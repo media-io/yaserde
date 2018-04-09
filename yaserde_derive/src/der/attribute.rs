@@ -1,5 +1,7 @@
 
+use proc_macro2::TokenTreeIter;
 use proc_macro2::TokenNode::*;
+use proc_macro2::Spacing;
 use proc_macro2::Delimiter::Parenthesis;
 use syn::Attribute;
 
@@ -11,7 +13,22 @@ pub struct YaSerdeAttribute {
   pub text: bool,
 }
 
+fn get_value(iter: &mut TokenTreeIter) -> Option<String> {
+  match (iter.next(), iter.next()) {
+    (Some(operator), Some(value)) => {
+      match (operator.kind, value.kind) {
+        (Op('=', Spacing::Alone), Literal(l)) => {
+          Some(l.to_string().replace("\"", ""))
+        },
+        _ => None,
+      }
+    },
+    _ => None,
+  }
+}
+
 impl YaSerdeAttribute {
+
   pub fn parse(attrs: &Vec<Attribute>) -> YaSerdeAttribute {
 
     let mut root = None;
@@ -32,26 +49,10 @@ impl YaSerdeAttribute {
                   Term(t) => {
                     match t.as_str() {
                       "root" => {
-                        attr_iter.next();
-                        let v = attr_iter.next().map(|s|
-                          match s.kind {
-                            Literal(l) => {
-                              Some(l.to_string().replace("\"", ""))
-                            },
-                            _ => None
-                          });
-                        root = v.unwrap_or(None);
+                        root = get_value(&mut attr_iter);
                       },
                       "rename" => {
-                        attr_iter.next();
-                        let v = attr_iter.next().map(|s|
-                          match s.kind {
-                            Literal(l) => {
-                              Some(l.to_string().replace("\"", ""))
-                            },
-                            _ => None
-                          });
-                        rename = v.unwrap_or(None);
+                        rename = get_value(&mut attr_iter);
                       },
                       "attribute" => {
                         attribute = true;
