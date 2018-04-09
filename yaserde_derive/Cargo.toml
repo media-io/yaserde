@@ -1,0 +1,13 @@
+[package]
+name = "yaserde_derive"
+version = "0.1.0"
+authors = ["Marc-Antoine Arnaud <arnaud.marcantoine@gmail.com>"]
+
+[dependencies]
+syn = { version = "0.12.14", features = ["visit", "extra-traits"] }
+proc-macro2 = "0.2.3"
+quote = "0.4.2"
+
+[lib]
+name = "yaserde_derive"
+proc-macro = true
