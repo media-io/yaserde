@@ -2,6 +2,13 @@
 name = "yaserde"
 version = "0.1.0"
 authors = ["Marc-Antoine Arnaud <arnaud.marcantoine@gmail.com>"]
+description = "Serialization and deserialization library"
+keywords = ["Serialization", "Deserialization", "XML"]
+license = "MIT"
+repository = "https://github.com/media-io/yaserde"
+homepage = "https://github.com/media-io/yaserde"
+documentation = "https://docs.rs/yaserde"
+readme = "README.md"
 
 [dependencies]
 yaserde_derive = { path = "../yaserde_derive", optional = true }
@@ -10,3 +17,6 @@ xml-rs = "0.7.0"
 
 [dev-dependencies]
 yaserde_derive = { path = "../yaserde_derive" }
+
+[badges]
+travis-ci = { repository = "media-io/yaserde" }

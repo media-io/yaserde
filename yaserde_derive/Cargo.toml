@@ -2,6 +2,13 @@
 name = "yaserde_derive"
 version = "0.1.0"
 authors = ["Marc-Antoine Arnaud <arnaud.marcantoine@gmail.com>"]
+description = "Serialization and deserialization macros"
+keywords = ["Serialization", "Deserialization"]
+license = "MIT"
+repository = "https://github.com/media-io/yaserde"
+homepage = "https://github.com/media-io/yaserde"
+documentation = "https://docs.rs/yaserde"
+readme = "README.md"
 
 [dependencies]
 syn = { version = "0.12.14", features = ["visit", "extra-traits"] }
@@ -11,3 +18,6 @@ quote = "0.4.2"
 [lib]
 name = "yaserde_derive"
 proc-macro = true
+
+[badges]
+travis-ci = { repository = "media-io/yaserde" }
