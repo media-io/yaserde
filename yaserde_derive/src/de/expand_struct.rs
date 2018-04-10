@@ -137,7 +137,7 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
                   #label = parsed_structure;
                 },
                 Err(msg) => {
-                  println!("ERROR {:?}", msg);
+                  return Err(msg);
                 },
               }
             },
@@ -167,7 +167,7 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
                       #label.push(parsed_item);
                     },
                     Err(msg) => {
-                      println!("ERROR {:?}", msg);
+                      return Err(msg);
                     },
                   }
                 },
