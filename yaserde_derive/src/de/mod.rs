@@ -1,8 +1,8 @@
 
-pub mod attribute;
 pub mod expand_struct;
 pub mod field_type;
 
+use attribute;
 use proc_macro2::Span;
 use quote;
 use syn;

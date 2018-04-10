@@ -6,6 +6,7 @@ extern crate proc_macro2;
 extern crate quote;
 extern crate syn;
 
+mod attribute;
 mod de;
 mod ser;
 

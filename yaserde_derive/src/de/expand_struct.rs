@@ -1,5 +1,5 @@
 
-use de::attribute::*;
+use attribute::*;
 use de::field_type::*;
 use quote::Tokens;
 use syn::Ident;

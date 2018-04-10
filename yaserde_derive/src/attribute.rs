@@ -28,9 +28,7 @@ fn get_value(iter: &mut TokenTreeIter) -> Option<String> {
 }
 
 impl YaSerdeAttribute {
-
   pub fn parse(attrs: &Vec<Attribute>) -> YaSerdeAttribute {
-
     let mut root = None;
     let mut rename = None;
     let mut attribute = false;

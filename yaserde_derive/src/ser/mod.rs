@@ -1,9 +1,7 @@
 
-// pub mod attribute;
 pub mod expand_struct;
-// pub mod field_type;
 
-use de::attribute;
+use attribute;
 
 use proc_macro2::Span;
 use quote;
