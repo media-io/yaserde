@@ -8,7 +8,21 @@ use std::str;
 use std::io::Cursor;
 use std::io::Write;
 use xml::writer::EventWriter;
-use yaserde::{YaSerialize};
+use yaserde::YaSerialize;
+
+macro_rules! convert_and_validate {
+  ($model:expr, $content:expr) => {
+    let mut buf = Cursor::new(Vec::new());
+    let mut writer = EventWriter::new(&mut buf);
+    let _status = $model.derive_serialize(&mut writer, None);
+
+    let buffer = writer.into_inner();
+    let cursor = buffer.get_ref();
+
+    let data = str::from_utf8(cursor).expect("Found invalid UTF-8");
+    assert_eq!(data, $content);
+  }
+}
 
 #[test]
 fn ser_basic() {
@@ -23,16 +37,7 @@ fn ser_basic() {
   };
 
   let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><item>something</item></base>".to_string();
-
-  let mut buf = Cursor::new(Vec::new());
-  let mut writer = EventWriter::new(&mut buf);
-  let _status = model.derive_serialize(&mut writer, None);
-
-  let buffer = writer.into_inner();
-  let cursor = buffer.get_ref();
-
-  let data = str::from_utf8(cursor).expect("Found invalid UTF-8");
-  assert_eq!(data, content);
+  convert_and_validate!(model, content);
 }
 
 #[test]
@@ -51,15 +56,5 @@ fn ser_list_of_items() {
   };
 
   let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><items>something1</items><items>something2</items></base>".to_string();
-
-  let mut buf = Cursor::new(Vec::new());
-  let mut writer = EventWriter::new(&mut buf);
-  let _status = model.derive_serialize(&mut writer, None);
-
-  let buffer = writer.into_inner();
-  let cursor = buffer.get_ref();
-
-  let data = str::from_utf8(cursor).expect("Found invalid UTF-8");
-  assert_eq!(data, content);
-
+  convert_and_validate!(model, content);
 }

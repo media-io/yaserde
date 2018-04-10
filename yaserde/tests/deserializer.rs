@@ -6,7 +6,16 @@ extern crate xml;
 
 use std::io::Read;
 use xml::reader::EventReader;
-use yaserde::{YaDeserialize};
+use yaserde::YaDeserialize;
+
+macro_rules! convert_and_validate {
+  ($content:expr, $model:expr) => {
+    let mut parser = EventReader::from_str($content);
+
+    let loaded = XmlStruct::derive_deserialize(&mut parser, None);
+    assert_eq!(loaded, Ok($model));
+  }
+}
 
 #[test]
 fn de_basic() {
@@ -16,13 +25,10 @@ fn de_basic() {
     item: String
   }
 
-  let content = "<base><item>something</item></base>".to_string();
-  let mut parser = EventReader::from_str(content.as_str());
-
-  let loaded = XmlStruct::derive_deserialize(&mut parser, None);
-  assert_eq!(loaded, Ok(XmlStruct{
+  let content = "<base><item>something</item></base>";
+  convert_and_validate!(content, XmlStruct{
     item: "something".to_string()
-  }));
+  });
 }
 
 #[test]
@@ -33,16 +39,13 @@ fn de_list_of_items() {
     items: Vec<String>
   }
 
-  let content = "<base><items>something1</items><items>something2</items></base>".to_string();
-  let mut parser = EventReader::from_str(content.as_str());
-
-  let loaded = XmlStruct::derive_deserialize(&mut parser, None);
-  assert_eq!(loaded, Ok(XmlStruct{
+  let content = "<base><items>something1</items><items>something2</items></base>";
+  convert_and_validate!(content, XmlStruct{
     items: vec![
       "something1".to_string(),
       "something2".to_string()
     ]
-  }));
+  });
 }
 
 #[test]
@@ -70,16 +73,13 @@ fn de_attributes() {
     }
   }
 
-  let content = "<base item=\"something\"><sub subitem=\"sub-something\"></sub></base>".to_string();
-  let mut parser = EventReader::from_str(content.as_str());
-
-  let loaded = XmlStruct::derive_deserialize(&mut parser, None);
-  assert_eq!(loaded, Ok(XmlStruct{
+  let content = "<base item=\"something\"><sub subitem=\"sub-something\"></sub></base>";
+  convert_and_validate!(content, XmlStruct{
     item: "something".to_string(),
     sub: SubStruct{
       subitem: "sub-something".to_string()
     }
-  }));
+  });
 }
 
 #[test]
@@ -108,16 +108,13 @@ fn de_rename() {
     }
   }
 
-  let content = "<base Item=\"something\"><sub sub_item=\"sub_something\"></sub></base>".to_string();
-  let mut parser = EventReader::from_str(content.as_str());
-
-  let loaded = XmlStruct::derive_deserialize(&mut parser, None);
-  assert_eq!(loaded, Ok(XmlStruct{
+  let content = "<base Item=\"something\"><sub sub_item=\"sub_something\"></sub></base>";
+  convert_and_validate!(content, XmlStruct{
     item: "something".to_string(),
     sub_struct: SubStruct{
       subitem: "sub_something".to_string()
     }
-  }));
+  });
 }
 
 #[test]
@@ -149,15 +146,12 @@ fn de_text_content_with_attributes() {
     }
   }
 
-  let content = "<base Item=\"something\"><sub sub_item=\"sub_something\">text_content</sub></base>".to_string();
-  let mut parser = EventReader::from_str(content.as_str());
-
-  let loaded = XmlStruct::derive_deserialize(&mut parser, None);
-  assert_eq!(loaded, Ok(XmlStruct{
+  let content = "<base Item=\"something\"><sub sub_item=\"sub_something\">text_content</sub></base>";
+  convert_and_validate!(content, XmlStruct{
     item: "something".to_string(),
     sub_struct: SubStruct{
       subitem: "sub_something".to_string(),
       text: "text_content".to_string()
     }
-  }));
+  });
 }
