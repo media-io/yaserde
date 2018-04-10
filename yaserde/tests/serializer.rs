@@ -57,6 +57,34 @@ fn ser_list_of_items() {
 
   let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><items>something1</items><items>something2</items></base>".to_string();
   convert_and_validate!(model, content);
+
+
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(root="base")]
+  pub struct XmlStructOfStruct {
+    items: Vec<SubStruct>
+  }
+
+
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(root="items")]
+  pub struct SubStruct {
+    field: String
+  }
+
+  let model2 = XmlStructOfStruct{
+    items: vec![
+      SubStruct{
+        field: "something1".to_string()
+      },
+      SubStruct{
+        field: "something2".to_string()
+      }
+    ]
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><items><field>something1</field></items><items><field>something2</field></items></base>";
+  convert_and_validate!(model2, content);
 }
 
 #[test]

@@ -16,16 +16,28 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
             let mut #label : String = "".to_string();
           })
         },
-        Some(FieldType::FieldTypeVec{data_type}) => {
-          Some(quote!{
-            let mut #label : Vec<#data_type> = vec![];
-          })
-        },
         Some(FieldType::FieldTypeStruct{struct_name}) => {
           Some(quote!{
             let mut #label : #struct_name = #struct_name::default();
           })
-        }
+        },
+        Some(FieldType::FieldTypeVec{data_type}) => {
+          let dt = Box::into_raw(data_type);
+          match unsafe{dt.as_ref()} {
+            Some(&FieldType::FieldTypeString) => {
+              Some(quote!{
+                let mut #label : Vec<String> = vec![];
+              })
+            },
+            Some(&FieldType::FieldTypeStruct{struct_name}) => {
+              Some(quote!{
+                let mut #label : Vec<#struct_name> = vec![];
+              })
+            },
+            Some(&FieldType::FieldTypeVec{..}) => {unimplemented!();},
+            None => {unimplemented!();},
+          }
+        },
         _ => None
       }
     })
@@ -144,8 +156,9 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
           })
         },
         Some(FieldType::FieldTypeVec{data_type}) => {
-          match data_type.to_string().as_str() {
-            "String" => {
+          let dt = Box::into_raw(data_type);
+          match unsafe{dt.as_ref()} {
+            Some(&FieldType::FieldTypeString) => {
               Some(quote!{
                 #label_name => {
                   match read.next() {
@@ -157,7 +170,7 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
                 },
               })
             },
-            struct_name => {
+            Some(&FieldType::FieldTypeStruct{struct_name}) => {
               let struct_ident = Ident::new(&format!("{}", struct_name), Span::def_site());
               Some(quote!{
                 #label_name => {
@@ -172,7 +185,9 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
                   }
                 },
               })
-            }
+            },
+            Some(&FieldType::FieldTypeVec{..}) => {unimplemented!();},
+            None => {unimplemented!();},
           }
         },
         _ => None

@@ -6,8 +6,32 @@ use syn::Type::Path;
 #[derive(Debug)]
 pub enum FieldType {
   FieldTypeString,
-  FieldTypeVec{data_type: syn::Ident},
+  FieldTypeVec{data_type: Box<FieldType>},
   FieldTypeStruct{struct_name: syn::Ident},
+}
+
+impl FieldType {
+  fn from_ident(t: &syn::PathSegment) -> Option<FieldType> {
+    match t.ident.as_ref() {
+      "String" => Some(FieldType::FieldTypeString),
+      "Vec" => {
+        get_vec_type(t).map(|data_type| {
+          let p = syn::PathSegment{
+            ident: data_type,
+            arguments: syn::PathArguments::None
+          };
+
+          FieldType::FieldTypeVec{
+            data_type: Box::new(FieldType::from_ident(&p).unwrap())
+          }
+        })
+      },
+      _struct_name =>
+        Some(FieldType::FieldTypeStruct{
+          struct_name: t.ident
+        }),
+    }
+  }
 }
 
 pub fn get_field_type(field: &syn::Field) -> Option<FieldType> {
@@ -15,29 +39,14 @@ pub fn get_field_type(field: &syn::Field) -> Option<FieldType> {
     Path(ref path) => {
       match path.path.segments.first() {
         Some(Pair::End(t)) => {
-          match t.ident.to_string().as_str() {
-            "String" => Some(FieldType::FieldTypeString),
-            "Vec" => {
-              match get_vec_type(t) {
-                Some(data_type) =>
-                  Some(FieldType::FieldTypeVec{
-                    data_type: data_type
-                  }),
-                None => None,
-              }
-            },
-            _struct_name =>
-              Some(FieldType::FieldTypeStruct{
-                struct_name: t.ident
-              }),
-          }
+          FieldType::from_ident(t)
         },
         _ => {
           None
         },
       }
     },
-    _ => {None},
+    _ => None,
   }
 }
 

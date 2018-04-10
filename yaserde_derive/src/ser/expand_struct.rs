@@ -75,19 +75,39 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
               },
             };
           }),
-        Some(FieldType::FieldTypeVec{..}) =>
-          Some(quote!{
-            for item in &self.#label {
-              let start_event = XmlEvent::start_element(#label_name);
-              let _ret = writer.write(start_event);
+        Some(FieldType::FieldTypeVec{data_type}) => {
+          let dt = Box::into_raw(data_type);
+          match unsafe{dt.as_ref()} {
+            Some(&FieldType::FieldTypeString) => {
+              Some(quote!{
+                for item in &self.#label {
+                  let start_event = XmlEvent::start_element(#label_name);
+                  let _ret = writer.write(start_event);
 
-              let data_event = XmlEvent::characters(item);
-              let _ret = writer.write(data_event);
+                  let data_event = XmlEvent::characters(item);
+                  let _ret = writer.write(data_event);
 
-              let end_event = XmlEvent::end_element();
-              let _ret = writer.write(end_event);
-            }
-          }),
+                  let end_event = XmlEvent::end_element();
+                  let _ret = writer.write(end_event);
+                }
+              })
+            },
+            Some(&FieldType::FieldTypeStruct{..}) => {
+              Some(quote!{
+                for item in &self.#label {
+                  match item.derive_serialize(writer) {
+                    Ok(()) => {},
+                    Err(msg) => {
+                      return Err(msg);
+                    },
+                  };
+                }
+              })
+            },
+            Some(&FieldType::FieldTypeVec{..}) => {unimplemented!();},
+            None => {unimplemented!();},
+          }
+        },
         None => None,
       }
     })

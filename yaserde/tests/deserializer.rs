@@ -9,10 +9,10 @@ use xml::reader::EventReader;
 use yaserde::YaDeserialize;
 
 macro_rules! convert_and_validate {
-  ($content:expr, $model:expr) => {
+  ($content:expr, $struct:tt, $model:expr) => {
     let mut parser = EventReader::from_str($content);
 
-    let loaded = XmlStruct::derive_deserialize(&mut parser, None);
+    let loaded = $struct::derive_deserialize(&mut parser, None);
     assert_eq!(loaded, Ok($model));
   }
 }
@@ -26,7 +26,7 @@ fn de_basic() {
   }
 
   let content = "<base><item>something</item></base>";
-  convert_and_validate!(content, XmlStruct{
+  convert_and_validate!(content, XmlStruct, XmlStruct{
     item: "something".to_string()
   });
 }
@@ -40,10 +40,35 @@ fn de_list_of_items() {
   }
 
   let content = "<base><items>something1</items><items>something2</items></base>";
-  convert_and_validate!(content, XmlStruct{
+  convert_and_validate!(content, XmlStruct, XmlStruct{
     items: vec![
       "something1".to_string(),
       "something2".to_string()
+    ]
+  });
+
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(root="base")]
+  pub struct XmlStructOfStruct {
+    items: Vec<SubStruct>
+  }
+
+
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(root="items")]
+  pub struct SubStruct {
+    field: String
+  }
+
+  let content = "<base><items><field>something1</field></items><items><field>something2</field></items></base>";
+  convert_and_validate!(content, XmlStructOfStruct, XmlStructOfStruct{
+    items: vec![
+      SubStruct{
+        field: "something1".to_string()
+      },
+      SubStruct{
+        field: "something2".to_string()
+      }
     ]
   });
 }
@@ -74,7 +99,7 @@ fn de_attributes() {
   }
 
   let content = "<base item=\"something\"><sub subitem=\"sub-something\"></sub></base>";
-  convert_and_validate!(content, XmlStruct{
+  convert_and_validate!(content, XmlStruct, XmlStruct{
     item: "something".to_string(),
     sub: SubStruct{
       subitem: "sub-something".to_string()
@@ -109,7 +134,7 @@ fn de_rename() {
   }
 
   let content = "<base Item=\"something\"><sub sub_item=\"sub_something\"></sub></base>";
-  convert_and_validate!(content, XmlStruct{
+  convert_and_validate!(content, XmlStruct, XmlStruct{
     item: "something".to_string(),
     sub_struct: SubStruct{
       subitem: "sub_something".to_string()
@@ -147,7 +172,7 @@ fn de_text_content_with_attributes() {
   }
 
   let content = "<base Item=\"something\"><sub sub_item=\"sub_something\">text_content</sub></base>";
-  convert_and_validate!(content, XmlStruct{
+  convert_and_validate!(content, XmlStruct, XmlStruct{
     item: "something".to_string(),
     sub_struct: SubStruct{
       subitem: "sub_something".to_string(),
