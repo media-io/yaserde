@@ -55,7 +55,7 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
     .map(|x| x.unwrap())
     .fold(Tokens::new(), |mut tokens, token| {tokens.append_all(token); tokens});
 
-  println!("{:?}", struct_inspector);
+  // println!("{:?}", struct_inspector);
 
   quote! {
     use xml::writer::XmlEvent;
