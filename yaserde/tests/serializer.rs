@@ -200,3 +200,68 @@ fn ser_text_content_with_attributes() {
   let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base Item=\"something\"><sub sub_item=\"sub_something\">text_content</sub></base>";
   convert_and_validate!(model, content);
 }
+
+#[test]
+fn ser_enum() {
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(root="base")]
+  pub struct XmlStruct {
+    color: Color
+  }
+
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(root="color")]
+  pub enum Color {
+    White,
+    Black,
+    #[yaserde(rename="custom")]
+    Custom{
+      enabled: String,
+      color: RGBColor,
+      alpha: Alpha,
+      alphas: Vec<Alpha>,
+    }
+  }
+
+  impl Default for Color {
+    fn default() -> Color {
+      Color::White
+    }
+  }
+
+  #[derive(YaSerialize, PartialEq, Debug)]
+  pub struct RGBColor {
+    red: String,
+    green: String,
+    blue: String,
+  }
+
+  #[derive(YaSerialize, PartialEq, Debug)]
+  pub enum Alpha {
+    Transparent,
+    Opaque,
+  }
+
+  let model = XmlStruct{
+    color: Color::Black
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color>Black</color></base>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct{
+    color: Color::Custom{
+      enabled: "true".to_string(),
+      color: RGBColor{
+        red: "0".to_string(),
+        green: "128".to_string(),
+        blue: "255".to_string(),
+      },
+      alpha: Alpha::Opaque,
+      alphas: vec![Alpha::Opaque, Alpha::Transparent]
+    }
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><custom><enabled>true</enabled><RGBColor><red>0</red><green>128</green><blue>255</blue></RGBColor><Alpha>Opaque</Alpha><Alpha>Opaque</Alpha><Alpha>Transparent</Alpha></custom></color></base>";
+  convert_and_validate!(model, content);
+}
