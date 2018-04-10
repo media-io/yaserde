@@ -14,5 +14,5 @@ pub trait YaDeserialize : Sized {
 }
 
 pub trait YaSerialize : Sized {
-  fn derive_serialize<W: Write>(&self, read: &mut EventWriter<W>, parent_attributes: Option<&Vec<OwnedAttribute>>) -> Result<(), String>;
+  fn derive_serialize<W: Write>(&self, read: &mut EventWriter<W>) -> Result<(), String>;
 }

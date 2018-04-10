@@ -7,9 +7,13 @@ use syn::DataStruct;
 use proc_macro2::Span;
 
 pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
-  let struct_inspector : Tokens = data_struct.fields.iter().map(|ref field|
+  let build_attributes : Tokens = data_struct.fields.iter().map(|ref field|
     {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
+      if field_attrs.attribute == false {
+        return None;
+      }
+
       let renamed_label =
         match field_attrs.rename {
           Some(value) => Some(Ident::new(&format!("{}", value), Span::call_site())),
@@ -21,30 +25,66 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) =>
           Some(quote!{
-            let start_event = xml::writer::events::XmlEvent::start_element(#label_name);
-            let data_event = xml::writer::events::XmlEvent::characters(&self.#label);
-            let end_event = xml::writer::events::XmlEvent::end_element();
+            .attr(#label_name, &self.#label)
+          }),
+        _ => None
+      }
+    })
+    .filter(|x| x.is_some())
+    .map(|x| x.unwrap())
+    .fold(Tokens::new(), |mut tokens, token| {tokens.append_all(token); tokens});
+
+  let struct_inspector : Tokens = data_struct.fields.iter().map(|ref field|
+    {
+      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
+      if field_attrs.attribute == true {
+        return None;
+      }
+
+      let label = field.ident;
+      if field_attrs.text == true {
+        return Some(quote!(
+          let data_event = XmlEvent::characters(&self.#label);
+          let _ret = writer.write(data_event);
+        ))
+      }
+
+      let renamed_label =
+        match field_attrs.rename {
+          Some(value) => Some(Ident::new(&format!("{}", value), Span::call_site())),
+          None => field.ident
+        };
+      let label_name = renamed_label.unwrap().to_string();
+
+      match get_field_type(field) {
+        Some(FieldType::FieldTypeString) =>
+          Some(quote!{
+            let start_event = XmlEvent::start_element(#label_name);
+            let data_event = XmlEvent::characters(&self.#label);
+            let end_event = XmlEvent::end_element();
             let _ret = writer.write(start_event);
             let _ret = writer.write(data_event);
             let _ret = writer.write(end_event);
           }),
         Some(FieldType::FieldTypeStruct{..}) =>
           Some(quote!{
-            let start_event = xml::writer::events::XmlEvent::start_element(#label_name);
-            let end_event = xml::writer::events::XmlEvent::end_element();
-            let _ret = writer.write(start_event);
-            let _ret = writer.write(end_event);
+            match self.#label.derive_serialize(writer) {
+              Ok(()) => {},
+              Err(msg) => {
+                return Err(msg);
+              },
+            };
           }),
         Some(FieldType::FieldTypeVec) =>
           Some(quote!{
             for item in &self.#label {
-              let start_event = xml::writer::events::XmlEvent::start_element(#label_name);
+              let start_event = XmlEvent::start_element(#label_name);
               let _ret = writer.write(start_event);
 
-              let data_event = xml::writer::events::XmlEvent::characters(item);
+              let data_event = XmlEvent::characters(item);
               let _ret = writer.write(data_event);
 
-              let end_event = xml::writer::events::XmlEvent::end_element();
+              let end_event = XmlEvent::end_element();
               let _ret = writer.write(end_event);
             }
           }),
@@ -62,13 +102,13 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
 
     impl YaSerialize for #name {
       #[allow(unused_variables)]
-      fn derive_serialize<W: Write>(&self, writer: &mut xml::EventWriter<W>, parent_attributes: Option<&Vec<xml::attribute::OwnedAttribute>>) -> Result<(), String> {
-        let struct_start_event = xml::writer::events::XmlEvent::start_element(#root);
+      fn derive_serialize<W: Write>(&self, writer: &mut xml::EventWriter<W>) -> Result<(), String> {
+        let struct_start_event = XmlEvent::start_element(#root)#build_attributes;
         let _ret = writer.write(struct_start_event);
 
         #struct_inspector
 
-        let struct_end_event = xml::writer::events::XmlEvent::end_element();
+        let struct_end_event = XmlEvent::end_element();
         let _ret = writer.write(struct_end_event);
         Ok(())
       }
