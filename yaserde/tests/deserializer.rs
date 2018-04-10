@@ -6,11 +6,11 @@ extern crate xml;
 
 use std::io::Read;
 use xml::reader::EventReader;
-use yaserde::{YaDeserialize, YaSerialize};
+use yaserde::{YaDeserialize};
 
 #[test]
-fn test_basic() {
-  #[derive(YaDeserialize, YaSerialize, PartialEq, Debug)]
+fn de_basic() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root="base")]
   pub struct XmlStruct {
     item: String
@@ -26,8 +26,8 @@ fn test_basic() {
 }
 
 #[test]
-fn test_list_of_items() {
-  #[derive(YaDeserialize, YaSerialize, PartialEq, Debug)]
+fn de_list_of_items() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root="base")]
   pub struct XmlStruct {
     items: Vec<String>
@@ -46,8 +46,8 @@ fn test_list_of_items() {
 }
 
 #[test]
-fn test_attributes() {
-  #[derive(YaDeserialize, YaSerialize, PartialEq, Debug)]
+fn de_attributes() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root="base")]
   pub struct XmlStruct {
     #[yaserde(attribute)]
@@ -55,7 +55,7 @@ fn test_attributes() {
     sub: SubStruct
   }
 
-  #[derive(YaDeserialize, YaSerialize, PartialEq, Debug)]
+  #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root="sub")]
   pub struct SubStruct {
     #[yaserde(attribute)]
@@ -83,8 +83,8 @@ fn test_attributes() {
 }
 
 #[test]
-fn test_rename() {
-  #[derive(YaDeserialize, YaSerialize, PartialEq, Debug)]
+fn de_rename() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root="base")]
   pub struct XmlStruct {
     #[yaserde(attribute, rename="Item")]
@@ -93,7 +93,7 @@ fn test_rename() {
     sub_struct: SubStruct
   }
 
-  #[derive(YaDeserialize, YaSerialize, PartialEq, Debug)]
+  #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root="sub")]
   pub struct SubStruct {
     #[yaserde(attribute, rename="sub_item")]
@@ -121,8 +121,8 @@ fn test_rename() {
 }
 
 #[test]
-fn test_text_content_with_attributes() {
-  #[derive(YaDeserialize, YaSerialize, PartialEq, Debug)]
+fn de_text_content_with_attributes() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root="base")]
   pub struct XmlStruct {
     #[yaserde(attribute, rename="Item")]
@@ -131,7 +131,7 @@ fn test_text_content_with_attributes() {
     sub_struct: SubStruct
   }
 
-  #[derive(YaDeserialize, YaSerialize, PartialEq, Debug)]
+  #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root="sub")]
   pub struct SubStruct {
     #[yaserde(attribute, rename="sub_item")]

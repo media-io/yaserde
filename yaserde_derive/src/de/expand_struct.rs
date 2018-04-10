@@ -1,6 +1,6 @@
 
-use der::attribute::*;
-use der::field_type::*;
+use de::attribute::*;
+use de::field_type::*;
 use quote::Tokens;
 use syn::Ident;
 use syn::DataStruct;
@@ -8,7 +8,7 @@ use syn::punctuated::Pair;
 use syn::Type::Path;
 use proc_macro2::Span;
 
-pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String, _root_attributes: &YaSerdeAttribute) -> Tokens {
+pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
   let variables : Tokens = data_struct.fields.iter().map(|ref field|
     {
       let label = field.ident;

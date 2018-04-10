@@ -19,7 +19,7 @@ pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<quote::Tokens
   let impl_block =
     match data {
       &syn::Data::Struct(ref data_struct) => {
-        expand_struct::parse(data_struct, &name, &root, &root_attrs)
+        expand_struct::parse(data_struct, &name, &root)
       },
       &syn::Data::Enum(ref _data_enum) => {
         unimplemented!()
@@ -29,7 +29,7 @@ pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<quote::Tokens
       },
     };
 
-  let dummy_const = Ident::new(&format!("_IMPL_DESERIALIZE_FOR_{}", name), Span::def_site());
+  let dummy_const = Ident::new(&format!("_IMPL_YA_DESERIALIZE_FOR_{}", name), Span::def_site());
 
   let generated = quote! {
     #[allow(non_upper_case_globals, unused_attributes, unused_qualifications)]
