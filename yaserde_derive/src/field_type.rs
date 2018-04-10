@@ -6,8 +6,8 @@ use syn::Type::Path;
 #[derive(Debug)]
 pub enum FieldType {
   FieldTypeString,
-  FieldTypeVec,
-  FieldTypeStruct{name: String},
+  FieldTypeVec{data_type: syn::Ident},
+  FieldTypeStruct{struct_name: syn::Ident},
 }
 
 pub fn get_field_type(field: &syn::Field) -> Option<FieldType> {
@@ -17,8 +17,19 @@ pub fn get_field_type(field: &syn::Field) -> Option<FieldType> {
         Some(Pair::End(t)) => {
           match t.ident.to_string().as_str() {
             "String" => Some(FieldType::FieldTypeString),
-            "Vec" => Some(FieldType::FieldTypeVec),
-            name => Some(FieldType::FieldTypeStruct{name: name.to_string()}),
+            "Vec" => {
+              match get_vec_type(t) {
+                Some(data_type) =>
+                  Some(FieldType::FieldTypeVec{
+                    data_type: data_type
+                  }),
+                None => None,
+              }
+            },
+            _struct_name =>
+              Some(FieldType::FieldTypeStruct{
+                struct_name: t.ident
+              }),
           }
         },
         _ => {
@@ -30,28 +41,18 @@ pub fn get_field_type(field: &syn::Field) -> Option<FieldType> {
   }
 }
 
-pub fn get_vec_type(field: &syn::Field) -> Option<syn::Ident> {
-  match field.ty {
-    Path(ref path) => {
-      match path.path.segments.first() {
-        Some(Pair::End(t)) => {
-          match t.arguments {
-            syn::PathArguments::AngleBracketed(ref args) => {
-              match args.args.first() {
-                Some(Pair::End(tt)) => {
-                  match tt {
-                    &syn::GenericArgument::Type(ref argument) => {
-                      match argument {
-                        &Path(ref path2) => {
-                          match path2.path.segments.first() {
-                            Some(Pair::End(ttt)) => {
-                              Some(ttt.ident)
-                            },
-                            _ => None
-                          }
-                        },
-                        _ => None
-                      }
+fn get_vec_type(t: &syn::PathSegment) -> Option<syn::Ident> {
+  match t.arguments {
+    syn::PathArguments::AngleBracketed(ref args) => {
+      match args.args.first() {
+        Some(Pair::End(tt)) => {
+          match tt {
+            &syn::GenericArgument::Type(ref argument) => {
+              match argument {
+                &Path(ref path2) => {
+                  match path2.path.segments.first() {
+                    Some(Pair::End(ttt)) => {
+                      Some(ttt.ident)
                     },
                     _ => None
                   }
@@ -64,7 +65,7 @@ pub fn get_vec_type(field: &syn::Field) -> Option<syn::Ident> {
         },
         _ => None
       }
-    }
+    },
     _ => None
   }
 }

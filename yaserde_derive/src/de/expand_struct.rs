@@ -4,45 +4,29 @@ use field_type::*;
 use quote::Tokens;
 use syn::Ident;
 use syn::DataStruct;
-use syn::punctuated::Pair;
-use syn::Type::Path;
 use proc_macro2::Span;
 
 pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
   let variables : Tokens = data_struct.fields.iter().map(|ref field|
     {
       let label = field.ident;
-
-      match field.ty {
-        Path(ref path) => {
-          match path.path.segments.first() {
-            Some(Pair::End(t)) => {
-              let pair = path.path.segments.first().unwrap();
-
-              match t.ident.to_string().as_str() {
-                "String" => {
-                  Some(quote!{
-                    let mut #label : #pair = "".to_string();
-                  })
-                },
-                "Vec" => {
-                  Some(quote!{
-                    let mut #label : #pair = vec![];
-                  })
-                },
-                _ => {
-                  Some(quote!{
-                    let mut #label : #pair = #pair::default();
-                  })
-                },
-              }
-            },
-            _ => {
-              None
-            },
-          }
+      match get_field_type(field) {
+        Some(FieldType::FieldTypeString) => {
+          Some(quote!{
+            let mut #label : String = "".to_string();
+          })
         },
-        _ => {None},
+        Some(FieldType::FieldTypeVec{data_type}) => {
+          Some(quote!{
+            let mut #label : Vec<#data_type> = vec![];
+          })
+        },
+        Some(FieldType::FieldTypeStruct{struct_name}) => {
+          Some(quote!{
+            let mut #label : #struct_name = #struct_name::default();
+          })
+        }
+        _ => None
       }
     })
     .filter(|x| x.is_some())
@@ -142,8 +126,8 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
             },
           })
         },
-        Some(FieldType::FieldTypeStruct{name}) => {
-          let struct_ident = Ident::new(&format!("{}", name), Span::def_site());
+        Some(FieldType::FieldTypeStruct{struct_name}) => {
+          let struct_ident = Ident::new(&format!("{}", struct_name), Span::def_site());
 
           Some(quote!{
             #label_name => {
@@ -159,41 +143,36 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
             },
           })
         },
-        Some(FieldType::FieldTypeVec) => {
-          match get_vec_type(field) {
-            Some(identifier) => {
-              match identifier.to_string().as_str() {
-                "String" => {
-                  Some(quote!{
-                    #label_name => {
-                      match read.next() {
-                        Ok(xml::reader::XmlEvent::Characters(characters_content)) => {
-                          #label.push(characters_content.trim().to_string());
-                        },
-                        _ => {},
-                      }
+        Some(FieldType::FieldTypeVec{data_type}) => {
+          match data_type.to_string().as_str() {
+            "String" => {
+              Some(quote!{
+                #label_name => {
+                  match read.next() {
+                    Ok(xml::reader::XmlEvent::Characters(characters_content)) => {
+                      #label.push(characters_content.trim().to_string());
                     },
-                  })
+                    _ => {},
+                  }
                 },
-                struct_name => {
-                  let struct_ident = Ident::new(&format!("{}", struct_name), Span::def_site());
-                  Some(quote!{
-                    #label_name => {
-                      match #struct_ident::derive_deserialize(read, Some(&attributes)) {
-                        Ok(parsed_item) => {
-                          prev_level -= 1;
-                          #label.push(parsed_item);
-                        },
-                        Err(msg) => {
-                          println!("ERROR {:?}", msg);
-                        },
-                      }
-                    },
-                  })
-                }
-              }
+              })
             },
-            None => None
+            struct_name => {
+              let struct_ident = Ident::new(&format!("{}", struct_name), Span::def_site());
+              Some(quote!{
+                #label_name => {
+                  match #struct_ident::derive_deserialize(read, Some(&attributes)) {
+                    Ok(parsed_item) => {
+                      prev_level -= 1;
+                      #label.push(parsed_item);
+                    },
+                    Err(msg) => {
+                      println!("ERROR {:?}", msg);
+                    },
+                  }
+                },
+              })
+            }
           }
         },
         _ => None
@@ -210,7 +189,7 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) |
         Some(FieldType::FieldTypeStruct{..}) |
-        Some(FieldType::FieldTypeVec) =>
+        Some(FieldType::FieldTypeVec{..}) =>
           Some(quote!{
             #label: #label,
           }),

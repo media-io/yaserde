@@ -75,7 +75,7 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
               },
             };
           }),
-        Some(FieldType::FieldTypeVec) =>
+        Some(FieldType::FieldTypeVec{..}) =>
           Some(quote!{
             for item in &self.#label {
               let start_event = XmlEvent::start_element(#label_name);
