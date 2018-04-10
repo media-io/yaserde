@@ -1,6 +1,6 @@
 
 use attribute::*;
-use de::field_type::*;
+use field_type::*;
 use quote::Tokens;
 use syn::Ident;
 use syn::DataStruct;
