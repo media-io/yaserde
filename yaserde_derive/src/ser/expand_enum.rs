@@ -10,9 +10,9 @@ use proc_macro2::Span;
 pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
   let write_enum_content : Tokens = data_enum.variants.iter().map(|ref variant|
     {
-      let field_attrs = YaSerdeAttribute::parse(&variant.attrs);
+      let variant_attrs = YaSerdeAttribute::parse(&variant.attrs);
       let renamed_label =
-        match field_attrs.rename {
+        match variant_attrs.rename {
           Some(value) => Ident::new(&format!("{}", value), Span::call_site()),
           None => variant.ident
         };
@@ -51,7 +51,6 @@ pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
               };
             let field_label_name = renamed_field_label.unwrap().to_string();
 
-
             match get_field_type(field) {
               Some(FieldType::FieldTypeString) =>
                 Some(quote!{
@@ -71,9 +70,12 @@ pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
                 }),
               Some(FieldType::FieldTypeStruct{..}) =>
                 Some(quote!{
+                  let struct_start_event = XmlEvent::start_element(#field_label_name);
+                  let _ret = writer.write(struct_start_event);
+
                   match self {
                     &#name::#label{ref #field_label, ..} => {
-                      match #field_label.derive_serialize(writer) {
+                      match #field_label.derive_serialize(writer, true) {
                         Ok(()) => {},
                         Err(msg) => {
                           return Err(msg);
@@ -82,18 +84,26 @@ pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
                     },
                     _ => {}
                   }
+
+                  let struct_end_event = XmlEvent::end_element();
+                  let _ret = writer.write(struct_end_event);
                 }),
               Some(FieldType::FieldTypeVec{..}) =>
                 Some(quote!{
                   match self {
                     &#name::#label{ref #field_label, ..} => {
                       for item in #field_label {
-                        match item.derive_serialize(writer) {
+                        let struct_start_event = XmlEvent::start_element(#field_label_name);
+                        let _ret = writer.write(struct_start_event);
+
+                        match item.derive_serialize(writer, true) {
                           Ok(()) => {},
                           Err(msg) => {
                             return Err(msg);
                           },
                         };
+                        let struct_end_event = XmlEvent::end_element();
+                        let _ret = writer.write(struct_end_event);
                       }
                     },
                     _ => {}
@@ -127,22 +137,25 @@ pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
     .map(|x| x.unwrap())
     .fold(Tokens::new(), |mut tokens, token| {tokens.append_all(token); tokens});
 
-  // println!("{:?}", write_enum_content);
-
   quote! {
     use xml::writer::XmlEvent;
 
     impl YaSerialize for #name {
       #[allow(unused_variables)]
-      fn derive_serialize<W: Write>(&self, writer: &mut xml::EventWriter<W>) -> Result<(), String> {
-        let struct_start_event = XmlEvent::start_element(#root);
-        let _ret = writer.write(struct_start_event);
+      fn derive_serialize<W: Write>(&self, writer: &mut xml::EventWriter<W>, skip_start_end: bool) -> Result<(), String> {
+        if !skip_start_end {
+          let struct_start_event = XmlEvent::start_element(#root);
+          let _ret = writer.write(struct_start_event);
+        }
+
         match self {
           #write_enum_content
         }
 
-        let struct_end_event = XmlEvent::end_element();
-        let _ret = writer.write(struct_end_event);
+        if !skip_start_end {
+          let struct_end_event = XmlEvent::end_element();
+          let _ret = writer.write(struct_end_event);
+        }
         Ok(())
       }
     }

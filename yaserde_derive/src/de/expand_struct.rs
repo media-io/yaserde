@@ -224,6 +224,8 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
         let mut prev_level = 0;
         let mut current_level = 0;
 
+        println!("Struct: start to parse {}",  #root);
+
         #variables
         let current_attributes = parent_attributes;
         #attributes_loading
@@ -236,7 +238,7 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
               break;
             },
             Ok(XmlEvent::StartElement{name, attributes, namespace: _namespace}) => {
-              // println!("{} | {} - {}: {}", #root, prev_level, current_level, name.local_name.as_str());
+              println!("Struct: {} | {} - {}: {}", #root, prev_level, current_level, name.local_name.as_str());
               if prev_level == current_level {
                 match name.local_name.as_str() {
                   #root => {
@@ -254,8 +256,9 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
               prev_level += 1;
             },
             Ok(XmlEvent::EndElement{name}) => {
+              println!("Struct: end element {}", name);
               if #root == name.local_name.as_str() {
-                // println!("BREAK {}", #root);
+                println!("Struct: break for {}", #root);
                 break;
               }
               prev_level -= 1;

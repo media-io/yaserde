@@ -68,7 +68,7 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
           }),
         Some(FieldType::FieldTypeStruct{..}) =>
           Some(quote!{
-            match self.#label.derive_serialize(writer) {
+            match self.#label.derive_serialize(writer, false) {
               Ok(()) => {},
               Err(msg) => {
                 return Err(msg);
@@ -95,7 +95,7 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
             Some(&FieldType::FieldTypeStruct{..}) => {
               Some(quote!{
                 for item in &self.#label {
-                  match item.derive_serialize(writer) {
+                  match item.derive_serialize(writer, false) {
                     Ok(()) => {},
                     Err(msg) => {
                       return Err(msg);
@@ -122,14 +122,18 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
 
     impl YaSerialize for #name {
       #[allow(unused_variables)]
-      fn derive_serialize<W: Write>(&self, writer: &mut xml::EventWriter<W>) -> Result<(), String> {
-        let struct_start_event = XmlEvent::start_element(#root)#build_attributes;
-        let _ret = writer.write(struct_start_event);
+      fn derive_serialize<W: Write>(&self, writer: &mut xml::EventWriter<W>, skip_start_end: bool) -> Result<(), String> {
+        if !skip_start_end {
+          let struct_start_event = XmlEvent::start_element(#root)#build_attributes;
+          let _ret = writer.write(struct_start_event);
+        }
 
         #struct_inspector
 
-        let struct_end_event = XmlEvent::end_element();
-        let _ret = writer.write(struct_end_event);
+        if !skip_start_end {
+          let struct_end_event = XmlEvent::end_element();
+          let _ret = writer.write(struct_end_event);
+        }
         Ok(())
       }
     }

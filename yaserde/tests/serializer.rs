@@ -14,7 +14,7 @@ macro_rules! convert_and_validate {
   ($model:expr, $content:expr) => (
     let mut buf = Cursor::new(Vec::new());
     let mut writer = EventWriter::new(&mut buf);
-    let _status = $model.derive_serialize(&mut writer);
+    let _status = $model.derive_serialize(&mut writer, false);
 
     let buffer = writer.into_inner();
     let cursor = buffer.get_ref();
@@ -215,7 +215,7 @@ fn ser_enum() {
     White,
     Black,
     #[yaserde(rename="custom")]
-    Custom{
+    Custom {
       enabled: String,
       color: RGBColor,
       alpha: Alpha,
@@ -262,6 +262,6 @@ fn ser_enum() {
     }
   };
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><custom><enabled>true</enabled><RGBColor><red>0</red><green>128</green><blue>255</blue></RGBColor><Alpha>Opaque</Alpha><Alpha>Opaque</Alpha><Alpha>Transparent</Alpha></custom></color></base>";
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><custom><enabled>true</enabled><color><red>0</red><green>128</green><blue>255</blue></color><alpha>Opaque</alpha><alphas>Opaque</alphas><alphas>Transparent</alphas></custom></color></base>";
   convert_and_validate!(model, content);
 }

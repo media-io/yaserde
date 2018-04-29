@@ -1,4 +1,5 @@
 
+pub mod expand_enum;
 pub mod expand_struct;
 
 use attribute;
@@ -20,8 +21,8 @@ pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<quote::Tokens
       &syn::Data::Struct(ref data_struct) => {
         expand_struct::parse(data_struct, &name, &root)
       },
-      &syn::Data::Enum(ref _data_enum) => {
-        unimplemented!()
+      &syn::Data::Enum(ref data_enum) => {
+        expand_enum::parse(data_enum, &name, &root)
       },
       &syn::Data::Union(ref _data_union) => {
         unimplemented!()

@@ -180,3 +180,59 @@ fn de_text_content_with_attributes() {
     }
   });
 }
+
+#[test]
+fn de_enum() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(root="base")]
+  pub struct XmlStruct {
+    background: Color
+  }
+
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(root="color")]
+  pub enum Color {
+    White,
+    Black,
+  }
+
+  impl Default for Color {
+    fn default() -> Color {
+      Color::White
+    }
+  }
+
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  pub struct RGBColor {
+    red: String,
+    green: String,
+    blue: String,
+  }
+
+  impl Default for RGBColor {
+    fn default() -> RGBColor {
+      RGBColor{
+        red: "0".to_string(),
+        green: "0".to_string(),
+        blue: "0".to_string(),
+      }
+    }
+  }
+
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  pub enum Alpha {
+    Transparent,
+    Opaque,
+  }
+
+  impl Default for Alpha {
+    fn default() -> Alpha {
+      Alpha::Transparent
+    }
+  }
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><background>Black</background></base>";
+  convert_and_validate!(content, XmlStruct, XmlStruct{
+    background: Color::Black
+  });
+}
