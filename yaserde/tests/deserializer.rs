@@ -230,24 +230,6 @@ fn de_enum() {
     }
   }
 
-//   #[derive(YaDeserialize, PartialEq, Debug)]
-//   pub enum Alpha {
-//     Transparent,
-//     Opaque,
-//   }
-
-//   impl Default for Alpha {
-//     fn default() -> Alpha {
-//       Alpha::Transparent
-//     }
-//   }
-
-
-  // let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><background>Black</background></base>";
-  // convert_and_validate!(content, XmlStruct, XmlStruct{
-  //   background: Color::Black
-  // });
-
   let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><background>Black</background></base>";
   convert_and_validate!(content, XmlStruct, XmlStruct{
     background: Color::Black
