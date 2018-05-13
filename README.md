@@ -11,6 +11,9 @@ This library will support XML de/ser-ializing with all specific features.
 - [x] Enum
 - [ ] Enum with complex types
 - [ ] Option
+- [x] String
+- [ ] bool
+- [ ] number (u8, i8, u32, i32, f32, f64)
 
 ## Decorators
 
@@ -18,7 +21,7 @@ This library will support XML de/ser-ializing with all specific features.
 - [x] **rename**: be able to rename a field
 - [x] **attribute**: this field is defined as an attribute
 - [x] **text**: this field match to the text content
-- [ ] **namespace**: defines the namespace of the field
+- [x] **namespace**: defines the namespace of the field
 
 ## Custom De/Ser-rializer
 
