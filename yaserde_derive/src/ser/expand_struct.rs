@@ -5,6 +5,7 @@ use quote::Tokens;
 use syn::Ident;
 use syn::DataStruct;
 use proc_macro2::Span;
+use std::string::ToString;
 
 pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
   let build_attributes : Tokens = data_struct.fields.iter().map(|ref field|
@@ -27,7 +28,25 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
           Some(quote!{
             .attr(#label_name, &self.#label)
           }),
-        _ => None
+        Some(FieldType::FieldTypeStruct{struct_name: _struct_name}) =>
+          Some(quote!{
+            .attr(#label_name, &*{
+              use std::mem;
+              match yaserde::ser::to_string_content(&self.#label) {
+                Ok(value) => {
+                  unsafe {
+                    let ret : &'static str = mem::transmute(&value as &str);
+                    mem::forget(value);
+                    ret
+                  }
+                },
+                Err(msg) => return Err("Unable to serialize content".to_owned()),
+              }
+            })
+          }),
+        _ => {
+          None
+        }
       }
     })
     .filter(|x| x.is_some())
@@ -68,7 +87,8 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
           }),
         Some(FieldType::FieldTypeStruct{..}) =>
           Some(quote!{
-            match self.#label.derive_serialize(writer, false) {
+            writer.set_skip_start_end(false);
+            match self.#label.serialize(writer) {
               Ok(()) => {},
               Err(msg) => {
                 return Err(msg);
@@ -95,7 +115,8 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
             Some(&FieldType::FieldTypeStruct{..}) => {
               Some(quote!{
                 for item in &self.#label {
-                  match item.derive_serialize(writer, false) {
+                  writer.set_skip_start_end(false);
+                  match item.serialize(writer) {
                     Ok(()) => {},
                     Err(msg) => {
                       return Err(msg);
@@ -122,15 +143,17 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
 
     impl YaSerialize for #name {
       #[allow(unused_variables)]
-      fn derive_serialize<W: Write>(&self, writer: &mut xml::EventWriter<W>, skip_start_end: bool) -> Result<(), String> {
-        if !skip_start_end {
+      fn serialize<W: Write>(&self, writer: &mut yaserde::ser::Serializer<W>) -> Result<(), String> {
+        error!("Struct: start to expand {:?}", #root);
+
+        if !writer.skip_start_end() {
           let struct_start_event = XmlEvent::start_element(#root)#build_attributes;
           let _ret = writer.write(struct_start_event);
         }
 
         #struct_inspector
 
-        if !skip_start_end {
+        if !writer.skip_start_end() {
           let struct_end_event = XmlEvent::end_element();
           let _ret = writer.write(struct_end_event);
         }

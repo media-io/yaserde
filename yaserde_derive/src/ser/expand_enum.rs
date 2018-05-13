@@ -75,11 +75,9 @@ pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
 
                   match self {
                     &#name::#label{ref #field_label, ..} => {
-                      match #field_label.derive_serialize(writer, true) {
-                        Ok(()) => {},
-                        Err(msg) => {
-                          return Err(msg);
-                        },
+                      writer.set_skip_start_end(true);
+                      if let Err(msg) = #field_label.serialize(writer) {
+                        return Err(msg);
                       };
                     },
                     _ => {}
@@ -96,11 +94,9 @@ pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
                         let struct_start_event = XmlEvent::start_element(#field_label_name);
                         let _ret = writer.write(struct_start_event);
 
-                        match item.derive_serialize(writer, true) {
-                          Ok(()) => {},
-                          Err(msg) => {
-                            return Err(msg);
-                          },
+                        writer.set_skip_start_end(true);
+                        if let Err(msg) = item.serialize(writer) {
+                          return Err(msg);
                         };
                         let struct_end_event = XmlEvent::end_element();
                         let _ret = writer.write(struct_end_event);
@@ -142,8 +138,10 @@ pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
 
     impl YaSerialize for #name {
       #[allow(unused_variables)]
-      fn derive_serialize<W: Write>(&self, writer: &mut xml::EventWriter<W>, skip_start_end: bool) -> Result<(), String> {
-        if !skip_start_end {
+      fn serialize<W: Write>(&self, writer: &mut yaserde::ser::Serializer<W>) -> Result<(), String> {
+        error!("Enum: start to expand {:?}", #root);
+
+        if !writer.skip_start_end() {
           let struct_start_event = XmlEvent::start_element(#root);
           let _ret = writer.write(struct_start_event);
         }
@@ -152,10 +150,11 @@ pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
           #write_enum_content
         }
 
-        if !skip_start_end {
+        if !writer.skip_start_end() {
           let struct_end_event = XmlEvent::end_element();
           let _ret = writer.write(struct_end_event);
         }
+        writer.set_skip_start_end(false);
         Ok(())
       }
     }

@@ -3,24 +3,17 @@ extern crate yaserde;
 #[macro_use]
 extern crate yaserde_derive;
 extern crate xml;
+#[macro_use]
+extern crate log;
 
-use std::str;
-use std::io::Cursor;
 use std::io::Write;
-use xml::writer::EventWriter;
 use yaserde::YaSerialize;
+use yaserde::ser::to_string;
 
 macro_rules! convert_and_validate {
   ($model:expr, $content:expr) => (
-    let mut buf = Cursor::new(Vec::new());
-    let mut writer = EventWriter::new(&mut buf);
-    let _status = $model.derive_serialize(&mut writer, false);
-
-    let buffer = writer.into_inner();
-    let cursor = buffer.get_ref();
-
-    let data = str::from_utf8(cursor).expect("Found invalid UTF-8");
-    assert_eq!(data, $content);
+    let data : Result<String, String> = to_string(&$model);
+    assert_eq!(data, Ok(String::from($content)));
   )
 }
 
@@ -36,7 +29,7 @@ fn ser_basic() {
     item: "something".to_string()
   };
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><item>something</item></base>".to_string();
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><item>something</item></base>";
   convert_and_validate!(model, content);
 }
 
@@ -55,7 +48,7 @@ fn ser_list_of_items() {
     ]
   };
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><items>something1</items><items>something2</items></base>".to_string();
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><items>something1</items><items>something2</items></base>";
   convert_and_validate!(model, content);
 
 
@@ -263,5 +256,30 @@ fn ser_enum() {
   };
 
   let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><custom><enabled>true</enabled><color><red>0</red><green>128</green><blue>255</blue></color><alpha>Opaque</alpha><alphas>Opaque</alphas><alphas>Transparent</alphas></custom></color></base>";
+  convert_and_validate!(model, content);
+}
+
+
+#[test]
+fn ser_attribute_enum() {
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(root="base")]
+  pub struct XmlStruct {
+    #[yaserde(attribute)]
+    color: Color
+  }
+
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(root="color")]
+  pub enum Color {
+    #[yaserde(rename="pink")]
+    Pink,
+  }
+
+  let model = XmlStruct{
+    color: Color::Pink
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base color=\"pink\" />";
   convert_and_validate!(model, content);
 }

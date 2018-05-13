@@ -14,6 +14,7 @@ readme = "../README.md"
 yaserde_derive = { version = "0.1", path = "../yaserde_derive", optional = true }
 regex = "0.2"
 xml-rs = "0.7.0"
+log = "0.4.1"
 
 [dev-dependencies]
 yaserde_derive = { version = "0.1", path = "../yaserde_derive" }

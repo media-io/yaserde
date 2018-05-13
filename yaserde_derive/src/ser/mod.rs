@@ -3,7 +3,6 @@ pub mod expand_enum;
 pub mod expand_struct;
 
 use attribute;
-
 use proc_macro2::Span;
 use quote;
 use syn;

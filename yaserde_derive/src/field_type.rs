@@ -51,30 +51,17 @@ pub fn get_field_type(field: &syn::Field) -> Option<FieldType> {
 }
 
 fn get_vec_type(t: &syn::PathSegment) -> Option<syn::Ident> {
-  match t.arguments {
-    syn::PathArguments::AngleBracketed(ref args) => {
-      match args.args.first() {
-        Some(Pair::End(tt)) => {
-          match tt {
-            &syn::GenericArgument::Type(ref argument) => {
-              match argument {
-                &Path(ref path2) => {
-                  match path2.path.segments.first() {
-                    Some(Pair::End(ttt)) => {
-                      Some(ttt.ident)
-                    },
-                    _ => None
-                  }
-                },
-                _ => None
-              }
-            },
-            _ => None
+  if let syn::PathArguments::AngleBracketed(ref args) = t.arguments {
+    if let Some(Pair::End(tt)) = args.args.first() {
+      if let &syn::GenericArgument::Type(ref argument) = tt {
+        if let &Path(ref path2) = argument {
+          if let Some(Pair::End(ttt)) = path2.path.segments.first() {
+            return Some(ttt.ident)
           }
-        },
-        _ => None
+        }
       }
-    },
-    _ => None
+    }
   }
+
+  None
 }

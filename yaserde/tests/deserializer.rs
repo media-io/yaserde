@@ -3,16 +3,16 @@ extern crate yaserde;
 #[macro_use]
 extern crate yaserde_derive;
 extern crate xml;
+#[macro_use]
+extern crate log;
 
 use std::io::Read;
-use xml::reader::EventReader;
 use yaserde::YaDeserialize;
+use yaserde::de::from_str;
 
 macro_rules! convert_and_validate {
   ($content:expr, $struct:tt, $model:expr) => {
-    let mut parser = EventReader::from_str($content);
-
-    let loaded = $struct::derive_deserialize(&mut parser, None);
+    let loaded : Result<$struct, String> = from_str($content);
     assert_eq!(loaded, Ok($model));
   }
 }
@@ -20,54 +20,59 @@ macro_rules! convert_and_validate {
 #[test]
 fn de_basic() {
   #[derive(YaDeserialize, PartialEq, Debug)]
-  #[yaserde(root="base")]
-  pub struct XmlStruct {
-    item: String
+  #[yaserde(root="book")]
+  pub struct Book {
+    author: String,
+    title: String,
   }
 
-  let content = "<base><item>something</item></base>";
-  convert_and_validate!(content, XmlStruct, XmlStruct{
-    item: "something".to_string()
+  let content = "<book><author>Antoine de Saint-Exupéry</author><title>Little prince</title></book>";
+  convert_and_validate!(content, Book, Book{
+    author: String::from("Antoine de Saint-Exupéry"),
+    title: String::from("Little prince")
+  });
+
+  let content = "<book><title>Little prince</title><author>Antoine de Saint-Exupéry</author></book>";
+  convert_and_validate!(content, Book, Book{
+    author: String::from("Antoine de Saint-Exupéry"),
+    title: String::from("Little prince")
   });
 }
 
 #[test]
 fn de_list_of_items() {
   #[derive(YaDeserialize, PartialEq, Debug)]
-  #[yaserde(root="base")]
-  pub struct XmlStruct {
-    items: Vec<String>
+  #[yaserde(root="library")]
+  pub struct Library {
+    books: Vec<String>
   }
 
-  let content = "<base><items>something1</items><items>something2</items></base>";
-  convert_and_validate!(content, XmlStruct, XmlStruct{
-    items: vec![
-      "something1".to_string(),
-      "something2".to_string()
+  let content = "<library><books>Little Prince</books><books>Harry Potter</books></library>";
+  convert_and_validate!(content, Library, Library{
+    books: vec![
+      String::from("Little Prince"),
+      String::from("Harry Potter")
     ]
   });
 
   #[derive(YaDeserialize, PartialEq, Debug)]
-  #[yaserde(root="base")]
-  pub struct XmlStructOfStruct {
-    items: Vec<SubStruct>
+  #[yaserde(root="libraries")]
+  pub struct Libraries {
+    library: Vec<Library>
   }
 
-
-  #[derive(YaDeserialize, PartialEq, Debug)]
-  #[yaserde(root="items")]
-  pub struct SubStruct {
-    field: String
-  }
-
-  let content = "<base><items><field>something1</field></items><items><field>something2</field></items></base>";
-  convert_and_validate!(content, XmlStructOfStruct, XmlStructOfStruct{
-    items: vec![
-      SubStruct{
-        field: "something1".to_string()
+  let content = "<libraries><library><books>Little Prince</books></library><library><books>Harry Potter</books></library></libraries>";
+  convert_and_validate!(content, Libraries, Libraries{
+    library: vec![
+      Library{
+        books: vec![
+          String::from("Little Prince")
+        ]
       },
-      SubStruct{
-        field: "something2".to_string()
+      Library{
+        books: vec![
+          String::from("Harry Potter")
+        ]
       }
     ]
   });
@@ -190,6 +195,12 @@ fn de_enum() {
   }
 
   #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(root="base")]
+  pub struct Colors {
+    items: Vec<Color>
+  }
+
+  #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root="color")]
   pub enum Color {
     White,
@@ -219,19 +230,58 @@ fn de_enum() {
     }
   }
 
+//   #[derive(YaDeserialize, PartialEq, Debug)]
+//   pub enum Alpha {
+//     Transparent,
+//     Opaque,
+//   }
+
+//   impl Default for Alpha {
+//     fn default() -> Alpha {
+//       Alpha::Transparent
+//     }
+//   }
+
+
+  // let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><background>Black</background></base>";
+  // convert_and_validate!(content, XmlStruct, XmlStruct{
+  //   background: Color::Black
+  // });
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><background>Black</background></base>";
+  convert_and_validate!(content, XmlStruct, XmlStruct{
+    background: Color::Black
+  });
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><items>Black</items><items>White</items></base>";
+  convert_and_validate!(content, Colors, Colors{
+    items: vec![Color::Black, Color::White]
+  });
+}
+
+#[test]
+fn de_attribute_enum() {
   #[derive(YaDeserialize, PartialEq, Debug)]
-  pub enum Alpha {
-    Transparent,
-    Opaque,
+  #[yaserde(root="base")]
+  pub struct XmlStruct {
+    #[yaserde(attribute)]
+    background: Color
   }
 
-  impl Default for Alpha {
-    fn default() -> Alpha {
-      Alpha::Transparent
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(root="color")]
+  pub enum Color {
+    White,
+    Black,
+  }
+
+  impl Default for Color {
+    fn default() -> Color {
+      Color::White
     }
   }
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><background>Black</background></base>";
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base background=\"Black\" />";
   convert_and_validate!(content, XmlStruct, XmlStruct{
     background: Color::Black
   });

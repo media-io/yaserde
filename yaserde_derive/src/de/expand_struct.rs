@@ -7,17 +7,19 @@ use syn::DataStruct;
 use proc_macro2::Span;
 
 pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
-  let variables : Tokens = data_struct.fields.iter().map(|ref field|
+  let variables: Tokens = data_struct.fields.iter().map(|ref field|
     {
       let label = field.ident;
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
           Some(quote!{
+            #[allow(unused_mut)]
             let mut #label : String = "".to_string();
           })
         },
         Some(FieldType::FieldTypeStruct{struct_name}) => {
           Some(quote!{
+            #[allow(unused_mut, non_snake_case, non_camel_case_types)]
             let mut #label : #struct_name = #struct_name::default();
           })
         },
@@ -26,11 +28,13 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
           match unsafe{dt.as_ref()} {
             Some(&FieldType::FieldTypeString) => {
               Some(quote!{
+                #[allow(unused_mut)]
                 let mut #label : Vec<String> = vec![];
               })
             },
             Some(&FieldType::FieldTypeStruct{struct_name}) => {
               Some(quote!{
+                #[allow(unused_mut)]
                 let mut #label : Vec<#struct_name> = vec![];
               })
             },
@@ -45,114 +49,42 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
     .map(|x| x.unwrap())
     .fold(Tokens::new(), |mut sum, val| {sum.append_all(val); sum});
 
-  let attributes_loading: Tokens = data_struct.fields.iter().map(|ref field|
-    match get_field_type(field) {
-      Some(FieldType::FieldTypeString) => {
-        let label = field.ident;
-        let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-
-        match (field_attrs.attribute, field_attrs.rename) {
-          (true, Some(value)) => {
-            let label_name = Ident::new(&format!("{}", value), Span::call_site()).to_string();
-            Some(quote!{
-              match current_attributes {
-                Some(attributes) =>
-                  for attr in attributes {
-                    if attr.name.local_name == #label_name {
-                      #label = attr.value.to_owned();
-                    }
-                  },
-                None => {},
-              }
-            })
-          },
-          (true, None) => {
-            let label_name = field.ident.unwrap().to_string();
-            Some(quote!{
-              match current_attributes {
-                Some(attributes) =>
-                  for attr in attributes {
-                    if attr.name.local_name == #label_name {
-                      #label = attr.value.to_owned();
-                    }
-                  },
-                None => {},
-              }
-            })
-          }
-          _ => None
-        }
-      }
-      _ => {
-        None
-      }
-    })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut sum, val| {sum.append_all(val); sum});
-
-  let assign_text_field: Tokens = data_struct.fields.iter().map(|ref field|
-    match get_field_type(field) {
-      Some(FieldType::FieldTypeString) => {
-        let label = field.ident;
-        let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-
-        match field_attrs.text {
-          true => {
-            Some(quote!{
-              #label = characters_content.to_owned();
-            })
-          },
-          false => None
-        }
-      }
-      _ => {
-        None
-      }
-    })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut sum, val| {sum.append_all(val); sum});
-
-  let fields : Tokens = data_struct.fields.iter().map(|ref field|
+  let field_visitors: Tokens = data_struct.fields.iter().map(|ref field|
     {
-      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
       let label = field.ident;
-      let renamed_label =
-        match field_attrs.rename {
-          Some(value) => Some(Ident::new(&format!("{}", value), Span::call_site())),
-          None => field.ident
-        };
+      let label_name = label.unwrap().to_string();
+      let visitor_label = Ident::new(&format!("__Visitor{}", label_name), Span::call_site());
 
-      let label_name = renamed_label.unwrap().to_string();
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
           Some(quote!{
-            #label_name => {
-              match read.next() {
-                Ok(xml::reader::XmlEvent::Characters(characters_content)) => {
-                  #label = characters_content.trim().to_string();
-                },
-                _ => {},
+            #[allow(non_snake_case, non_camel_case_types)]
+            struct #visitor_label;
+            impl<'de> Visitor<'de> for #visitor_label {
+              type Value = String;
+
+              fn visit_str(self, v: &str) -> Result<Self::Value, String> {
+                Ok(String::from(v))
               }
-            },
+            }
           })
         },
         Some(FieldType::FieldTypeStruct{struct_name}) => {
-          let struct_ident = Ident::new(&format!("{}", struct_name), Span::def_site());
+          let struct_id = struct_name.to_string();
+          let struct_ident = Ident::new(&format!("__Visitor_{}_{}", label_name, struct_name), Span::call_site());
 
           Some(quote!{
-            #label_name => {
-              match #struct_ident::derive_deserialize(read, Some(&attributes)) {
-                Ok(parsed_structure) => {
-                  prev_level -= 1;
-                  #label = parsed_structure;
-                },
-                Err(msg) => {
-                  return Err(msg);
-                },
+            #[allow(non_snake_case, non_camel_case_types)]
+            struct #struct_ident;
+            impl<'de> Visitor<'de> for #struct_ident {
+              type Value = #struct_name;
+
+              fn visit_str(self, v: &str) -> Result<Self::Value, String> {
+                let content = "<".to_string() + #struct_id + ">" + v + "</" + #struct_id + ">";
+                let value : Result<#struct_name, String> = yaserde::de::from_str(&content);
+                value
               }
-            },
+            }
           })
         },
         Some(FieldType::FieldTypeVec{data_type}) => {
@@ -160,34 +92,30 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
           match unsafe{dt.as_ref()} {
             Some(&FieldType::FieldTypeString) => {
               Some(quote!{
-                #label_name => {
-                  match read.next() {
-                    Ok(xml::reader::XmlEvent::Characters(characters_content)) => {
-                      #label.push(characters_content.trim().to_string());
-                    },
-                    _ => {},
+                #[allow(non_snake_case, non_camel_case_types)]
+                struct #visitor_label;
+                impl<'de> Visitor<'de> for #visitor_label {
+                  type Value = String;
+
+                  fn visit_str(self, v: &str) -> Result<Self::Value, String> {
+                    Ok(String::from(v))
                   }
-                },
+                }
               })
-            },
+            }
             Some(&FieldType::FieldTypeStruct{struct_name}) => {
               let struct_ident = Ident::new(&format!("{}", struct_name), Span::def_site());
               Some(quote!{
-                #label_name => {
-                  match #struct_ident::derive_deserialize(read, Some(&attributes)) {
-                    Ok(parsed_item) => {
-                      prev_level -= 1;
-                      #label.push(parsed_item);
-                    },
-                    Err(msg) => {
-                      return Err(msg);
-                    },
-                  }
-                },
+                #[allow(non_snake_case, non_camel_case_types)]
+                struct #visitor_label;
+                impl<'de> Visitor<'de> for #visitor_label {
+                  type Value = #struct_ident;
+                }
               })
-            },
-            Some(&FieldType::FieldTypeVec{..}) => {unimplemented!();},
-            None => {unimplemented!();},
+            }
+            _ => {
+              None
+            }
           }
         },
         _ => None
@@ -197,7 +125,197 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
     .map(|x| x.unwrap())
     .fold(Tokens::new(), |mut sum, val| {sum.append_all(val); sum});
 
-  let struct_builder : Tokens = data_struct.fields.iter().map(|ref field|
+  let call_visitors: Tokens = data_struct.fields.iter().map(|ref field|
+    {
+      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
+      let label = field.ident;
+
+      if field_attrs.attribute {
+        return None;
+      }
+
+      let label_name =
+        if let Some(value) = field_attrs.rename {
+          Ident::new(&format!("{}", value), Span::call_site()).to_string()
+        } else {
+          field.ident.unwrap().to_string()
+        };
+
+      let visitor_label = Ident::new(&format!("__Visitor{}", label_name), Span::call_site());
+
+      match get_field_type(field) {
+        Some(FieldType::FieldTypeString) => {
+          Some(quote!{
+            #label_name => {
+              let visitor = #visitor_label{};
+
+              if let XmlEvent::StartElement { .. } = *reader.peek()? {
+                reader.set_map_value()
+              }
+
+              let result = reader.read_inner_value::<String, _>(|reader| {
+                if let XmlEvent::EndElement { .. } = *reader.peek()? {
+                  return visitor.visit_str("");
+                }
+
+                if let Ok(XmlEvent::Characters(s)) = reader.next() {
+                  visitor.visit_str(&s)
+                } else {
+                  Err(format!("unable to parse content for {}", #label_name))
+                }
+              });
+
+              if let Ok(value) = result {
+                #label = value
+              }
+            }
+          })
+        },
+        Some(FieldType::FieldTypeStruct{struct_name}) => {
+          Some(quote!{
+            #label_name => {
+              reader.set_map_value();
+              match #struct_name::deserialize(reader) {
+                Ok(parsed_item) => {
+                  #label = parsed_item;
+                  let _root = reader.next();
+                },
+                Err(msg) => {
+                  return Err(msg);
+                },
+              }
+            }
+          })
+        },
+        Some(FieldType::FieldTypeVec{data_type}) => {
+          let dt = Box::into_raw(data_type);
+          match unsafe{dt.as_ref()} {
+            Some(&FieldType::FieldTypeString) => {
+              Some(quote!{
+                #label_name => {
+                  let visitor = #visitor_label{};
+                  if let XmlEvent::StartElement { .. } = *reader.peek()? {
+                    reader.set_map_value()
+                  }
+
+                  let result = reader.read_inner_value::<String, _>(|reader| {
+                    if let XmlEvent::EndElement { .. } = *reader.peek()? {
+                      return visitor.visit_str("");
+                    }
+
+                    if let Ok(XmlEvent::Characters(s)) = reader.next() {
+                      visitor.visit_str(&s)
+                    } else {
+                      Err(format!("unable to parse content for {}", #label_name))
+                    }
+                  });
+
+                  if let Ok(value) = result {
+                    #label.push(value)
+                  }
+                }
+              })
+            }
+            Some(&FieldType::FieldTypeStruct{struct_name}) => {
+              let struct_ident = Ident::new(&format!("{}", struct_name), Span::def_site());
+              Some(quote!{
+                #label_name => {
+                  reader.set_map_value();
+                  match #struct_ident::deserialize(reader) {
+                    Ok(parsed_item) => {
+                      #label.push(parsed_item);
+                      let _root = reader.next();
+                    },
+                    Err(msg) => {
+                      return Err(msg);
+                    },
+                  }
+                }
+              })
+            }
+            _ => unimplemented!()
+          }
+        },
+        _ => None
+      }
+    })
+    .filter(|x| x.is_some())
+    .map(|x| x.unwrap())
+    .fold(Tokens::new(), |mut sum, val| {sum.append_all(val); sum});
+
+  let attributes_loading: Tokens = data_struct.fields.iter().map(|ref field| {
+    let field_attrs = YaSerdeAttribute::parse(&field.attrs);
+    if !field_attrs.attribute {
+      return None;
+    }
+
+    let label = field.ident;
+    let field_ident = field.ident.unwrap().to_string();
+    let label_name =
+      if let Some(value) = field_attrs.rename {
+        Ident::new(&format!("{}", value), Span::call_site()).to_string()
+      } else {
+        field.ident.unwrap().to_string()
+      };
+
+    match get_field_type(field) {
+      Some(FieldType::FieldTypeString) => {
+        Some(quote!{
+          for attr in attributes {
+            if attr.name.local_name == #label_name {
+              #label = attr.value.to_owned();
+            }
+          }
+        })
+      }
+      Some(FieldType::FieldTypeStruct{struct_name}) => {
+        let struct_ident = Ident::new(&format!("__Visitor_{}_{}", field_ident, struct_name), Span::call_site());
+
+        Some(quote!{
+          for attr in attributes {
+            if attr.name.local_name == #label_name {
+              let visitor = #struct_ident{};
+              match visitor.visit_str(&attr.value) {
+                Ok(value) => {#label = value;}
+                Err(msg) => {return Err(msg);}
+              }
+            }
+          }
+        })
+      }
+      _ => {
+        None
+      }
+    }})
+    .filter(|x| x.is_some())
+    .map(|x| x.unwrap())
+    .fold(Tokens::new(), |mut sum, val| {sum.append_all(val); sum});
+
+  let set_text: Tokens = data_struct.fields.iter().map(|ref field|
+    {
+      let label = field.ident;
+      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
+
+      match get_field_type(field) {
+        Some(FieldType::FieldTypeString) => {
+          if field_attrs.text {
+            Some(quote!{
+              #label = text_content.to_owned();
+            })
+          } else {
+            None
+          }
+        },
+        Some(FieldType::FieldTypeStruct{..}) |
+        Some(FieldType::FieldTypeVec{..})|
+        None => None,
+      }
+    })
+    .filter(|x| x.is_some())
+    .map(|x| x.unwrap())
+    .fold(Tokens::new(), |mut tokens, token| {tokens.append_all(token); tokens});
+
+  let struct_builder: Tokens = data_struct.fields.iter().map(|ref field|
     {
       let label = field.ident;
 
@@ -217,64 +335,52 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
 
   quote! {
     use xml::reader::XmlEvent;
+    use yaserde::Visitor;
 
     impl YaDeserialize for #name {
       #[allow(unused_variables)]
-      fn derive_deserialize<R: Read>(read: &mut xml::EventReader<R>, parent_attributes: Option<&Vec<xml::attribute::OwnedAttribute>>) -> Result<Self, String> {
-        let mut prev_level = 0;
-        let mut current_level = 0;
-
-        println!("Struct: start to parse {}",  #root);
+      fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, String> {
+        let named_element =
+          if let XmlEvent::StartElement{name, ..} = reader.peek()?.to_owned() {
+            name.local_name.to_owned()
+          } else {
+            String::from(#root)
+          };
+        debug!("Struct: start to parse {:?}", named_element);
 
         #variables
-        let current_attributes = parent_attributes;
-        #attributes_loading
+        #field_visitors
 
         loop {
-          match read.next() {
-            Ok(XmlEvent::StartDocument{..}) => {
-            },
-            Ok(XmlEvent::EndDocument) => {
-              break;
-            },
-            Ok(XmlEvent::StartElement{name, attributes, namespace: _namespace}) => {
-              println!("Struct: {} | {} - {}: {}", #root, prev_level, current_level, name.local_name.as_str());
-              if prev_level == current_level {
-                match name.local_name.as_str() {
-                  #root => {
-                    let root_attributes = attributes.clone();
-                    let current_attributes = Some(&root_attributes);
-                    #attributes_loading
-
-                    current_level += 1;
-                  },
-                  #fields
-                  _ => {}
-                };
+          match reader.peek()?.to_owned() {
+            XmlEvent::StartElement{ref name, ref attributes, ..} => {
+              match name.local_name.as_str() {
+                #call_visitors
+                named_element => {
+                  let _root = reader.next();
+                }
+                // name => {
+                //   return Err(format!("unknown key {}", name))
+                // }
               }
-              
-              prev_level += 1;
-            },
-            Ok(XmlEvent::EndElement{name}) => {
-              println!("Struct: end element {}", name);
-              if #root == name.local_name.as_str() {
-                println!("Struct: break for {}", #root);
+              #attributes_loading
+            }
+            XmlEvent::EndElement{ref name} => {
+              if name.local_name == named_element {
                 break;
               }
-              prev_level -= 1;
+              let _root = reader.next();
             }
-            Ok(xml::reader::XmlEvent::Characters(characters_content)) => {
-              if prev_level == current_level {
-                #assign_text_field
-              }
-            },
-            Ok(_event) => {
-            },
-            Err(_msg) => {
-              break;
-            },
+            XmlEvent::Characters(ref text_content) => {
+              #set_text
+              let _root = reader.next();
+            }
+            event => {
+              return Err(format!("unknown event {:?}", event))
+            }
           }
         }
+
         Ok(#name{#struct_builder})
       }
     }
