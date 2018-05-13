@@ -2,12 +2,13 @@
 use attribute::*;
 use field_type::*;
 use quote::Tokens;
+use std::collections::BTreeMap;
 use syn::Fields;
 use syn::Ident;
 use syn::DataEnum;
 use proc_macro2::Span;
 
-pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
+pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String, namespaces: &BTreeMap<String, String>) -> Tokens {
   let write_enum_content : Tokens = data_enum.variants.iter().map(|ref variant|
     {
       let variant_attrs = YaSerdeAttribute::parse(&variant.attrs);
@@ -17,7 +18,12 @@ pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
           None => variant.ident
         };
       let label = variant.ident;
-      let label_name = renamed_label.to_string();
+      let label_name =
+        if let Some(prefix) = variant_attrs.prefix {
+          prefix + ":" + renamed_label.to_string().as_ref()
+        } else {
+          renamed_label.to_string()
+        };
 
       match variant.fields {
         Fields::Unit => {
@@ -133,6 +139,15 @@ pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
     .map(|x| x.unwrap())
     .fold(Tokens::new(), |mut tokens, token| {tokens.append_all(token); tokens});
 
+  let add_namespaces : Tokens = namespaces.iter().map(|(ref prefix, ref namespace)| {
+      Some(quote!(
+        .ns(#prefix, #namespace)
+      ))
+    })
+    .filter(|x| x.is_some())
+    .map(|x| x.unwrap())
+    .fold(Tokens::new(), |mut tokens, token| {tokens.append_all(token); tokens});
+
   quote! {
     use xml::writer::XmlEvent;
 
@@ -142,7 +157,7 @@ pub fn serialize(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
         error!("Enum: start to expand {:?}", #root);
 
         if !writer.skip_start_end() {
-          let struct_start_event = XmlEvent::start_element(#root);
+          let struct_start_event = XmlEvent::start_element(#root)#add_namespaces;
           let _ret = writer.write(struct_start_event);
         }
 

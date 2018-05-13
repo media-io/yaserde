@@ -2,11 +2,33 @@
 use attribute::*;
 use field_type::*;
 use quote::Tokens;
+use std::collections::BTreeMap;
 use syn::Ident;
 use syn::DataStruct;
 use proc_macro2::Span;
 
-pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
+pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String, namespaces: &BTreeMap<String, String>) -> Tokens {
+
+  let validate_namespace : Tokens = namespaces.iter().map(|(ref prefix, ref namespace)| {
+      Some(quote!(
+
+        let mut found = false;
+        for (key, value) in namespace {
+          if #namespace == value {
+            found = true;
+          }
+        }
+        if !found {
+          return Err("bad namespace".to_string());
+        }
+        // println!("{}: {}", #prefix, #namespace);
+      ))
+    })
+    .filter(|x| x.is_some())
+    .map(|x| x.unwrap())
+    .fold(Tokens::new(), |mut tokens, token| {tokens.append_all(token); tokens});
+
+
   let variables: Tokens = data_struct.fields.iter().map(|ref field|
     {
       let label = field.ident;
@@ -353,7 +375,9 @@ pub fn parse(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
 
         loop {
           match reader.peek()?.to_owned() {
-            XmlEvent::StartElement{ref name, ref attributes, ..} => {
+            XmlEvent::StartElement{ref name, ref attributes, ref namespace} => {
+              #validate_namespace
+
               match name.local_name.as_str() {
                 #call_visitors
                 named_element => {

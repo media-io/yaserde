@@ -2,12 +2,13 @@
 use attribute::*;
 use field_type::*;
 use quote::Tokens;
+use std::collections::BTreeMap;
 use syn::Ident;
 use syn::DataStruct;
 use proc_macro2::Span;
 use std::string::ToString;
 
-pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Tokens {
+pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String, namespaces: &BTreeMap<String, String>) -> Tokens {
   let build_attributes : Tokens = data_struct.fields.iter().map(|ref field|
     {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
@@ -21,7 +22,12 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
           None => field.ident
         };
       let label = field.ident;
-      let label_name = renamed_label.unwrap().to_string();
+      let label_name =
+        if let Some(prefix) = field_attrs.prefix {
+          prefix + ":" + renamed_label.unwrap().to_string().as_ref()
+        } else {
+          renamed_label.unwrap().to_string()
+        };
 
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) =>
@@ -53,6 +59,15 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
     .map(|x| x.unwrap())
     .fold(Tokens::new(), |mut tokens, token| {tokens.append_all(token); tokens});
 
+  let add_namespaces : Tokens = namespaces.iter().map(|(ref prefix, ref namespace)| {
+      Some(quote!(
+        .ns(#prefix, #namespace)
+      ))
+    })
+    .filter(|x| x.is_some())
+    .map(|x| x.unwrap())
+    .fold(Tokens::new(), |mut tokens, token| {tokens.append_all(token); tokens});
+
   let struct_inspector : Tokens = data_struct.fields.iter().map(|ref field|
     {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
@@ -73,7 +88,13 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
           Some(value) => Some(Ident::new(&format!("{}", value), Span::call_site())),
           None => field.ident
         };
-      let label_name = renamed_label.unwrap().to_string();
+
+      let label_name =
+        if let Some(prefix) = field_attrs.prefix {
+          prefix + ":" + renamed_label.unwrap().to_string().as_ref()
+        } else {
+          renamed_label.unwrap().to_string()
+        };
 
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) =>
@@ -136,8 +157,6 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
     .map(|x| x.unwrap())
     .fold(Tokens::new(), |mut tokens, token| {tokens.append_all(token); tokens});
 
-  // println!("{:?}", struct_inspector);
-
   quote! {
     use xml::writer::XmlEvent;
 
@@ -147,7 +166,7 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String) -> Token
         error!("Struct: start to expand {:?}", #root);
 
         if !writer.skip_start_end() {
-          let struct_start_event = XmlEvent::start_element(#root)#build_attributes;
+          let struct_start_event = XmlEvent::start_element(#root)#build_attributes#add_namespaces;
           let _ret = writer.write(struct_start_event);
         }
 

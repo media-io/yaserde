@@ -130,21 +130,4 @@ impl<'de, R: Read> Deserializer<R> {
       )))
     }
   }
-
-  // fn prepare_parse_type<V: de::Visitor<'de>>(&mut self) -> Result<String> {
-  //   if let XmlEvent::StartElement { .. } = *self.peek()? {
-  //     self.set_map_value()
-  //   }
-  //   self.read_inner_value::<V, String, _>(|this| {
-  //     if let XmlEvent::EndElement { .. } = *this.peek()? {
-  //       return Err(
-  //         ErrorKind::UnexpectedToken("EndElement".into(), "Characters".into()).into(),
-  //       );
-  //     }
-
-  //     expect!(this.next()?, XmlEvent::Characters(s) => {
-  //       return Ok(s)
-  //     })
-  //   })
-  // }
 }

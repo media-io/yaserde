@@ -2,12 +2,13 @@
 use attribute::*;
 use field_type::*;
 use quote::Tokens;
+use std::collections::BTreeMap;
 use syn::Fields;
 use syn::Ident;
 use syn::DataEnum;
 use proc_macro2::Span;
 
-pub fn parse(data_enum: &DataEnum, name: &Ident, root: &String) -> Tokens {
+pub fn parse(data_enum: &DataEnum, name: &Ident, root: &String, namespaces: &BTreeMap<String, String>) -> Tokens {
   let variables : Tokens = data_enum.variants.iter().map(|ref variant|
     {
       match variant.fields {

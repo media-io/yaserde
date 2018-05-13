@@ -19,10 +19,10 @@ pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<quote::Tokens
   let impl_block =
     match data {
       &syn::Data::Struct(ref data_struct) => {
-        expand_struct::parse(data_struct, &name, &root)
+        expand_struct::parse(data_struct, &name, &root, &root_attrs.namespaces)
       },
       &syn::Data::Enum(ref data_enum) => {
-        expand_enum::parse(data_enum, &name, &root)
+        expand_enum::parse(data_enum, &name, &root, &root_attrs.namespaces)
       },
       &syn::Data::Union(ref _data_union) => {
         unimplemented!()

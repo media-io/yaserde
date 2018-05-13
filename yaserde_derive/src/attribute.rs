@@ -3,12 +3,15 @@ use proc_macro2::TokenTreeIter;
 use proc_macro2::TokenNode::*;
 use proc_macro2::Spacing;
 use proc_macro2::Delimiter::Parenthesis;
+use std::collections::BTreeMap;
 use syn::Attribute;
 
 #[derive(Debug, Clone)]
 pub struct YaSerdeAttribute {
   pub root: Option<String>,
   pub rename: Option<String>,
+  pub prefix: Option<String>,
+  pub namespaces: BTreeMap<String, String>,
   pub attribute: bool,
   pub text: bool,
 }
@@ -29,9 +32,11 @@ fn get_value(iter: &mut TokenTreeIter) -> Option<String> {
 
 impl YaSerdeAttribute {
   pub fn parse(attrs: &Vec<Attribute>) -> YaSerdeAttribute {
-    let mut root = None;
-    let mut rename = None;
     let mut attribute = false;
+    let mut namespaces = BTreeMap::new();
+    let mut prefix = None;
+    let mut rename = None;
+    let mut root = None;
     let mut text = false;
 
     for attr in attrs.iter() {
@@ -46,15 +51,31 @@ impl YaSerdeAttribute {
                 match item.kind {
                   Term(t) => {
                     match t.as_str() {
-                      "root" => {
-                        root = get_value(&mut attr_iter);
+                      "attribute" => {
+                        attribute = true;
                       },
+                      "namespace" => {
+                        if let Some(namespace) = get_value(&mut attr_iter) {
+
+                          let splitted : Vec<&str> = namespace.split(": ").collect();
+                          if splitted.len() == 2 {
+                            namespaces.insert(splitted[0].to_owned(), splitted[1].to_owned());
+                          }
+                          if splitted.len() == 1 {
+                            namespaces.insert("".to_owned(), splitted[0].to_owned());
+                          }
+                          
+                        }
+                      },
+                      "prefix" => {
+                        prefix = get_value(&mut attr_iter);
+                      }
                       "rename" => {
                         rename = get_value(&mut attr_iter);
                       },
-                      "attribute" => {
-                        attribute = true;
-                      }
+                      "root" => {
+                        root = get_value(&mut attr_iter);
+                      },
                       "text" => {
                         text = true;
                       }
@@ -73,9 +94,11 @@ impl YaSerdeAttribute {
     }
 
     YaSerdeAttribute {
-      root: root,
-      rename: rename,
       attribute: attribute,
+      namespaces: namespaces,
+      prefix: prefix,
+      rename: rename,
+      root: root,
       text: text,
     }
   }
