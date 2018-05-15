@@ -100,21 +100,29 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String, namespac
         Some(FieldType::FieldTypeString) =>
           Some(quote!{
             let start_event = XmlEvent::start_element(#label_name);
-            let data_event = XmlEvent::characters(&self.#label);
-            let end_event = XmlEvent::end_element();
             let _ret = writer.write(start_event);
+
+            let data_event = XmlEvent::characters(&self.#label);
             let _ret = writer.write(data_event);
+
+            let end_event = XmlEvent::end_element();
             let _ret = writer.write(end_event);
           }),
         Some(FieldType::FieldTypeStruct{..}) =>
           Some(quote!{
-            writer.set_skip_start_end(false);
+            let start_event = XmlEvent::start_element(#label_name);
+            let _ret = writer.write(start_event);
+
+            writer.set_skip_start_end(true);
             match self.#label.serialize(writer) {
               Ok(()) => {},
               Err(msg) => {
                 return Err(msg);
               },
             };
+
+            let struct_end_event = XmlEvent::end_element();
+            let _ret = writer.write(struct_end_event);
           }),
         Some(FieldType::FieldTypeVec{data_type}) => {
           let dt = Box::into_raw(data_type);
@@ -135,6 +143,10 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String, namespac
             },
             Some(&FieldType::FieldTypeStruct{..}) => {
               Some(quote!{
+
+                let start_event = XmlEvent::start_element(#label_name);
+                let _ret = writer.write(start_event);
+
                 for item in &self.#label {
                   writer.set_skip_start_end(false);
                   match item.serialize(writer) {
@@ -144,6 +156,8 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String, namespac
                     },
                   };
                 }
+                let end_event = XmlEvent::end_element();
+                let _ret = writer.write(end_event);
               })
             },
             Some(&FieldType::FieldTypeVec{..}) => {unimplemented!();},
@@ -164,15 +178,15 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String, namespac
       #[allow(unused_variables)]
       fn serialize<W: Write>(&self, writer: &mut yaserde::ser::Serializer<W>) -> Result<(), String> {
         error!("Struct: start to expand {:?}", #root);
-
-        if !writer.skip_start_end() {
+        let skip = writer.skip_start_end();
+        if !skip {
           let struct_start_event = XmlEvent::start_element(#root)#build_attributes#add_namespaces;
           let _ret = writer.write(struct_start_event);
         }
 
         #struct_inspector
 
-        if !writer.skip_start_end() {
+        if !skip {
           let struct_end_event = XmlEvent::end_element();
           let _ret = writer.write(struct_end_event);
         }
