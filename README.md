@@ -28,6 +28,7 @@ This library will support XML de/ser-ializing with all specific features.
 - [x] **attribute**: this field is defined as an attribute
 - [x] **text**: this field match to the text content
 - [x] **namespace**: defines the namespace of the field
+- [ ] **flatten**: Flatten the contents of the field
 
 ## Custom De/Ser-rializer
 
