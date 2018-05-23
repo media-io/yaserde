@@ -1,5 +1,11 @@
-# yaserde
-Yet Another Serializer/Deserializer
+# yaserde &emsp; [![Build Status]][travis] [![Latest Version]][crates.io]
+
+[Build Status]: https://travis-ci.org/media-io/yaserde.svg?branch=master
+[travis]: https://travis-ci.org/media-io/yaserde
+[Latest Version]: https://img.shields.io/crates/v/yaserde.svg
+[crates.io]: https://crates.io/crates/serde
+
+**Yet Another Serializer/Deserializer specialized for XML**
 
 ## Goal
 This library will support XML de/ser-ializing with all specific features.
