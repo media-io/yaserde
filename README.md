@@ -18,8 +18,8 @@ This library will support XML de/ser-ializing with all specific features.
 - [ ] Enum with complex types
 - [ ] Option
 - [x] String
-- [ ] bool
-- [ ] number (u8, i8, u32, i32, f32, f64)
+- [x] bool
+- [x] number (u8, i8, u32, i32, f32, f64)
 
 ## Decorators
 
