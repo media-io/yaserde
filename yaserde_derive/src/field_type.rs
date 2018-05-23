@@ -62,7 +62,7 @@ fn get_vec_type(t: &syn::PathSegment) -> Option<syn::Ident> {
   if let syn::PathArguments::AngleBracketed(ref args) = t.arguments {
     if let Some(Pair::End(tt)) = args.args.first() {
       if let syn::GenericArgument::Type(ref argument) = *tt {
-        if let Path(ref path2) = argument {
+        if let Path(ref path2) = *argument {
           if let Some(Pair::End(ttt)) = path2.path.segments.first() {
             return Some(ttt.ident);
           }
