@@ -10,7 +10,7 @@ use proc_macro2::Span;
 pub fn serialize(
   data_enum: &DataEnum,
   name: &Ident,
-  root: &String,
+  root: &str,
   namespaces: &BTreeMap<String, String>,
 ) -> Tokens {
   let write_enum_content: Tokens = data_enum
@@ -42,12 +42,12 @@ pub fn serialize(
             .iter()
             .map(|ref field| {
               let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-              if field_attrs.attribute == true {
+              if field_attrs.attribute {
                 return None;
               }
 
               let field_label = field.ident;
-              if field_attrs.text == true {
+              if field_attrs.text {
                 return Some(quote!(
                 let data_event = XmlEvent::characters(&self.#field_label);
                 let _ret = writer.write(data_event);

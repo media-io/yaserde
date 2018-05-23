@@ -13,7 +13,7 @@ pub fn expand_derive_serialize(ast: &syn::DeriveInput) -> Result<quote::Tokens, 
   let data = &ast.data;
 
   let root_attrs = attribute::YaSerdeAttribute::parse(&attrs);
-  let root = root_attrs.clone().root.unwrap_or(name.to_string());
+  let root = root_attrs.clone().root.unwrap_or_else(|| name.to_string());
 
   let root = if let Some(prefix) = root_attrs.prefix {
     prefix + ":" + &root
@@ -21,14 +21,14 @@ pub fn expand_derive_serialize(ast: &syn::DeriveInput) -> Result<quote::Tokens, 
     root
   };
 
-  let impl_block = match data {
-    &syn::Data::Struct(ref data_struct) => {
+  let impl_block = match *data {
+    syn::Data::Struct(ref data_struct) => {
       expand_struct::serialize(data_struct, &name, &root, &root_attrs.namespaces)
     }
-    &syn::Data::Enum(ref data_enum) => {
+    syn::Data::Enum(ref data_enum) => {
       expand_enum::serialize(data_enum, &name, &root, &root_attrs.namespaces)
     }
-    &syn::Data::Union(ref _data_union) => unimplemented!(),
+    syn::Data::Union(ref _data_union) => unimplemented!(),
   };
 
   let dummy_const = Ident::new(

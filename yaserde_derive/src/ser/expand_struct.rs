@@ -10,7 +10,7 @@ use std::string::ToString;
 pub fn serialize(
   data_struct: &DataStruct,
   name: &Ident,
-  root: &String,
+  root: &str,
   namespaces: &BTreeMap<String, String>,
 ) -> Tokens {
   let build_attributes: Tokens = data_struct
@@ -18,7 +18,7 @@ pub fn serialize(
     .iter()
     .map(|ref field| {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-      if field_attrs.attribute == false {
+      if !field_attrs.attribute {
         return None;
       }
 
@@ -90,12 +90,12 @@ pub fn serialize(
     .iter()
     .map(|ref field| {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-      if field_attrs.attribute == true {
+      if field_attrs.attribute {
         return None;
       }
 
       let label = field.ident;
-      if field_attrs.text == true {
+      if field_attrs.text {
         return Some(quote!(
           let data_event = XmlEvent::characters(&self.#label);
           let _ret = writer.write(data_event);

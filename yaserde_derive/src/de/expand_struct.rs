@@ -9,7 +9,7 @@ use proc_macro2::Span;
 pub fn parse(
   data_struct: &DataStruct,
   name: &Ident,
-  root: &String,
+  root: &str,
   namespaces: &BTreeMap<String, String>,
 ) -> Tokens {
   let validate_namespace: Tokens = namespaces
@@ -43,17 +43,19 @@ pub fn parse(
       let label = field.ident;
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
-          build_default_value(&label, quote!{String}, quote!{"".to_string()})
+          build_default_value(&label, &quote!{String}, &quote!{"".to_string()})
         }
-        Some(FieldType::FieldTypeBool) => build_default_value(&label, quote!{bool}, quote!{false}),
-        Some(FieldType::FieldTypeI8) => build_default_value(&label, quote!{i8}, quote!{0}),
-        Some(FieldType::FieldTypeU8) => build_default_value(&label, quote!{u8}, quote!{0}),
-        Some(FieldType::FieldTypeI16) => build_default_value(&label, quote!{i16}, quote!{0}),
-        Some(FieldType::FieldTypeU16) => build_default_value(&label, quote!{u16}, quote!{0}),
-        Some(FieldType::FieldTypeI32) => build_default_value(&label, quote!{i32}, quote!{0}),
-        Some(FieldType::FieldTypeU32) => build_default_value(&label, quote!{u32}, quote!{0}),
-        Some(FieldType::FieldTypeI64) => build_default_value(&label, quote!{i64}, quote!{0}),
-        Some(FieldType::FieldTypeU64) => build_default_value(&label, quote!{u64}, quote!{0}),
+        Some(FieldType::FieldTypeBool) => {
+          build_default_value(&label, &quote!{bool}, &quote!{false})
+        }
+        Some(FieldType::FieldTypeI8) => build_default_value(&label, &quote!{i8}, &quote!{0}),
+        Some(FieldType::FieldTypeU8) => build_default_value(&label, &quote!{u8}, &quote!{0}),
+        Some(FieldType::FieldTypeI16) => build_default_value(&label, &quote!{i16}, &quote!{0}),
+        Some(FieldType::FieldTypeU16) => build_default_value(&label, &quote!{u16}, &quote!{0}),
+        Some(FieldType::FieldTypeI32) => build_default_value(&label, &quote!{i32}, &quote!{0}),
+        Some(FieldType::FieldTypeU32) => build_default_value(&label, &quote!{u32}, &quote!{0}),
+        Some(FieldType::FieldTypeI64) => build_default_value(&label, &quote!{i64}, &quote!{0}),
+        Some(FieldType::FieldTypeU64) => build_default_value(&label, &quote!{u64}, &quote!{0}),
         Some(FieldType::FieldTypeStruct { struct_name }) => Some(quote!{
           #[allow(unused_mut, non_snake_case, non_camel_case_types)]
           let mut #label : #struct_name = #struct_name::default();
@@ -62,34 +64,34 @@ pub fn parse(
           let dt = Box::into_raw(data_type);
           match unsafe { dt.as_ref() } {
             Some(&FieldType::FieldTypeString) => {
-              build_default_value(&label, quote!{Vec<String>}, quote!{vec![]})
+              build_default_value(&label, &quote!{Vec<String>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeBool) => {
-              build_default_value(&label, quote!{Vec<bool>}, quote!{vec![]})
+              build_default_value(&label, &quote!{Vec<bool>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeI8) => {
-              build_default_value(&label, quote!{Vec<i8>}, quote!{vec![]})
+              build_default_value(&label, &quote!{Vec<i8>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeU8) => {
-              build_default_value(&label, quote!{Vec<u8>}, quote!{vec![]})
+              build_default_value(&label, &quote!{Vec<u8>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeI16) => {
-              build_default_value(&label, quote!{Vec<i16>}, quote!{vec![]})
+              build_default_value(&label, &quote!{Vec<i16>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeU16) => {
-              build_default_value(&label, quote!{Vec<u16>}, quote!{vec![]})
+              build_default_value(&label, &quote!{Vec<u16>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeI32) => {
-              build_default_value(&label, quote!{Vec<i32>}, quote!{vec![]})
+              build_default_value(&label, &quote!{Vec<i32>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeU32) => {
-              build_default_value(&label, quote!{Vec<u32>}, quote!{vec![]})
+              build_default_value(&label, &quote!{Vec<u32>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeI64) => {
-              build_default_value(&label, quote!{Vec<i64>}, quote!{vec![]})
+              build_default_value(&label, &quote!{Vec<i64>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeU64) => {
-              build_default_value(&label, quote!{Vec<u64>}, quote!{vec![]})
+              build_default_value(&label, &quote!{Vec<u64>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeStruct { struct_name }) => Some(quote!{
               #[allow(unused_mut)]
@@ -129,43 +131,43 @@ pub fn parse(
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
           let visitor = Ident::new("visit_str", Span::call_site());
-          build_declare_visitor(quote!{String}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{String}, &visitor, &visitor_label)
         }
         Some(FieldType::FieldTypeBool) => {
           let visitor = Ident::new("visit_bool", Span::call_site());
-          build_declare_visitor(quote!{bool}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{bool}, &visitor, &visitor_label)
         }
         Some(FieldType::FieldTypeI8) => {
           let visitor = Ident::new("visit_i8", Span::call_site());
-          build_declare_visitor(quote!{i8}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{i8}, &visitor, &visitor_label)
         }
         Some(FieldType::FieldTypeU8) => {
           let visitor = Ident::new("visit_u8", Span::call_site());
-          build_declare_visitor(quote!{u8}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{u8}, &visitor, &visitor_label)
         }
         Some(FieldType::FieldTypeI16) => {
           let visitor = Ident::new("visit_i16", Span::call_site());
-          build_declare_visitor(quote!{i16}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{i16}, &visitor, &visitor_label)
         }
         Some(FieldType::FieldTypeU16) => {
           let visitor = Ident::new("visit_u16", Span::call_site());
-          build_declare_visitor(quote!{u16}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{u16}, &visitor, &visitor_label)
         }
         Some(FieldType::FieldTypeI32) => {
           let visitor = Ident::new("visit_i32", Span::call_site());
-          build_declare_visitor(quote!{i32}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{i32}, &visitor, &visitor_label)
         }
         Some(FieldType::FieldTypeU32) => {
           let visitor = Ident::new("visit_u32", Span::call_site());
-          build_declare_visitor(quote!{u32}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{u32}, &visitor, &visitor_label)
         }
         Some(FieldType::FieldTypeI64) => {
           let visitor = Ident::new("visit_i64", Span::call_site());
-          build_declare_visitor(quote!{i64}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{i64}, &visitor, &visitor_label)
         }
         Some(FieldType::FieldTypeU64) => {
           let visitor = Ident::new("visit_u64", Span::call_site());
-          build_declare_visitor(quote!{u64}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{u64}, &visitor, &visitor_label)
         }
         Some(FieldType::FieldTypeStruct { struct_name }) => {
           let struct_id = struct_name.to_string();
@@ -193,43 +195,43 @@ pub fn parse(
           match unsafe { dt.as_ref() } {
             Some(&FieldType::FieldTypeString) => {
               let visitor = Ident::new("visit_str", Span::call_site());
-              build_declare_visitor(quote!{String}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{String}, &visitor, &visitor_label)
             }
             Some(&FieldType::FieldTypeBool) => {
               let visitor = Ident::new("visit_bool", Span::call_site());
-              build_declare_visitor(quote!{bool}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{bool}, &visitor, &visitor_label)
             }
             Some(&FieldType::FieldTypeI8) => {
               let visitor = Ident::new("visit_i8", Span::call_site());
-              build_declare_visitor(quote!{i8}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{i8}, &visitor, &visitor_label)
             }
             Some(&FieldType::FieldTypeU8) => {
               let visitor = Ident::new("visit_u8", Span::call_site());
-              build_declare_visitor(quote!{u8}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{u8}, &visitor, &visitor_label)
             }
             Some(&FieldType::FieldTypeI16) => {
               let visitor = Ident::new("visit_i16", Span::call_site());
-              build_declare_visitor(quote!{i16}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{i16}, &visitor, &visitor_label)
             }
             Some(&FieldType::FieldTypeU16) => {
               let visitor = Ident::new("visit_u16", Span::call_site());
-              build_declare_visitor(quote!{u16}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{u16}, &visitor, &visitor_label)
             }
             Some(&FieldType::FieldTypeI32) => {
               let visitor = Ident::new("visit_i32", Span::call_site());
-              build_declare_visitor(quote!{i32}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{i32}, &visitor, &visitor_label)
             }
             Some(&FieldType::FieldTypeU32) => {
               let visitor = Ident::new("visit_u32", Span::call_site());
-              build_declare_visitor(quote!{u32}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{u32}, &visitor, &visitor_label)
             }
             Some(&FieldType::FieldTypeI64) => {
               let visitor = Ident::new("visit_i64", Span::call_site());
-              build_declare_visitor(quote!{i64}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{i64}, &visitor, &visitor_label)
             }
             Some(&FieldType::FieldTypeU64) => {
               let visitor = Ident::new("visit_u64", Span::call_site());
-              build_declare_visitor(quote!{u64}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{u64}, &visitor, &visitor_label)
             }
             Some(&FieldType::FieldTypeStruct { struct_name }) => {
               let struct_ident = Ident::new(&format!("{}", struct_name), Span::def_site());
@@ -277,9 +279,9 @@ pub fn parse(
         Some(FieldType::FieldTypeString) => {
           let visitor = Ident::new("visit_str", Span::call_site());
           build_call_visitor(
-            quote!{String},
+            &quote!{String},
             &visitor,
-            quote!{= value},
+            &quote!{= value},
             &visitor_label,
             &label,
             &label_name,
@@ -288,9 +290,9 @@ pub fn parse(
         Some(FieldType::FieldTypeBool) => {
           let visitor = Ident::new("visit_bool", Span::call_site());
           build_call_visitor(
-            quote!{bool},
+            &quote!{bool},
             &visitor,
-            quote!{= value},
+            &quote!{= value},
             &visitor_label,
             &label,
             &label_name,
@@ -299,9 +301,9 @@ pub fn parse(
         Some(FieldType::FieldTypeI8) => {
           let visitor = Ident::new("visit_i8", Span::call_site());
           build_call_visitor(
-            quote!{i8},
+            &quote!{i8},
             &visitor,
-            quote!{= value},
+            &quote!{= value},
             &visitor_label,
             &label,
             &label_name,
@@ -310,9 +312,9 @@ pub fn parse(
         Some(FieldType::FieldTypeU8) => {
           let visitor = Ident::new("visit_u8", Span::call_site());
           build_call_visitor(
-            quote!{u8},
+            &quote!{u8},
             &visitor,
-            quote!{= value},
+            &quote!{= value},
             &visitor_label,
             &label,
             &label_name,
@@ -321,9 +323,9 @@ pub fn parse(
         Some(FieldType::FieldTypeU16) => {
           let visitor = Ident::new("visit_u16", Span::call_site());
           build_call_visitor(
-            quote!{u16},
+            &quote!{u16},
             &visitor,
-            quote!{= value},
+            &quote!{= value},
             &visitor_label,
             &label,
             &label_name,
@@ -332,9 +334,9 @@ pub fn parse(
         Some(FieldType::FieldTypeI16) => {
           let visitor = Ident::new("visit_i16", Span::call_site());
           build_call_visitor(
-            quote!{i16},
+            &quote!{i16},
             &visitor,
-            quote!{= value},
+            &quote!{= value},
             &visitor_label,
             &label,
             &label_name,
@@ -343,9 +345,9 @@ pub fn parse(
         Some(FieldType::FieldTypeU32) => {
           let visitor = Ident::new("visit_u32", Span::call_site());
           build_call_visitor(
-            quote!{u32},
+            &quote!{u32},
             &visitor,
-            quote!{= value},
+            &quote!{= value},
             &visitor_label,
             &label,
             &label_name,
@@ -354,9 +356,9 @@ pub fn parse(
         Some(FieldType::FieldTypeI32) => {
           let visitor = Ident::new("visit_i32", Span::call_site());
           build_call_visitor(
-            quote!{i32},
+            &quote!{i32},
             &visitor,
-            quote!{= value},
+            &quote!{= value},
             &visitor_label,
             &label,
             &label_name,
@@ -365,9 +367,9 @@ pub fn parse(
         Some(FieldType::FieldTypeU64) => {
           let visitor = Ident::new("visit_u64", Span::call_site());
           build_call_visitor(
-            quote!{u64},
+            &quote!{u64},
             &visitor,
-            quote!{= value},
+            &quote!{= value},
             &visitor_label,
             &label,
             &label_name,
@@ -376,9 +378,9 @@ pub fn parse(
         Some(FieldType::FieldTypeI64) => {
           let visitor = Ident::new("visit_i64", Span::call_site());
           build_call_visitor(
-            quote!{i64},
+            &quote!{i64},
             &visitor,
-            quote!{= value},
+            &quote!{= value},
             &visitor_label,
             &label,
             &label_name,
@@ -404,9 +406,9 @@ pub fn parse(
             Some(&FieldType::FieldTypeString) => {
               let visitor = Ident::new("visit_str", Span::call_site());
               build_call_visitor(
-                quote!{String},
+                &quote!{String},
                 &visitor,
-                quote!{.push(value)},
+                &quote!{.push(value)},
                 &visitor_label,
                 &label,
                 &label_name,
@@ -415,9 +417,9 @@ pub fn parse(
             Some(&FieldType::FieldTypeBool) => {
               let visitor = Ident::new("visit_bool", Span::call_site());
               build_call_visitor(
-                quote!{bool},
+                &quote!{bool},
                 &visitor,
-                quote!{.push(value)},
+                &quote!{.push(value)},
                 &visitor_label,
                 &label,
                 &label_name,
@@ -426,9 +428,9 @@ pub fn parse(
             Some(&FieldType::FieldTypeI8) => {
               let visitor = Ident::new("visit_i8", Span::call_site());
               build_call_visitor(
-                quote!{i8},
+                &quote!{i8},
                 &visitor,
-                quote!{.push(value)},
+                &quote!{.push(value)},
                 &visitor_label,
                 &label,
                 &label_name,
@@ -437,9 +439,9 @@ pub fn parse(
             Some(&FieldType::FieldTypeU8) => {
               let visitor = Ident::new("visit_u8", Span::call_site());
               build_call_visitor(
-                quote!{u8},
+                &quote!{u8},
                 &visitor,
-                quote!{.push(value)},
+                &quote!{.push(value)},
                 &visitor_label,
                 &label,
                 &label_name,
@@ -448,9 +450,9 @@ pub fn parse(
             Some(&FieldType::FieldTypeI16) => {
               let visitor = Ident::new("visit_i16", Span::call_site());
               build_call_visitor(
-                quote!{i16},
+                &quote!{i16},
                 &visitor,
-                quote!{.push(value)},
+                &quote!{.push(value)},
                 &visitor_label,
                 &label,
                 &label_name,
@@ -459,9 +461,9 @@ pub fn parse(
             Some(&FieldType::FieldTypeU16) => {
               let visitor = Ident::new("visit_u16", Span::call_site());
               build_call_visitor(
-                quote!{u16},
+                &quote!{u16},
                 &visitor,
-                quote!{.push(value)},
+                &quote!{.push(value)},
                 &visitor_label,
                 &label,
                 &label_name,
@@ -470,9 +472,9 @@ pub fn parse(
             Some(&FieldType::FieldTypeI32) => {
               let visitor = Ident::new("visit_i32", Span::call_site());
               build_call_visitor(
-                quote!{i32},
+                &quote!{i32},
                 &visitor,
-                quote!{.push(value)},
+                &quote!{.push(value)},
                 &visitor_label,
                 &label,
                 &label_name,
@@ -481,9 +483,9 @@ pub fn parse(
             Some(&FieldType::FieldTypeU32) => {
               let visitor = Ident::new("visit_u32", Span::call_site());
               build_call_visitor(
-                quote!{u32},
+                &quote!{u32},
                 &visitor,
-                quote!{.push(value)},
+                &quote!{.push(value)},
                 &visitor_label,
                 &label,
                 &label_name,
@@ -492,9 +494,9 @@ pub fn parse(
             Some(&FieldType::FieldTypeI64) => {
               let visitor = Ident::new("visit_i64", Span::call_site());
               build_call_visitor(
-                quote!{i64},
+                &quote!{i64},
                 &visitor,
-                quote!{.push(value)},
+                &quote!{.push(value)},
                 &visitor_label,
                 &label,
                 &label_name,
@@ -503,9 +505,9 @@ pub fn parse(
             Some(&FieldType::FieldTypeU64) => {
               let visitor = Ident::new("visit_u64", Span::call_site());
               build_call_visitor(
-                quote!{u64},
+                &quote!{u64},
                 &visitor,
-                quote!{.push(value)},
+                &quote!{.push(value)},
                 &visitor_label,
                 &label,
                 &label_name,
@@ -602,52 +604,52 @@ pub fn parse(
 
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
-          build_set_text_to_value(&field_attrs, &label, quote!{text_content.to_owned()})
+          build_set_text_to_value(&field_attrs, &label, &quote!{text_content.to_owned()})
         }
         Some(FieldType::FieldTypeBool) => build_set_text_to_value(
           &field_attrs,
           &label,
-          quote!{bool::from_str(text_content).unwrap()},
+          &quote!{bool::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeI8) => build_set_text_to_value(
           &field_attrs,
           &label,
-          quote!{i8::from_str(text_content).unwrap()},
+          &quote!{i8::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeU8) => build_set_text_to_value(
           &field_attrs,
           &label,
-          quote!{u8::from_str(text_content).unwrap()},
+          &quote!{u8::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeI16) => build_set_text_to_value(
           &field_attrs,
           &label,
-          quote!{i16::from_str(text_content).unwrap()},
+          &quote!{i16::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeU16) => build_set_text_to_value(
           &field_attrs,
           &label,
-          quote!{u16::from_str(text_content).unwrap()},
+          &quote!{u16::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeI32) => build_set_text_to_value(
           &field_attrs,
           &label,
-          quote!{i32::from_str(text_content).unwrap()},
+          &quote!{i32::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeU32) => build_set_text_to_value(
           &field_attrs,
           &label,
-          quote!{u32::from_str(text_content).unwrap()},
+          &quote!{u32::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeI64) => build_set_text_to_value(
           &field_attrs,
           &label,
-          quote!{i64::from_str(text_content).unwrap()},
+          &quote!{i64::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeU64) => build_set_text_to_value(
           &field_attrs,
           &label,
-          quote!{u64::from_str(text_content).unwrap()},
+          &quote!{u64::from_str(text_content).unwrap()},
         ),
 
         Some(FieldType::FieldTypeStruct { .. }) | Some(FieldType::FieldTypeVec { .. }) | None => {
@@ -743,8 +745,8 @@ pub fn parse(
 
 fn build_default_value(
   label: &Option<Ident>,
-  field_type: Tokens,
-  default: Tokens,
+  field_type: &Tokens,
+  default: &Tokens,
 ) -> Option<Tokens> {
   Some(quote!{
     #[allow(unused_mut)]
@@ -753,7 +755,7 @@ fn build_default_value(
 }
 
 fn build_declare_visitor(
-  field_type: Tokens,
+  field_type: &Tokens,
   visitor: &Ident,
   visitor_label: &Ident,
 ) -> Option<Tokens> {
@@ -771,12 +773,12 @@ fn build_declare_visitor(
 }
 
 fn build_call_visitor(
-  field_type: Tokens,
+  field_type: &Tokens,
   visitor: &Ident,
-  action: Tokens,
+  action: &Tokens,
   visitor_label: &Ident,
   label: &Option<Ident>,
-  label_name: &String,
+  label_name: &str,
 ) -> Option<Tokens> {
   Some(quote!{
     #label_name => {
@@ -799,7 +801,6 @@ fn build_call_visitor(
       });
 
       if let Ok(value) = result {
-        // #label = value
         #label#action
       }
     }
@@ -809,7 +810,7 @@ fn build_call_visitor(
 fn build_set_text_to_value(
   field_attrs: &YaSerdeAttribute,
   label: &Option<Ident>,
-  action: Tokens,
+  action: &Tokens,
 ) -> Option<Tokens> {
   if field_attrs.text {
     Some(quote!{
