@@ -10,21 +10,19 @@ use yaserde::YaSerialize;
 use yaserde::ser::to_string;
 
 macro_rules! convert_and_validate {
-  ($type:ty, $value:expr, $content:expr) => ({
-
+  ($type: ty, $value: expr, $content: expr) => {{
     #[derive(YaSerialize, PartialEq, Debug)]
-    #[yaserde(root="data")]
+    #[yaserde(root = "data")]
     pub struct Data {
-      item: $type
+      item: $type,
     }
-    let model = Data {
-      item: $value
-    };
+    let model = Data { item: $value };
 
-    let data : Result<String, String> = to_string(&model);
-    let content = String::from("<?xml version=\"1.0\" encoding=\"utf-8\"?><data><item>") + $content + "</item></data>";
+    let data: Result<String, String> = to_string(&model);
+    let content = String::from("<?xml version=\"1.0\" encoding=\"utf-8\"?><data><item>") + $content
+      + "</item></data>";
     assert_eq!(data, Ok(content));
-  })
+  }};
 }
 
 #[test]

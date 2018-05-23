@@ -122,10 +122,7 @@ impl<'de, R: Read> Deserializer<R> {
         ))
       }
     } else {
-      Err(format!(
-        "Unexpected token </{}>",
-        start_name.local_name
-      ))
+      Err(format!("Unexpected token </{}>", start_name.local_name))
     }
   }
 }

@@ -10,10 +10,10 @@ use yaserde::YaDeserialize;
 use yaserde::de::from_str;
 
 macro_rules! convert_and_validate {
-  ($content:expr, $struct:tt, $model:expr) => {
-    let loaded : Result<$struct, String> = from_str($content);
+  ($content: expr, $struct: tt, $model: expr) => {
+    let loaded: Result<$struct, String> = from_str($content);
     assert_eq!(loaded, Ok($model));
-  }
+  };
 }
 
 #[test]
@@ -21,8 +21,10 @@ fn de_struct_namespace() {
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "book", prefix = "ns", namespace = "ns: http://www.sample.com/ns/domain")]
   pub struct Book {
-    #[yaserde(prefix = "ns")] author: String,
-    #[yaserde(prefix = "ns")] title: String,
+    #[yaserde(prefix = "ns")]
+    author: String,
+    #[yaserde(prefix = "ns")]
+    title: String,
   }
 
   let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><ns:book xmlns:ns=\"http://www.sample.com/ns/domain\"><ns:author>Antoine de Saint-Exupéry</ns:author><ns:title>Little prince</ns:title></ns:book>";
@@ -45,7 +47,8 @@ fn de_enum_namespace() {
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "root", prefix = "ns", namespace = "ns: http://www.sample.com/ns/domain")]
   pub enum XmlStruct {
-    #[yaserde(prefix = "ns")] Item,
+    #[yaserde(prefix = "ns")]
+    Item,
   }
 
   impl Default for XmlStruct {

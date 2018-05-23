@@ -10,10 +10,10 @@ use yaserde::YaDeserialize;
 use yaserde::de::from_str;
 
 macro_rules! convert_and_validate {
-  ($content:expr, $struct:tt, $model:expr) => {
-    let loaded : Result<$struct, String> = from_str($content);
+  ($content: expr, $struct: tt, $model: expr) => {
+    let loaded: Result<$struct, String> = from_str($content);
     assert_eq!(loaded, Ok($model));
-  }
+  };
 }
 
 #[test]
@@ -93,14 +93,16 @@ fn de_attributes() {
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "base")]
   pub struct XmlStruct {
-    #[yaserde(attribute)] item: String,
+    #[yaserde(attribute)]
+    item: String,
     sub: SubStruct,
   }
 
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "sub")]
   pub struct SubStruct {
-    #[yaserde(attribute)] subitem: String,
+    #[yaserde(attribute)]
+    subitem: String,
   }
 
   impl Default for SubStruct {
@@ -129,14 +131,17 @@ fn de_rename() {
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "base")]
   pub struct XmlStruct {
-    #[yaserde(attribute, rename = "Item")] item: String,
-    #[yaserde(rename = "sub")] sub_struct: SubStruct,
+    #[yaserde(attribute, rename = "Item")]
+    item: String,
+    #[yaserde(rename = "sub")]
+    sub_struct: SubStruct,
   }
 
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "sub")]
   pub struct SubStruct {
-    #[yaserde(attribute, rename = "sub_item")] subitem: String,
+    #[yaserde(attribute, rename = "sub_item")]
+    subitem: String,
   }
 
   impl Default for SubStruct {
@@ -165,15 +170,19 @@ fn de_text_content_with_attributes() {
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "base")]
   pub struct XmlStruct {
-    #[yaserde(attribute, rename = "Item")] item: String,
-    #[yaserde(rename = "sub")] sub_struct: SubStruct,
+    #[yaserde(attribute, rename = "Item")]
+    item: String,
+    #[yaserde(rename = "sub")]
+    sub_struct: SubStruct,
   }
 
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "sub")]
   pub struct SubStruct {
-    #[yaserde(attribute, rename = "sub_item")] subitem: String,
-    #[yaserde(text)] text: String,
+    #[yaserde(attribute, rename = "sub_item")]
+    subitem: String,
+    #[yaserde(text)]
+    text: String,
   }
 
   impl Default for SubStruct {
@@ -269,7 +278,8 @@ fn de_attribute_enum() {
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "base")]
   pub struct XmlStruct {
-    #[yaserde(attribute)] background: Color,
+    #[yaserde(attribute)]
+    background: Color,
   }
 
   #[derive(YaDeserialize, PartialEq, Debug)]

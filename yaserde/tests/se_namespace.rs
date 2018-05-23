@@ -10,10 +10,10 @@ use yaserde::YaSerialize;
 use yaserde::ser::to_string;
 
 macro_rules! convert_and_validate {
-  ($model:expr, $content:expr) => (
-    let data : Result<String, String> = to_string(&$model);
+  ($model: expr, $content: expr) => {
+    let data: Result<String, String> = to_string(&$model);
     assert_eq!(data, Ok(String::from($content)));
-  )
+  };
 }
 
 #[test]
@@ -21,7 +21,8 @@ fn ser_struct_namespace() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(root = "root", prefix = "ns", namespace = "ns: http://www.sample.com/ns/domain")]
   pub struct XmlStruct {
-    #[yaserde(prefix = "ns")] item: String,
+    #[yaserde(prefix = "ns")]
+    item: String,
   }
 
   let model = XmlStruct {
@@ -37,7 +38,8 @@ fn ser_enum_namespace() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(root = "root", prefix = "ns", namespace = "ns: http://www.sample.com/ns/domain")]
   pub enum XmlStruct {
-    #[yaserde(prefix = "ns")] Item,
+    #[yaserde(prefix = "ns")]
+    Item,
   }
 
   let model = XmlStruct::Item;
@@ -52,8 +54,10 @@ fn ser_struct_multi_namespace() {
   #[yaserde(root = "root", namespace = "ns1: http://www.sample.com/ns/domain1",
             namespace = "ns2: http://www.sample.com/ns/domain2")]
   pub struct XmlStruct {
-    #[yaserde(prefix = "ns1")] item_1: String,
-    #[yaserde(prefix = "ns2")] item_2: String,
+    #[yaserde(prefix = "ns1")]
+    item_1: String,
+    #[yaserde(prefix = "ns2")]
+    item_2: String,
   }
 
   let model = XmlStruct {
@@ -71,8 +75,10 @@ fn ser_enum_multi_namespace() {
   #[yaserde(root = "root", namespace = "ns1: http://www.sample.com/ns/domain1",
             namespace = "ns2: http://www.sample.com/ns/domain2")]
   pub enum XmlStruct {
-    #[yaserde(prefix = "ns1")] Item1,
-    #[yaserde(prefix = "ns2")] Item2,
+    #[yaserde(prefix = "ns1")]
+    Item1,
+    #[yaserde(prefix = "ns2")]
+    Item2,
   }
 
   let model1 = XmlStruct::Item1;
@@ -89,8 +95,10 @@ fn ser_struct_attribute_namespace() {
   #[yaserde(root = "root", namespace = "ns1: http://www.sample.com/ns/domain1",
             namespace = "ns2: http://www.sample.com/ns/domain2")]
   pub struct XmlStruct {
-    #[yaserde(prefix = "ns1")] item_1: String,
-    #[yaserde(attribute, prefix = "ns2")] item_2: String,
+    #[yaserde(prefix = "ns1")]
+    item_1: String,
+    #[yaserde(attribute, prefix = "ns2")]
+    item_2: String,
   }
 
   let model = XmlStruct {
