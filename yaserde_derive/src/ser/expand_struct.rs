@@ -30,11 +30,20 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String, namespac
         };
 
       match get_field_type(field) {
-        Some(FieldType::FieldTypeString) =>
+        Some(FieldType::FieldTypeString) |
+        Some(FieldType::FieldTypeBool) |
+        Some(FieldType::FieldTypeI8) |
+        Some(FieldType::FieldTypeU8) |
+        Some(FieldType::FieldTypeI16) |
+        Some(FieldType::FieldTypeU16) |
+        Some(FieldType::FieldTypeI32) |
+        Some(FieldType::FieldTypeU32) |
+        Some(FieldType::FieldTypeI64) |
+        Some(FieldType::FieldTypeU64) =>
           Some(quote!{
             .attr(#label_name, &self.#label)
           }),
-        Some(FieldType::FieldTypeStruct{struct_name: _struct_name}) =>
+        Some(FieldType::FieldTypeStruct{..}) =>
           Some(quote!{
             .attr(#label_name, &*{
               use std::mem;
@@ -108,21 +117,35 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String, namespac
             let end_event = XmlEvent::end_element();
             let _ret = writer.write(end_event);
           }),
-        Some(FieldType::FieldTypeStruct{..}) =>
+        Some(FieldType::FieldTypeBool) |
+        Some(FieldType::FieldTypeI8) |
+        Some(FieldType::FieldTypeU8) |
+        Some(FieldType::FieldTypeI16) |
+        Some(FieldType::FieldTypeU16) |
+        Some(FieldType::FieldTypeI32) |
+        Some(FieldType::FieldTypeU32) |
+        Some(FieldType::FieldTypeI64) |
+        Some(FieldType::FieldTypeU64) =>
           Some(quote!{
             let start_event = XmlEvent::start_element(#label_name);
             let _ret = writer.write(start_event);
 
-            writer.set_skip_start_end(true);
+            let content = format!("{}", &self.#label);
+            let data_event = XmlEvent::characters(&content);
+            let _ret = writer.write(data_event);
+
+            let end_event = XmlEvent::end_element();
+            let _ret = writer.write(end_event);
+          }),
+        Some(FieldType::FieldTypeStruct{..}) =>
+          Some(quote!{
+            writer.set_skip_start_end(false);
             match self.#label.serialize(writer) {
               Ok(()) => {},
               Err(msg) => {
                 return Err(msg);
               },
             };
-
-            let struct_end_event = XmlEvent::end_element();
-            let _ret = writer.write(struct_end_event);
           }),
         Some(FieldType::FieldTypeVec{data_type}) => {
           let dt = Box::into_raw(data_type);
@@ -141,12 +164,30 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String, namespac
                 }
               })
             },
+            Some(&FieldType::FieldTypeBool) |
+            Some(&FieldType::FieldTypeI8) |
+            Some(&FieldType::FieldTypeU8) |
+            Some(&FieldType::FieldTypeI16) |
+            Some(&FieldType::FieldTypeU16) |
+            Some(&FieldType::FieldTypeI32) |
+            Some(&FieldType::FieldTypeU32) |
+            Some(&FieldType::FieldTypeI64) |
+            Some(&FieldType::FieldTypeU64) => {
+              Some(quote!{
+                for item in &self.#label {
+                  let start_event = XmlEvent::start_element(#label_name);
+                  let _ret = writer.write(start_event);
+
+                  let data_event = XmlEvent::characters(format!("{}", item));
+                  let _ret = writer.write(data_event);
+
+                  let end_event = XmlEvent::end_element();
+                  let _ret = writer.write(end_event);
+                }
+              })
+            },
             Some(&FieldType::FieldTypeStruct{..}) => {
               Some(quote!{
-
-                let start_event = XmlEvent::start_element(#label_name);
-                let _ret = writer.write(start_event);
-
                 for item in &self.#label {
                   writer.set_skip_start_end(false);
                   match item.serialize(writer) {
@@ -156,8 +197,6 @@ pub fn serialize(data_struct: &DataStruct, name: &Ident, root: &String, namespac
                     },
                   };
                 }
-                let end_event = XmlEvent::end_element();
-                let _ret = writer.write(end_event);
               })
             },
             Some(&FieldType::FieldTypeVec{..}) => {unimplemented!();},

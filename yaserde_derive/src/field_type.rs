@@ -6,6 +6,15 @@ use syn::Type::Path;
 #[derive(Debug)]
 pub enum FieldType {
   FieldTypeString,
+  FieldTypeBool,
+  FieldTypeI8,
+  FieldTypeU8,
+  FieldTypeI16,
+  FieldTypeU16,
+  FieldTypeI32,
+  FieldTypeU32,
+  FieldTypeI64,
+  FieldTypeU64,
   FieldTypeVec{data_type: Box<FieldType>},
   FieldTypeStruct{struct_name: syn::Ident},
 }
@@ -14,6 +23,15 @@ impl FieldType {
   fn from_ident(t: &syn::PathSegment) -> Option<FieldType> {
     match t.ident.as_ref() {
       "String" => Some(FieldType::FieldTypeString),
+      "bool" => Some(FieldType::FieldTypeBool),
+      "i8" => Some(FieldType::FieldTypeI8),
+      "u8" => Some(FieldType::FieldTypeU8),
+      "i16" => Some(FieldType::FieldTypeI16),
+      "u16" => Some(FieldType::FieldTypeU16),
+      "i32" => Some(FieldType::FieldTypeI32),
+      "u32" => Some(FieldType::FieldTypeU32),
+      "i64" => Some(FieldType::FieldTypeI64),
+      "u64" => Some(FieldType::FieldTypeU64),
       "Vec" => {
         get_vec_type(t).map(|data_type| {
           let p = syn::PathSegment{

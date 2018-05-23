@@ -8,7 +8,7 @@ use syn::Ident;
 use syn::DataEnum;
 use proc_macro2::Span;
 
-pub fn parse(data_enum: &DataEnum, name: &Ident, root: &String, namespaces: &BTreeMap<String, String>) -> Tokens {
+pub fn parse(data_enum: &DataEnum, name: &Ident, root: &String, _namespaces: &BTreeMap<String, String>) -> Tokens {
   let variables : Tokens = data_enum.variants.iter().map(|ref variant|
     {
       match variant.fields {
@@ -18,12 +18,26 @@ pub fn parse(data_enum: &DataEnum, name: &Ident, root: &String, namespaces: &BTr
             let field_label = field.ident;
 
             match get_field_type(field) {
-              Some(FieldType::FieldTypeString) => {
-                Some(quote!{
-                  #[allow(unused_mut)]
-                  let mut #field_label : String = "".to_string();
-                })
-              },
+              Some(FieldType::FieldTypeString) =>
+                build_default_value(&field_label, quote!{String}, quote!{"".to_string()}),
+              Some(FieldType::FieldTypeBool) =>
+                build_default_value(&field_label, quote!{bool}, quote!{false}),
+              Some(FieldType::FieldTypeI8) =>
+                build_default_value(&field_label, quote!{i8}, quote!{0}),
+              Some(FieldType::FieldTypeU8) =>
+                build_default_value(&field_label, quote!{u8}, quote!{0}),
+              Some(FieldType::FieldTypeI16) =>
+                build_default_value(&field_label, quote!{i16}, quote!{0}),
+              Some(FieldType::FieldTypeU16) =>
+                build_default_value(&field_label, quote!{u16}, quote!{0}),
+              Some(FieldType::FieldTypeI32) =>
+                build_default_value(&field_label, quote!{i32}, quote!{0}),
+              Some(FieldType::FieldTypeU32) =>
+                build_default_value(&field_label, quote!{u32}, quote!{0}),
+              Some(FieldType::FieldTypeI64) =>
+                build_default_value(&field_label, quote!{i64}, quote!{0}),
+              Some(FieldType::FieldTypeU64) =>
+                build_default_value(&field_label, quote!{u64}, quote!{0}),
               Some(FieldType::FieldTypeStruct{struct_name}) => {
                 Some(quote!{
                   #[allow(unused_mut)]
@@ -33,12 +47,26 @@ pub fn parse(data_enum: &DataEnum, name: &Ident, root: &String, namespaces: &BTr
               Some(FieldType::FieldTypeVec{data_type}) => {
                 let dt = Box::into_raw(data_type);
                 match unsafe{dt.as_ref()} {
-                  Some(&FieldType::FieldTypeString) => {
-                    Some(quote!{
-                      #[allow(unused_mut)]
-                      let mut #field_label : Vec<String> = vec![];
-                    })
-                  },
+                  Some(&FieldType::FieldTypeString) =>
+                    build_default_value(&field_label, quote!{Vec<String>}, quote!{vec![]}),
+                  Some(&FieldType::FieldTypeBool) =>
+                    build_default_value(&field_label, quote!{Vec<bool>}, quote!{vec![]}),
+                  Some(&FieldType::FieldTypeI8) =>
+                    build_default_value(&field_label, quote!{Vec<i8>}, quote!{vec![]}),
+                  Some(&FieldType::FieldTypeU8) =>
+                    build_default_value(&field_label, quote!{Vec<u8>}, quote!{vec![]}),
+                  Some(&FieldType::FieldTypeI16) =>
+                    build_default_value(&field_label, quote!{Vec<i16>}, quote!{vec![]}),
+                  Some(&FieldType::FieldTypeU16) =>
+                    build_default_value(&field_label, quote!{Vec<u16>}, quote!{vec![]}),
+                  Some(&FieldType::FieldTypeI32) =>
+                    build_default_value(&field_label, quote!{Vec<i32>}, quote!{vec![]}),
+                  Some(&FieldType::FieldTypeU32) =>
+                    build_default_value(&field_label, quote!{Vec<u32>}, quote!{vec![]}),
+                  Some(&FieldType::FieldTypeI64) =>
+                    build_default_value(&field_label, quote!{Vec<i64>}, quote!{vec![]}),
+                  Some(&FieldType::FieldTypeU64) =>
+                    build_default_value(&field_label, quote!{Vec<u64>}, quote!{vec![]}),
                   Some(&FieldType::FieldTypeStruct{struct_name}) => {
                     Some(quote!{
                       #[allow(unused_mut)]
@@ -181,13 +209,6 @@ pub fn parse(data_enum: &DataEnum, name: &Ident, root: &String, namespaces: &BTr
               let _root = reader.next();
             },
             xml::reader::XmlEvent::Characters(characters_content) => {
-            //   println!("{:?} - {:?} -- {:?}", prev_level, current_level, characters_content.as_str());
-            //   if prev_level == current_level {
-            //     match characters_content.as_str() {
-            //       #match_to_enum
-            //       _ => {}
-            //     }
-            //   }
               let _root = reader.next();
             },
             event => {
@@ -205,4 +226,11 @@ pub fn parse(data_enum: &DataEnum, name: &Ident, root: &String, namespaces: &BTr
       }
     }
   }
+}
+
+fn build_default_value(label: &Option<Ident>, field_type: Tokens, default: Tokens) -> Option<Tokens> {
+  Some(quote!{
+    #[allow(unused_mut)]
+    let mut #label : #field_type = #default;
+  })
 }
