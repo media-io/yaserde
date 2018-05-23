@@ -1,4 +1,3 @@
-
 use std::io::Read;
 use xml::reader::{EventReader, ParserConfig, XmlEvent};
 use xml::name::OwnedName;
@@ -56,9 +55,9 @@ impl<'de, R: Read> Deserializer<R> {
     loop {
       if let Ok(next) = self.reader.next() {
         match next {
-          XmlEvent::StartDocument { .. } |
-          XmlEvent::ProcessingInstruction { .. } |
-          XmlEvent::Comment(_) => { /* skip */ },
+          XmlEvent::StartDocument { .. }
+          | XmlEvent::ProcessingInstruction { .. }
+          | XmlEvent::Comment(_) => { /* skip */ }
           other => return Ok(other),
         }
       } else {
@@ -77,11 +76,11 @@ impl<'de, R: Read> Deserializer<R> {
     match next {
       XmlEvent::StartElement { .. } => {
         self.depth += 1;
-      },
+      }
       XmlEvent::EndElement { .. } => {
         self.depth -= 1;
-      },
-      _ => {},
+      }
+      _ => {}
     }
     debug!("Fetched {:?}", next);
     Ok(next)
@@ -113,14 +112,13 @@ impl<'de, R: Read> Deserializer<R> {
   }
 
   pub fn expect_end_element(&mut self, start_name: OwnedName) -> Result<(), String> {
-    if let XmlEvent::EndElement{ name, .. } = self.next()? {
+    if let XmlEvent::EndElement { name, .. } = self.next()? {
       if name == start_name {
         Ok(())
       } else {
         Err(format!(
           "End tag </{}> didn't match the start tag <{}>",
-          name.local_name,
-          start_name.local_name
+          name.local_name, start_name.local_name
         ))
       }
     } else {

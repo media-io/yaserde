@@ -1,4 +1,3 @@
-
 use std::str;
 use std::io::{Cursor, Write};
 use xml::{EmitterConfig, EventWriter};
@@ -28,7 +27,10 @@ pub fn to_string_content<T: YaSerialize>(model: &T) -> Result<String, String> {
   Ok(String::from(data))
 }
 
-pub fn serialize_with_writer_content<W: Write, T: YaSerialize>(model: &T, writer: W) -> Result<W, String> {
+pub fn serialize_with_writer_content<W: Write, T: YaSerialize>(
+  model: &T,
+  writer: W,
+) -> Result<W, String> {
   let mut serializer = Serializer::new_for_inner(writer);
   serializer.set_skip_start_end(true);
   match model.serialize(&mut serializer) {
@@ -39,27 +41,25 @@ pub fn serialize_with_writer_content<W: Write, T: YaSerialize>(model: &T, writer
 
 pub struct Serializer<W: Write> {
   writer: EventWriter<W>,
-  skip_start_end: bool
+  skip_start_end: bool,
 }
 
 impl<'de, W: Write> Serializer<W> {
   pub fn new(writer: EventWriter<W>) -> Self {
     Serializer {
       writer: writer,
-      skip_start_end: false
+      skip_start_end: false,
     }
   }
 
   pub fn new_from_writer(writer: W) -> Self {
-    let config = EmitterConfig::new()
-      .cdata_to_characters(true);
+    let config = EmitterConfig::new().cdata_to_characters(true);
 
     Self::new(EventWriter::new_with_config(writer, config))
   }
 
   pub fn new_for_inner(writer: W) -> Self {
-    let config = EmitterConfig::new()
-      .write_document_declaration(false);
+    let config = EmitterConfig::new().write_document_declaration(false);
 
     Self::new(EventWriter::new_with_config(writer, config))
   }
@@ -77,7 +77,9 @@ impl<'de, W: Write> Serializer<W> {
   }
 
   pub fn write<'a, E>(&mut self, event: E) -> xml::writer::Result<()>
-    where E: Into<XmlEvent<'a>> {
+  where
+    E: Into<XmlEvent<'a>>,
+  {
     self.writer.write(event)
   }
 }
