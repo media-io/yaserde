@@ -1,19 +1,65 @@
-
 language: rust
-
 rust:
+  - 1.23.0
+  - 1.24.0
+  - 1.25.0
+  - 1.26.0
   - stable
   - beta
   - nightly
-
 matrix:
   allow_failures:
     - rust: nightly
-  fast_finish: true
+  include:
+    # Rustfmt
+    - env: RUSTFMT_VERSION="0.4.1"
+      rust: nightly-2018-04-01
+      install:
+        - rustup component add rustfmt-preview
+        - cargo install rustfmt-nightly --force --version $RUSTFMT_VERSION || echo "rustfmt already installed"
+      before_script:
+        - cargo-fmt fmt -- --version
+      script:
+        - cargo fmt -- --write-mode=diff
 
-cache: cargo
+    # Clippy
+    - env: CLIPPY_VERSION="0.0.191"
+      rust: nightly-2018-04-01
+      install:
+      - travis_wait cargo install clippy --version $CLIPPY_VERSION || echo "clippy already installed"
+      script:
+        # Fail if clippy output contains "error:" or "warning:"
+        - cargo clippy 2>&1 | tee ./clippy.out && ! grep -qe  "error:\|warning:" ./clippy.out
+
+    # Test coverage (with Tarpaulin)
+    - env: TARPAULIN_VERSION="0.5.6"
+      rust: stable
+      # To avoid "Error: EPERM: operation not permitted" error (see https://github.com/valery-barysok/session-file-store/issues/58)
+      sudo: true
+      install:
+        - curl -sL https://github.com/xd009642/tarpaulin/releases/download/$TARPAULIN_VERSION/cargo-tarpaulin-$TARPAULIN_VERSION-travis.tar.gz | tar xvz -C $HOME/.cargo/bin
+      script:
+        - cargo tarpaulin --verbose > ./tarpaulin.out
+
+        # Fetch coverage percentage (integer)
+        - COVERAGE=$(cat ./tarpaulin.out | awk -F '.' '/coverage/ { print $1 }')
+        - echo COVERAGE=${COVERAGE}
+
+        # Print uncoverted lines
+        - 'echo "UNCOVERED LINES" && grep "hits: 0" ./tarpaulin.out'
+
+        # Exit 1, if coverage is less than 89%
+        - if [ $COVERAGE -lt 89 ]; then exit 0; fi
 
 script:
-  - cargo build --verbose --all
-  - cargo test --verbose --all
+  - cargo test
+cache:
+  cargo: true
+before_cache:
+  # Travis can't cache files that are not readable by "others"
+  - chmod -R a+r $HOME/.cargo
 
+addons:
+  apt:
+    packages:
+      - libssl-dev  # Required for tarpaulin
