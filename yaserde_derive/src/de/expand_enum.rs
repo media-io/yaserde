@@ -236,7 +236,7 @@ pub fn parse(
             XmlEvent::StartElement{name, attributes, namespace: _namespace} => {
               debug!("Enum: {}: {}", named_element, name.local_name.as_str());
               if name.local_name == named_element {
-                let _next = reader.next();
+                let _next = reader.next_event();
 
                 if let XmlEvent::Characters(content) = reader.peek()?.to_owned() {
                   match content.as_str() {
@@ -250,10 +250,10 @@ pub fn parse(
               if name.local_name.as_str() == named_element {
                 break;
               }
-              let _root = reader.next();
+              let _root = reader.next_event();
             },
             xml::reader::XmlEvent::Characters(characters_content) => {
-              let _root = reader.next();
+              let _root = reader.next_event();
             },
             event => {
               return Err(format!("unknown event {:?}", event))

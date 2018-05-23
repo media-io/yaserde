@@ -392,7 +392,7 @@ pub fn parse(
             match #struct_name::deserialize(reader) {
               Ok(parsed_item) => {
                 #label = parsed_item;
-                let _root = reader.next();
+                let _root = reader.next_event();
               },
               Err(msg) => {
                 return Err(msg);
@@ -521,7 +521,7 @@ pub fn parse(
                   match #struct_ident::deserialize(reader) {
                     Ok(parsed_item) => {
                       #label.push(parsed_item);
-                      let _root = reader.next();
+                      let _root = reader.next_event();
                     },
                     Err(msg) => {
                       return Err(msg);
@@ -713,7 +713,7 @@ pub fn parse(
               match name.local_name.as_str() {
                 #call_visitors
                 named_element => {
-                  let _root = reader.next();
+                  let _root = reader.next_event();
                 }
                 // name => {
                 //   return Err(format!("unknown key {}", name))
@@ -725,11 +725,11 @@ pub fn parse(
               if name.local_name == named_element {
                 break;
               }
-              let _root = reader.next();
+              let _root = reader.next_event();
             }
             XmlEvent::Characters(ref text_content) => {
               #set_text
-              let _root = reader.next();
+              let _root = reader.next_event();
             }
             event => {
               return Err(format!("unknown event {:?}", event))
@@ -793,7 +793,7 @@ fn build_call_visitor(
           return visitor.#visitor("");
         }
 
-        if let Ok(XmlEvent::Characters(s)) = reader.next() {
+        if let Ok(XmlEvent::Characters(s)) = reader.next_event() {
           visitor.#visitor(&s)
         } else {
           Err(format!("unable to parse content for {}", #label_name))

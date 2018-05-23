@@ -22,7 +22,7 @@ impl<'de, R: Read> Deserializer<R> {
   pub fn new(reader: EventReader<R>) -> Self {
     Deserializer {
       depth: 0,
-      reader: reader,
+      reader,
       peeked: None,
       is_map_value: false,
     }
@@ -67,13 +67,13 @@ impl<'de, R: Read> Deserializer<R> {
     }
   }
 
-  pub fn next(&mut self) -> Result<XmlEvent, String> {
-    let next = if let Some(peeked) = self.peeked.take() {
+  pub fn next_event(&mut self) -> Result<XmlEvent, String> {
+    let next_event = if let Some(peeked) = self.peeked.take() {
       peeked
     } else {
       self.inner_next()?
     };
-    match next {
+    match next_event {
       XmlEvent::StartElement { .. } => {
         self.depth += 1;
       }
@@ -82,8 +82,8 @@ impl<'de, R: Read> Deserializer<R> {
       }
       _ => {}
     }
-    debug!("Fetched {:?}", next);
-    Ok(next)
+    debug!("Fetched {:?}", next_event);
+    Ok(next_event)
   }
 
   pub fn set_map_value(&mut self) {
@@ -99,21 +99,21 @@ impl<'de, R: Read> Deserializer<R> {
     f: F,
   ) -> Result<T, String> {
     if self.unset_map_value() {
-      if let Ok(XmlEvent::StartElement { name, .. }) = self.next() {
+      if let Ok(XmlEvent::StartElement { name, .. }) = self.next_event() {
         let result = f(self)?;
-        self.expect_end_element(name)?;
+        self.expect_end_element(&name)?;
         Ok(result)
       } else {
-        Err(format!("Internal error: Bad Event"))
+        Err("Internal error: Bad Event".to_string())
       }
     } else {
       f(self)
     }
   }
 
-  pub fn expect_end_element(&mut self, start_name: OwnedName) -> Result<(), String> {
-    if let XmlEvent::EndElement { name, .. } = self.next()? {
-      if name == start_name {
+  pub fn expect_end_element(&mut self, start_name: &OwnedName) -> Result<(), String> {
+    if let XmlEvent::EndElement { name, .. } = self.next_event()? {
+      if name == *start_name {
         Ok(())
       } else {
         Err(format!(
@@ -122,10 +122,10 @@ impl<'de, R: Read> Deserializer<R> {
         ))
       }
     } else {
-      Err(String::from(format!(
+      Err(format!(
         "Unexpected token </{}>",
         start_name.local_name
-      )))
+      ))
     }
   }
 }

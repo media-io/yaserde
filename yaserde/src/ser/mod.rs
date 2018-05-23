@@ -47,7 +47,7 @@ pub struct Serializer<W: Write> {
 impl<'de, W: Write> Serializer<W> {
   pub fn new(writer: EventWriter<W>) -> Self {
     Serializer {
-      writer: writer,
+      writer,
       skip_start_end: false,
     }
   }
