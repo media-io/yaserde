@@ -16,13 +16,13 @@ pub fn parse(
   let variables: Tokens = data_enum
     .variants
     .iter()
-    .map(|ref variant| match variant.fields {
+    .map(|variant| match variant.fields {
       Fields::Unit => None,
       Fields::Named(ref fields) => {
         let enum_fields = fields
           .named
           .iter()
-          .map(|ref field| {
+          .map(|field| {
             let field_label = field.ident;
 
             match get_field_type(field) {
@@ -131,14 +131,14 @@ pub fn parse(
   let enum_visitors: Tokens = data_enum
     .variants
     .iter()
-    .map(|ref variant| {
+    .map(|variant| {
       match variant.fields {
         Fields::Unit => None,
         Fields::Named(ref fields) => {
           let enum_fields = fields
             .named
             .iter()
-            .map(|ref field| {
+            .map(|field| {
               // let label = field.ident;
               // let label_name = label.unwrap().to_string();
               // let visitor_label = Ident::new(&format!("__Visitor{}", label_name), Span::call_site());
@@ -186,7 +186,7 @@ pub fn parse(
   let match_to_enum: Tokens = data_enum
     .variants
     .iter()
-    .map(|ref variant| {
+    .map(|variant| {
       let field_attrs = YaSerdeAttribute::parse(&variant.attrs);
       let renamed_label = match field_attrs.rename {
         Some(value) => Ident::new(&format!("{}", value), Span::call_site()),

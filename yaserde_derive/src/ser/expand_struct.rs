@@ -16,7 +16,7 @@ pub fn serialize(
   let build_attributes: Tokens = data_struct
     .fields
     .iter()
-    .map(|ref field| {
+    .map(|field| {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
       if !field_attrs.attribute {
         return None;
@@ -73,7 +73,7 @@ pub fn serialize(
 
   let add_namespaces: Tokens = namespaces
     .iter()
-    .map(|(ref prefix, ref namespace)| {
+    .map(|(prefix, namespace)| {
       Some(quote!(
         .ns(#prefix, #namespace)
       ))
@@ -88,7 +88,7 @@ pub fn serialize(
   let struct_inspector: Tokens = data_struct
     .fields
     .iter()
-    .map(|ref field| {
+    .map(|field| {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
       if field_attrs.attribute {
         return None;

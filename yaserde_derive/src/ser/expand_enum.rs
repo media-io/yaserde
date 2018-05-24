@@ -16,7 +16,7 @@ pub fn serialize(
   let write_enum_content: Tokens = data_enum
     .variants
     .iter()
-    .map(|ref variant| {
+    .map(|variant| {
       let variant_attrs = YaSerdeAttribute::parse(&variant.attrs);
       let renamed_label = match variant_attrs.rename {
         Some(value) => Ident::new(&format!("{}", value), Span::call_site()),
@@ -40,7 +40,7 @@ pub fn serialize(
           let enum_fields = fields
             .named
             .iter()
-            .map(|ref field| {
+            .map(|field| {
               let field_attrs = YaSerdeAttribute::parse(&field.attrs);
               if field_attrs.attribute {
                 return None;
@@ -145,7 +145,7 @@ pub fn serialize(
 
   let add_namespaces: Tokens = namespaces
     .iter()
-    .map(|(ref prefix, ref namespace)| {
+    .map(|(prefix, namespace)| {
       Some(quote!(
         .ns(#prefix, #namespace)
       ))

@@ -14,7 +14,7 @@ pub fn parse(
 ) -> Tokens {
   let validate_namespace: Tokens = namespaces
     .iter()
-    .map(|(ref _prefix, ref namespace)| {
+    .map(|(_prefix, namespace)| {
       Some(quote!(
 
         let mut found = false;
@@ -39,7 +39,7 @@ pub fn parse(
   let variables: Tokens = data_struct
     .fields
     .iter()
-    .map(|ref field| {
+    .map(|field| {
       let label = field.ident;
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
@@ -118,7 +118,7 @@ pub fn parse(
   let field_visitors: Tokens = data_struct
     .fields
     .iter()
-    .map(|ref field| {
+    .map(|field| {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
       let label_name = if let Some(value) = field_attrs.rename {
         Ident::new(&format!("{}", value), Span::call_site()).to_string()
@@ -259,7 +259,7 @@ pub fn parse(
   let call_visitors: Tokens = data_struct
     .fields
     .iter()
-    .map(|ref field| {
+    .map(|field| {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
       let label = field.ident;
 
@@ -546,7 +546,7 @@ pub fn parse(
   let attributes_loading: Tokens = data_struct
     .fields
     .iter()
-    .map(|ref field| {
+    .map(|field| {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
       if !field_attrs.attribute {
         return None;
@@ -598,7 +598,7 @@ pub fn parse(
   let set_text: Tokens = data_struct
     .fields
     .iter()
-    .map(|ref field| {
+    .map(|field| {
       let label = field.ident;
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
 
@@ -667,7 +667,7 @@ pub fn parse(
   let struct_builder: Tokens = data_struct
     .fields
     .iter()
-    .map(|ref field| {
+    .map(|field| {
       let label = field.ident;
 
       if get_field_type(field).is_some() {
