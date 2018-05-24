@@ -53,16 +53,18 @@ impl<'de, R: Read> Deserializer<R> {
 
   pub fn inner_next(&mut self) -> Result<XmlEvent, String> {
     loop {
-      if let Ok(next) = self.reader.next() {
-        match next {
-          XmlEvent::StartDocument { .. }
-          | XmlEvent::ProcessingInstruction { .. }
-          | XmlEvent::Comment(_) => { /* skip */ }
-          other => return Ok(other),
+      match self.reader.next() {
+        Ok(next) => {
+          match next {
+            XmlEvent::StartDocument { .. }
+            | XmlEvent::ProcessingInstruction { .. }
+            | XmlEvent::Comment(_) => { /* skip */ }
+            other => return Ok(other),
+          }
         }
-      } else {
-        println!("{:?}", self.peeked);
-        return Err(String::from("bad content"));
+        Err(msg) => {
+          return Err(msg.msg().to_string());
+        }
       }
     }
   }
