@@ -63,12 +63,6 @@ pub trait Visitor<'de>: Sized {
   fn visit_str(self, v: &str) -> Result<Self::Value, String> {
     Err(format!("Unexpected str {:?}", v))
   }
-
-  #[inline]
-  #[cfg(any(feature = "std", feature = "alloc"))]
-  fn visit_string<String>(self, v: String) -> Result<Self::Value, String> {
-    self.visit_str(&v)
-  }
 }
 
 macro_rules! serialize_type {
