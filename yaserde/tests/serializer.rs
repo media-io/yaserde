@@ -99,7 +99,12 @@ fn se_attributes() {
     }
   }
 
-  assert_eq!(SubStruct::default(), SubStruct{subitem: "".to_string()});
+  assert_eq!(
+    SubStruct::default(),
+    SubStruct {
+      subitem: "".to_string()
+    }
+  );
 
   let model = XmlStruct {
     item: "something".to_string(),
@@ -138,7 +143,12 @@ fn ser_rename() {
     }
   }
 
-  assert_eq!(SubStruct::default(), SubStruct{subitem: "".to_string()});
+  assert_eq!(
+    SubStruct::default(),
+    SubStruct {
+      subitem: "".to_string()
+    }
+  );
 
   let model = XmlStruct {
     item: "something".to_string(),
@@ -180,10 +190,13 @@ fn ser_text_content_with_attributes() {
     }
   }
 
-  assert_eq!(SubStruct::default(), SubStruct{
-    subitem: "".to_string(),
-    text: "".to_string(),
-  });
+  assert_eq!(
+    SubStruct::default(),
+    SubStruct {
+      subitem: "".to_string(),
+      text: "".to_string(),
+    }
+  );
 
   let model = XmlStruct {
     item: "something".to_string(),
