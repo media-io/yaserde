@@ -130,44 +130,34 @@ pub fn parse(
 
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
-          let visitor = Ident::new("visit_str", Span::call_site());
-          build_declare_visitor(&quote!{String}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{String}, &quote!{visit_str}, &visitor_label)
         }
         Some(FieldType::FieldTypeBool) => {
-          let visitor = Ident::new("visit_bool", Span::call_site());
-          build_declare_visitor(&quote!{bool}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{bool}, &quote!{visit_bool}, &visitor_label)
         }
         Some(FieldType::FieldTypeI8) => {
-          let visitor = Ident::new("visit_i8", Span::call_site());
-          build_declare_visitor(&quote!{i8}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{i8}, &quote!{visit_i8}, &visitor_label)
         }
         Some(FieldType::FieldTypeU8) => {
-          let visitor = Ident::new("visit_u8", Span::call_site());
-          build_declare_visitor(&quote!{u8}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{u8}, &quote!{visit_u8}, &visitor_label)
         }
         Some(FieldType::FieldTypeI16) => {
-          let visitor = Ident::new("visit_i16", Span::call_site());
-          build_declare_visitor(&quote!{i16}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{i16}, &quote!{visit_i16}, &visitor_label)
         }
         Some(FieldType::FieldTypeU16) => {
-          let visitor = Ident::new("visit_u16", Span::call_site());
-          build_declare_visitor(&quote!{u16}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{u16}, &quote!{visit_u16}, &visitor_label)
         }
         Some(FieldType::FieldTypeI32) => {
-          let visitor = Ident::new("visit_i32", Span::call_site());
-          build_declare_visitor(&quote!{i32}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{i32}, &quote!{visit_i32}, &visitor_label)
         }
         Some(FieldType::FieldTypeU32) => {
-          let visitor = Ident::new("visit_u32", Span::call_site());
-          build_declare_visitor(&quote!{u32}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{u32}, &quote!{visit_u32}, &visitor_label)
         }
         Some(FieldType::FieldTypeI64) => {
-          let visitor = Ident::new("visit_i64", Span::call_site());
-          build_declare_visitor(&quote!{i64}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{i64}, &quote!{visit_i64}, &visitor_label)
         }
         Some(FieldType::FieldTypeU64) => {
-          let visitor = Ident::new("visit_u64", Span::call_site());
-          build_declare_visitor(&quote!{u64}, &visitor, &visitor_label)
+          build_declare_visitor(&quote!{u64}, &quote!{visit_u64}, &visitor_label)
         }
         Some(FieldType::FieldTypeStruct { struct_name }) => {
           let struct_id = struct_name.to_string();
@@ -194,44 +184,34 @@ pub fn parse(
           let dt = Box::into_raw(data_type);
           match unsafe { dt.as_ref() } {
             Some(&FieldType::FieldTypeString) => {
-              let visitor = Ident::new("visit_str", Span::call_site());
-              build_declare_visitor(&quote!{String}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{String}, &quote!{visit_str}, &visitor_label)
             }
             Some(&FieldType::FieldTypeBool) => {
-              let visitor = Ident::new("visit_bool", Span::call_site());
-              build_declare_visitor(&quote!{bool}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{bool}, &quote!{visit_bool}, &visitor_label)
             }
             Some(&FieldType::FieldTypeI8) => {
-              let visitor = Ident::new("visit_i8", Span::call_site());
-              build_declare_visitor(&quote!{i8}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{i8}, &quote!{visit_i8}, &visitor_label)
             }
             Some(&FieldType::FieldTypeU8) => {
-              let visitor = Ident::new("visit_u8", Span::call_site());
-              build_declare_visitor(&quote!{u8}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{u8}, &quote!{visit_u8}, &visitor_label)
             }
             Some(&FieldType::FieldTypeI16) => {
-              let visitor = Ident::new("visit_i16", Span::call_site());
-              build_declare_visitor(&quote!{i16}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{i16}, &quote!{visit_i16}, &visitor_label)
             }
             Some(&FieldType::FieldTypeU16) => {
-              let visitor = Ident::new("visit_u16", Span::call_site());
-              build_declare_visitor(&quote!{u16}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{u16}, &quote!{visit_u16}, &visitor_label)
             }
             Some(&FieldType::FieldTypeI32) => {
-              let visitor = Ident::new("visit_i32", Span::call_site());
-              build_declare_visitor(&quote!{i32}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{i32}, &quote!{visit_i32}, &visitor_label)
             }
             Some(&FieldType::FieldTypeU32) => {
-              let visitor = Ident::new("visit_u32", Span::call_site());
-              build_declare_visitor(&quote!{u32}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{u32}, &quote!{visit_u32}, &visitor_label)
             }
             Some(&FieldType::FieldTypeI64) => {
-              let visitor = Ident::new("visit_i64", Span::call_site());
-              build_declare_visitor(&quote!{i64}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{i64}, &quote!{visit_i64}, &visitor_label)
             }
             Some(&FieldType::FieldTypeU64) => {
-              let visitor = Ident::new("visit_u64", Span::call_site());
-              build_declare_visitor(&quote!{u64}, &visitor, &visitor_label)
+              build_declare_visitor(&quote!{u64}, &quote!{visit_u64}, &visitor_label)
             }
             Some(&FieldType::FieldTypeStruct { struct_name }) => {
               let struct_ident = Ident::new(&format!("{}", struct_name), Span::def_site());
@@ -786,7 +766,7 @@ fn build_default_value(
 
 fn build_declare_visitor(
   field_type: &Tokens,
-  visitor: &Ident,
+  visitor: &Tokens,
   visitor_label: &Ident,
 ) -> Option<Tokens> {
   Some(quote!{
