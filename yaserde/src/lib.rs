@@ -110,10 +110,10 @@ fn default_visitor() {
   }
 
   macro_rules! test_type {
-    ($visitor:tt, $message:expr) => ({
-      let t = Test{};
+    ($visitor: tt, $message: expr) => {{
+      let t = Test {};
       assert_eq!(t.$visitor(""), Err($message.to_string()));
-    })
+    }};
   }
 
   test_type!(visit_bool, "Unexpected bool \"\"");
