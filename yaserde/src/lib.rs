@@ -25,43 +25,43 @@ pub trait Visitor<'de>: Sized {
   type Value;
 
   fn visit_bool(self, v: &str) -> Result<Self::Value, String> {
-    Err(format!("Unexpected bool {}", v))
+    Err(format!("Unexpected bool {:?}", v))
   }
 
   fn visit_i8(self, v: &str) -> Result<Self::Value, String> {
-    Err(format!("Unexpected i8 {}", v))
+    Err(format!("Unexpected i8 {:?}", v))
   }
 
   fn visit_u8(self, v: &str) -> Result<Self::Value, String> {
-    Err(format!("Unexpected u8 {}", v))
+    Err(format!("Unexpected u8 {:?}", v))
   }
 
   fn visit_i16(self, v: &str) -> Result<Self::Value, String> {
-    Err(format!("Unexpected i16 {}", v))
+    Err(format!("Unexpected i16 {:?}", v))
   }
 
   fn visit_u16(self, v: &str) -> Result<Self::Value, String> {
-    Err(format!("Unexpected u16 {}", v))
+    Err(format!("Unexpected u16 {:?}", v))
   }
 
   fn visit_i32(self, v: &str) -> Result<Self::Value, String> {
-    Err(format!("Unexpected i32 {}", v))
+    Err(format!("Unexpected i32 {:?}", v))
   }
 
   fn visit_u32(self, v: &str) -> Result<Self::Value, String> {
-    Err(format!("Unexpected u32 {}", v))
+    Err(format!("Unexpected u32 {:?}", v))
   }
 
   fn visit_i64(self, v: &str) -> Result<Self::Value, String> {
-    Err(format!("Unexpected i64 {}", v))
+    Err(format!("Unexpected i64 {:?}", v))
   }
 
   fn visit_u64(self, v: &str) -> Result<Self::Value, String> {
-    Err(format!("Unexpected u64 {}", v))
+    Err(format!("Unexpected u64 {:?}", v))
   }
 
   fn visit_str(self, v: &str) -> Result<Self::Value, String> {
-    Err(format!("Unexpected str {}", v))
+    Err(format!("Unexpected str {:?}", v))
   }
 
   #[inline]
@@ -101,3 +101,23 @@ serialize_type!(i64);
 
 serialize_type!(f32);
 serialize_type!(f64);
+
+#[test]
+fn default_visitor() {
+  struct Test;
+  impl<'de> Visitor<'de> for Test {
+    type Value = u8;
+  }
+
+  let t = Test{};
+  assert_eq!(t.visit_bool(""), Err("Unexpected bool \"\"".to_string()));
+  assert_eq!(t.visit_i8(""), Err("Unexpected i8 \"\"".to_string()));
+  assert_eq!(t.visit_u8(""), Err("Unexpected u8 \"\"".to_string()));
+  assert_eq!(t.visit_i16(""), Err("Unexpected i16 \"\"".to_string()));
+  assert_eq!(t.visit_u16(""), Err("Unexpected u16 \"\"".to_string()));
+  assert_eq!(t.visit_i32(""), Err("Unexpected i32 \"\"".to_string()));
+  assert_eq!(t.visit_u32(""), Err("Unexpected u32 \"\"".to_string()));
+  assert_eq!(t.visit_i64(""), Err("Unexpected i64 \"\"".to_string()));
+  assert_eq!(t.visit_u64(""), Err("Unexpected u64 \"\"".to_string()));
+  assert_eq!(t.visit_str(""), Err("Unexpected str \"\"".to_string()));
+}
