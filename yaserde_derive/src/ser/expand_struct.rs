@@ -44,7 +44,16 @@ pub fn serialize(
         | Some(FieldType::FieldTypeU32)
         | Some(FieldType::FieldTypeI64)
         | Some(FieldType::FieldTypeU64) => Some(quote!{
-          .attr(#label_name, &self.#label)
+          .attr(#label_name, &*{
+            use std::mem;
+            unsafe {
+              let content = format!("{}", self.#label);
+              let ret : &'static str = mem::transmute(&content as &str);
+              mem::forget(content);
+              ret
+            }
+            
+          })
         }),
         Some(FieldType::FieldTypeStruct { .. }) => Some(quote!{
           .attr(#label_name, &*{

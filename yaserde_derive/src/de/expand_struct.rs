@@ -559,6 +559,8 @@ pub fn parse(
         field.ident.unwrap().to_string()
       };
 
+      let visitor_label = Ident::new(&format!("__Visitor{}", label_name), Span::call_site());
+
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => Some(quote!{
           for attr in attributes {
@@ -567,6 +569,16 @@ pub fn parse(
             }
           }
         }),
+        Some(FieldType::FieldTypeBool) => build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_bool}, &visitor_label),
+        Some(FieldType::FieldTypeI8) => build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_i8}, &visitor_label),
+        Some(FieldType::FieldTypeU8) => build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_u8}, &visitor_label),
+        Some(FieldType::FieldTypeI16) => build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_i16}, &visitor_label),
+        Some(FieldType::FieldTypeU16) => build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_u16}, &visitor_label),
+        Some(FieldType::FieldTypeI32) => build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_i32}, &visitor_label),
+        Some(FieldType::FieldTypeU32) => build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_u32}, &visitor_label),
+        Some(FieldType::FieldTypeI64) => build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_i64}, &visitor_label),
+        Some(FieldType::FieldTypeU64) => build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_u64}, &visitor_label),
+
         Some(FieldType::FieldTypeStruct { struct_name }) => {
           let struct_ident = Ident::new(
             &format!("__Visitor_{}_{}", label_name, struct_name),
@@ -802,6 +814,25 @@ fn build_call_visitor(
 
       if let Ok(value) = result {
         #label#action
+      }
+    }
+  })
+}
+
+fn build_call_visitor_for_attribute(
+  label: &Option<Ident>,
+  label_name: &str,
+  visitor: &Tokens,
+  visitor_label: &Ident,
+) -> Option<Tokens> {
+  Some(quote!{
+    for attr in attributes {
+      if attr.name.local_name == #label_name {
+        let visitor = #visitor_label{};
+        match visitor.#visitor(&attr.value) {
+          Ok(value) => {#label = value;}
+          Err(msg) => {return Err(msg);}
+        }
       }
     }
   })
