@@ -109,15 +109,21 @@ fn default_visitor() {
     type Value = u8;
   }
 
-  let t = Test{};
-  assert_eq!(t.visit_bool(""), Err("Unexpected bool \"\"".to_string()));
-  assert_eq!(t.visit_i8(""), Err("Unexpected i8 \"\"".to_string()));
-  assert_eq!(t.visit_u8(""), Err("Unexpected u8 \"\"".to_string()));
-  assert_eq!(t.visit_i16(""), Err("Unexpected i16 \"\"".to_string()));
-  assert_eq!(t.visit_u16(""), Err("Unexpected u16 \"\"".to_string()));
-  assert_eq!(t.visit_i32(""), Err("Unexpected i32 \"\"".to_string()));
-  assert_eq!(t.visit_u32(""), Err("Unexpected u32 \"\"".to_string()));
-  assert_eq!(t.visit_i64(""), Err("Unexpected i64 \"\"".to_string()));
-  assert_eq!(t.visit_u64(""), Err("Unexpected u64 \"\"".to_string()));
-  assert_eq!(t.visit_str(""), Err("Unexpected str \"\"".to_string()));
+  macro_rules! test_type {
+    ($visitor:tt, $message:expr) => ({
+      let t = Test{};
+      assert_eq!(t.$visitor(""), Err($message.to_string()));
+    })
+  }
+
+  test_type!(visit_bool, "Unexpected bool \"\"");
+  test_type!(visit_i8, "Unexpected i8 \"\"");
+  test_type!(visit_u8, "Unexpected u8 \"\"");
+  test_type!(visit_i16, "Unexpected i16 \"\"");
+  test_type!(visit_u16, "Unexpected u16 \"\"");
+  test_type!(visit_i32, "Unexpected i32 \"\"");
+  test_type!(visit_u32, "Unexpected u32 \"\"");
+  test_type!(visit_i64, "Unexpected i64 \"\"");
+  test_type!(visit_u64, "Unexpected u64 \"\"");
+  test_type!(visit_str, "Unexpected str \"\"");
 }
