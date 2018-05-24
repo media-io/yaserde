@@ -38,8 +38,8 @@ macro_rules! convert_and_validate_for_attribute {
 
     let model = Data { item: $value };
 
-    let content = String::from("<?xml version=\"1.0\" encoding=\"utf-8\"?><data item=\"") + $content
-      + "\" />";
+    let content =
+      String::from("<?xml version=\"1.0\" encoding=\"utf-8\"?><data item=\"") + $content + "\" />";
 
     let loaded: Result<Data, String> = from_str(&content);
     assert_eq!(loaded, Ok(model));

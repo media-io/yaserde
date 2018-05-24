@@ -52,7 +52,7 @@ pub fn serialize(
               mem::forget(content);
               ret
             }
-            
+
           })
         }),
         Some(FieldType::FieldTypeStruct { .. }) => Some(quote!{
