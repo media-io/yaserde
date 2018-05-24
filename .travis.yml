@@ -39,17 +39,7 @@ matrix:
       install:
         - curl -sL https://github.com/xd009642/tarpaulin/releases/download/$TARPAULIN_VERSION/cargo-tarpaulin-$TARPAULIN_VERSION-travis.tar.gz | tar xvz -C $HOME/.cargo/bin
       script:
-        - cargo tarpaulin --verbose > ./tarpaulin.out
-
-        # Fetch coverage percentage (integer)
-        - COVERAGE=$(cat ./tarpaulin.out | awk -F '.' '/coverage/ { print $1 }')
-        - echo COVERAGE=${COVERAGE}
-
-        # Print uncoverted lines
-        - 'echo "UNCOVERED LINES" && grep "hits: 0" ./tarpaulin.out'
-
-        # Exit 1, if coverage is less than 89%
-        - if [ $COVERAGE -lt 89 ]; then exit 0; fi
+        - cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
 
 script:
   - cargo test
