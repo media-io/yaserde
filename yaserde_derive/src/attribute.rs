@@ -1,7 +1,7 @@
-use proc_macro2::TokenTreeIter;
-use proc_macro2::TokenNode::*;
-use proc_macro2::Spacing;
-use proc_macro2::Delimiter::Parenthesis;
+
+use proc_macro2::TokenTree;
+use proc_macro2::Delimiter;
+use proc_macro2::token_stream::IntoIter;
 use std::collections::BTreeMap;
 use syn::Attribute;
 
@@ -15,13 +15,15 @@ pub struct YaSerdeAttribute {
   pub text: bool,
 }
 
-fn get_value(iter: &mut TokenTreeIter) -> Option<String> {
-  match (iter.next(), iter.next()) {
-    (Some(operator), Some(value)) => match (operator.kind, value.kind) {
-      (Op('=', Spacing::Alone), Literal(l)) => Some(l.to_string().replace("\"", "")),
-      _ => None,
-    },
-    _ => None,
+fn get_value(iter: &mut IntoIter) -> Option<String> {
+  if let (Some(TokenTree::Punct(operator)), Some(TokenTree::Literal(value))) = (iter.next(), iter.next()) {
+    if operator.as_char() == '=' {
+      Some(value.to_string().replace("\"", ""))
+    } else {
+      None
+    }
+  } else {
+    None
   }
 }
 
@@ -37,39 +39,41 @@ impl YaSerdeAttribute {
     for attr in attrs.iter() {
       let mut attr_iter = attr.clone().tts.into_iter();
       if let Some(token) = attr_iter.next() {
-        if let Group(Parenthesis, token_stream) = token.kind {
-          let mut attr_iter = token_stream.into_iter();
+        if let TokenTree::Group(group) = token {
+          if group.delimiter() == Delimiter::Parenthesis {
+            let mut attr_iter = group.stream().into_iter();
 
-          while let Some(item) = attr_iter.next() {
-            if let Term(term) = item.kind {
-              match term.as_str() {
-                "attribute" => {
-                  attribute = true;
-                }
-                "namespace" => {
-                  if let Some(namespace) = get_value(&mut attr_iter) {
-                    let splitted: Vec<&str> = namespace.split(": ").collect();
-                    if splitted.len() == 2 {
-                      namespaces.insert(splitted[0].to_owned(), splitted[1].to_owned());
-                    }
-                    if splitted.len() == 1 {
-                      namespaces.insert("".to_owned(), splitted[0].to_owned());
+            while let Some(item) = attr_iter.next() {
+              if let TokenTree::Ident(ident) = item {
+                match ident.to_string().as_str() {
+                  "attribute" => {
+                    attribute = true;
+                  }
+                  "namespace" => {
+                    if let Some(namespace) = get_value(&mut attr_iter) {
+                      let splitted: Vec<&str> = namespace.split(": ").collect();
+                      if splitted.len() == 2 {
+                        namespaces.insert(splitted[0].to_owned(), splitted[1].to_owned());
+                      }
+                      if splitted.len() == 1 {
+                        namespaces.insert("".to_owned(), splitted[0].to_owned());
+                      }
                     }
                   }
+                  "prefix" => {
+                    prefix = get_value(&mut attr_iter);
+                  }
+                  "rename" => {
+                    rename = get_value(&mut attr_iter);
+                  }
+                  "root" => {
+                    root = get_value(&mut attr_iter);
+                  }
+                  "text" => {
+                    text = true;
+                  }
+                  _ => {}
                 }
-                "prefix" => {
-                  prefix = get_value(&mut attr_iter);
-                }
-                "rename" => {
-                  rename = get_value(&mut attr_iter);
-                }
-                "root" => {
-                  root = get_value(&mut attr_iter);
-                }
-                "text" => {
-                  text = true;
-                }
-                _ => {}
               }
             }
           }

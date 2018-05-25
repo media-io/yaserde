@@ -2,12 +2,11 @@ pub mod expand_enum;
 pub mod expand_struct;
 
 use attribute;
-use proc_macro2::Span;
-use quote;
+use proc_macro2::{TokenStream, Span};
 use syn;
 use syn::Ident;
 
-pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<quote::Tokens, String> {
+pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<TokenStream, String> {
   let name = &ast.ident;
   let attrs = &ast.attrs;
   let data = &ast.data;
@@ -27,7 +26,7 @@ pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<quote::Tokens
 
   let dummy_const = Ident::new(
     &format!("_IMPL_YA_DESERIALIZE_FOR_{}", name),
-    Span::def_site(),
+    Span::call_site(),
   );
 
   let generated = quote! {

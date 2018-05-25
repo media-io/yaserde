@@ -20,7 +20,7 @@ pub enum FieldType {
 
 impl FieldType {
   fn from_ident(t: &syn::PathSegment) -> Option<FieldType> {
-    match t.ident.as_ref() {
+    match t.ident.to_string().as_str() {
       "String" => Some(FieldType::FieldTypeString),
       "bool" => Some(FieldType::FieldTypeBool),
       "i8" => Some(FieldType::FieldTypeI8),
@@ -42,7 +42,7 @@ impl FieldType {
         }
       }),
       _struct_name => Some(FieldType::FieldTypeStruct {
-        struct_name: t.ident,
+        struct_name: t.ident.clone(),
       }),
     }
   }
@@ -64,7 +64,7 @@ fn get_vec_type(t: &syn::PathSegment) -> Option<syn::Ident> {
       if let syn::GenericArgument::Type(ref argument) = *tt {
         if let Path(ref path2) = *argument {
           if let Some(Pair::End(ttt)) = path2.path.segments.first() {
-            return Some(ttt.ident);
+            return Some(ttt.ident.clone());
           }
         }
       }

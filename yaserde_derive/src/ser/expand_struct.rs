@@ -1,10 +1,10 @@
 use attribute::*;
 use field_type::*;
-use quote::Tokens;
+use quote::TokenStreamExt;
 use std::collections::BTreeMap;
 use syn::Ident;
 use syn::DataStruct;
-use proc_macro2::Span;
+use proc_macro2::{TokenStream, Span};
 use std::string::ToString;
 
 pub fn serialize(
@@ -12,8 +12,8 @@ pub fn serialize(
   name: &Ident,
   root: &str,
   namespaces: &BTreeMap<String, String>,
-) -> Tokens {
-  let build_attributes: Tokens = data_struct
+) -> TokenStream {
+  let build_attributes: TokenStream = data_struct
     .fields
     .iter()
     .map(|field| {
@@ -24,9 +24,9 @@ pub fn serialize(
 
       let renamed_label = match field_attrs.rename {
         Some(value) => Some(Ident::new(&format!("{}", value), Span::call_site())),
-        None => field.ident,
+        None => field.ident.clone(),
       };
-      let label = field.ident;
+      let label = &field.ident;
       let label_name = if let Some(prefix) = field_attrs.prefix {
         prefix + ":" + renamed_label.unwrap().to_string().as_ref()
       } else {
@@ -75,12 +75,12 @@ pub fn serialize(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut tokens, token| {
+    .fold(TokenStream::empty(), |mut tokens, token| {
       tokens.append_all(token);
       tokens
     });
 
-  let add_namespaces: Tokens = namespaces
+  let add_namespaces: TokenStream = namespaces
     .iter()
     .map(|(prefix, namespace)| {
       Some(quote!(
@@ -89,12 +89,12 @@ pub fn serialize(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut tokens, token| {
+    .fold(TokenStream::empty(), |mut tokens, token| {
       tokens.append_all(token);
       tokens
     });
 
-  let struct_inspector: Tokens = data_struct
+  let struct_inspector: TokenStream = data_struct
     .fields
     .iter()
     .map(|field| {
@@ -103,7 +103,7 @@ pub fn serialize(
         return None;
       }
 
-      let label = field.ident;
+      let label = &field.ident;
       if field_attrs.text {
         return Some(quote!(
           let data_event = XmlEvent::characters(&self.#label);
@@ -113,7 +113,7 @@ pub fn serialize(
 
       let renamed_label = match field_attrs.rename {
         Some(value) => Some(Ident::new(&format!("{}", value), Span::call_site())),
-        None => field.ident,
+        None => field.ident.clone(),
       };
 
       let label_name = if let Some(prefix) = field_attrs.prefix {
@@ -220,7 +220,7 @@ pub fn serialize(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut tokens, token| {
+    .fold(TokenStream::empty(), |mut tokens, token| {
       tokens.append_all(token);
       tokens
     });

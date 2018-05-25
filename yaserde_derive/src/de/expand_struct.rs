@@ -1,24 +1,26 @@
 use attribute::*;
 use field_type::*;
-use quote::Tokens;
+use quote::TokenStreamExt;
 use std::collections::BTreeMap;
 use syn::Ident;
 use syn::DataStruct;
-use proc_macro2::Span;
+use proc_macro2::{TokenStream, Span};
 
 pub fn parse(
   data_struct: &DataStruct,
   name: &Ident,
   root: &str,
   namespaces: &BTreeMap<String, String>,
-) -> Tokens {
-  let validate_namespace: Tokens = namespaces
+) -> TokenStream {
+  let validate_namespace: TokenStream = namespaces
     .iter()
     .map(|(_prefix, namespace)| {
       Some(quote!(
 
         let mut found = false;
+        println!("{:?}", namespace);
         for (key, value) in namespace {
+          println!("{:?}", value);
           if #namespace == value {
             found = true;
           }
@@ -31,16 +33,16 @@ pub fn parse(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut tokens, token| {
+    .fold(TokenStream::empty(), |mut tokens, token| {
       tokens.append_all(token);
       tokens
     });
 
-  let variables: Tokens = data_struct
+  let variables: TokenStream = data_struct
     .fields
     .iter()
     .map(|field| {
-      let label = field.ident;
+      let label = &field.ident;
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
           build_default_value(&label, &quote!{String}, &quote!{"".to_string()})
@@ -93,7 +95,7 @@ pub fn parse(
             Some(&FieldType::FieldTypeU64) => {
               build_default_value(&label, &quote!{Vec<u64>}, &quote!{vec![]})
             }
-            Some(&FieldType::FieldTypeStruct { struct_name }) => Some(quote!{
+            Some(&FieldType::FieldTypeStruct { ref struct_name }) => Some(quote!{
               #[allow(unused_mut)]
               let mut #label : Vec<#struct_name> = vec![];
             }),
@@ -110,12 +112,12 @@ pub fn parse(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut sum, val| {
+    .fold(TokenStream::empty(), |mut sum, val| {
       sum.append_all(val);
       sum
     });
 
-  let field_visitors: Tokens = data_struct
+  let field_visitors: TokenStream = data_struct
     .fields
     .iter()
     .map(|field| {
@@ -123,7 +125,7 @@ pub fn parse(
       let label_name = if let Some(value) = field_attrs.rename {
         Ident::new(&format!("{}", value), Span::call_site()).to_string()
       } else {
-        field.ident.unwrap().to_string()
+        field.ident.clone().unwrap().to_string()
       };
 
       let visitor_label = Ident::new(&format!("__Visitor{}", label_name), Span::call_site());
@@ -213,8 +215,8 @@ pub fn parse(
             Some(&FieldType::FieldTypeU64) => {
               build_declare_visitor(&quote!{u64}, &quote!{visit_u64}, &visitor_label)
             }
-            Some(&FieldType::FieldTypeStruct { struct_name }) => {
-              let struct_ident = Ident::new(&format!("{}", struct_name), Span::def_site());
+            Some(&FieldType::FieldTypeStruct { ref struct_name }) => {
+              let struct_ident = Ident::new(&format!("{}", struct_name), Span::call_site());
               Some(quote!{
                 #[allow(non_snake_case, non_camel_case_types)]
                 struct #visitor_label;
@@ -231,17 +233,17 @@ pub fn parse(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut sum, val| {
+    .fold(TokenStream::empty(), |mut sum, val| {
       sum.append_all(val);
       sum
     });
 
-  let call_visitors: Tokens = data_struct
+  let call_visitors: TokenStream = data_struct
     .fields
     .iter()
     .map(|field| {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-      let label = field.ident;
+      let label = &field.ident;
 
       if field_attrs.attribute {
         return None;
@@ -250,7 +252,7 @@ pub fn parse(
       let label_name = if let Some(value) = field_attrs.rename {
         Ident::new(&format!("{}", value), Span::call_site()).to_string()
       } else {
-        field.ident.unwrap().to_string()
+        field.ident.clone().unwrap().to_string()
       };
 
       let visitor_label = Ident::new(&format!("__Visitor{}", label_name), Span::call_site());
@@ -493,8 +495,8 @@ pub fn parse(
                 &label_name,
               )
             }
-            Some(&FieldType::FieldTypeStruct { struct_name }) => {
-              let struct_ident = Ident::new(&format!("{}", struct_name), Span::def_site());
+            Some(&FieldType::FieldTypeStruct { ref struct_name }) => {
+              let struct_ident = Ident::new(&format!("{}", struct_name), Span::call_site());
               Some(quote!{
                 #label_name => {
                   reader.set_map_value();
@@ -518,12 +520,12 @@ pub fn parse(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut sum, val| {
+    .fold(TokenStream::empty(), |mut sum, val| {
       sum.append_all(val);
       sum
     });
 
-  let attributes_loading: Tokens = data_struct
+  let attributes_loading: TokenStream = data_struct
     .fields
     .iter()
     .map(|field| {
@@ -532,11 +534,11 @@ pub fn parse(
         return None;
       }
 
-      let label = field.ident;
+      let label = &field.ident;
       let label_name = if let Some(value) = field_attrs.rename {
         Ident::new(&format!("{}", value), Span::call_site()).to_string()
       } else {
-        field.ident.unwrap().to_string()
+        field.ident.clone().unwrap().to_string()
       };
 
       let visitor_label = Ident::new(&format!("__Visitor{}", label_name), Span::call_site());
@@ -600,16 +602,16 @@ pub fn parse(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut sum, val| {
+    .fold(TokenStream::empty(), |mut sum, val| {
       sum.append_all(val);
       sum
     });
 
-  let set_text: Tokens = data_struct
+  let set_text: TokenStream = data_struct
     .fields
     .iter()
     .map(|field| {
-      let label = field.ident;
+      let label = &field.ident;
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
 
       match get_field_type(field) {
@@ -669,16 +671,16 @@ pub fn parse(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut tokens, token| {
+    .fold(TokenStream::empty(), |mut tokens, token| {
       tokens.append_all(token);
       tokens
     });
 
-  let struct_builder: Tokens = data_struct
+  let struct_builder: TokenStream = data_struct
     .fields
     .iter()
     .map(|field| {
-      let label = field.ident;
+      let label = &field.ident;
 
       if get_field_type(field).is_some() {
         Some(quote!{
@@ -690,7 +692,7 @@ pub fn parse(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut tokens, token| {
+    .fold(TokenStream::empty(), |mut tokens, token| {
       tokens.append_all(token);
       tokens
     });
@@ -755,9 +757,9 @@ pub fn parse(
 
 fn build_default_value(
   label: &Option<Ident>,
-  field_type: &Tokens,
-  default: &Tokens,
-) -> Option<Tokens> {
+  field_type: &TokenStream,
+  default: &TokenStream,
+) -> Option<TokenStream> {
   Some(quote!{
     #[allow(unused_mut)]
     let mut #label : #field_type = #default;
@@ -765,10 +767,10 @@ fn build_default_value(
 }
 
 fn build_declare_visitor(
-  field_type: &Tokens,
-  visitor: &Tokens,
+  field_type: &TokenStream,
+  visitor: &TokenStream,
   visitor_label: &Ident,
-) -> Option<Tokens> {
+) -> Option<TokenStream> {
   Some(quote!{
     #[allow(non_snake_case, non_camel_case_types)]
     struct #visitor_label;
@@ -783,13 +785,13 @@ fn build_declare_visitor(
 }
 
 fn build_call_visitor(
-  field_type: &Tokens,
+  field_type: &TokenStream,
   visitor: &Ident,
-  action: &Tokens,
+  action: &TokenStream,
   visitor_label: &Ident,
   label: &Option<Ident>,
   label_name: &str,
-) -> Option<Tokens> {
+) -> Option<TokenStream> {
   Some(quote!{
     #label_name => {
       let visitor = #visitor_label{};
@@ -820,9 +822,9 @@ fn build_call_visitor(
 fn build_call_visitor_for_attribute(
   label: &Option<Ident>,
   label_name: &str,
-  visitor: &Tokens,
+  visitor: &TokenStream,
   visitor_label: &Ident,
-) -> Option<Tokens> {
+) -> Option<TokenStream> {
   Some(quote!{
     for attr in attributes {
       if attr.name.local_name == #label_name {
@@ -839,8 +841,8 @@ fn build_call_visitor_for_attribute(
 fn build_set_text_to_value(
   field_attrs: &YaSerdeAttribute,
   label: &Option<Ident>,
-  action: &Tokens,
-) -> Option<Tokens> {
+  action: &TokenStream,
+) -> Option<TokenStream> {
   if field_attrs.text {
     Some(quote!{
       #label = #action;

@@ -1,19 +1,19 @@
 use attribute::*;
 use field_type::*;
-use quote::Tokens;
+use quote::TokenStreamExt;
 use std::collections::BTreeMap;
 use syn::Fields;
 use syn::Ident;
 use syn::DataEnum;
-use proc_macro2::Span;
+use proc_macro2::{TokenStream, Span};
 
 pub fn parse(
   data_enum: &DataEnum,
   name: &Ident,
   root: &str,
   _namespaces: &BTreeMap<String, String>,
-) -> Tokens {
-  let variables: Tokens = data_enum
+) -> TokenStream {
+  let variables: TokenStream = data_enum
     .variants
     .iter()
     .map(|variant| match variant.fields {
@@ -23,7 +23,7 @@ pub fn parse(
           .named
           .iter()
           .map(|field| {
-            let field_label = field.ident;
+            let field_label = &field.ident;
 
             match get_field_type(field) {
               Some(FieldType::FieldTypeString) => {
@@ -93,7 +93,7 @@ pub fn parse(
                   Some(&FieldType::FieldTypeU64) => {
                     build_default_value(&field_label, &quote!{Vec<u64>}, &quote!{vec![]})
                   }
-                  Some(&FieldType::FieldTypeStruct { struct_name }) => Some(quote!{
+                  Some(&FieldType::FieldTypeStruct { ref struct_name }) => Some(quote!{
                     #[allow(unused_mut)]
                     let mut #field_label : Vec<#struct_name> = vec![];
                   }),
@@ -110,7 +110,7 @@ pub fn parse(
           })
           .filter(|x| x.is_some())
           .map(|x| x.unwrap())
-          .fold(Tokens::new(), |mut sum, val| {
+          .fold(TokenStream::empty(), |mut sum, val| {
             sum.append_all(val);
             sum
           });
@@ -123,12 +123,12 @@ pub fn parse(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut sum, val| {
+    .fold(TokenStream::empty(), |mut sum, val| {
       sum.append_all(val);
       sum
     });
 
-  let enum_visitors: Tokens = data_enum
+  let enum_visitors: TokenStream = data_enum
     .variants
     .iter()
     .map(|variant| {
@@ -164,7 +164,7 @@ pub fn parse(
             })
             .filter(|x| x.is_some())
             .map(|x| x.unwrap())
-            .fold(Tokens::new(), |mut sum, val| {
+            .fold(TokenStream::empty(), |mut sum, val| {
               sum.append_all(val);
               sum
             });
@@ -178,21 +178,21 @@ pub fn parse(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut sum, val| {
+    .fold(TokenStream::empty(), |mut sum, val| {
       sum.append_all(val);
       sum
     });
 
-  let match_to_enum: Tokens = data_enum
+  let match_to_enum: TokenStream = data_enum
     .variants
     .iter()
     .map(|variant| {
       let field_attrs = YaSerdeAttribute::parse(&variant.attrs);
       let renamed_label = match field_attrs.rename {
         Some(value) => Ident::new(&format!("{}", value), Span::call_site()),
-        None => variant.ident,
+        None => variant.ident.clone(),
       };
-      let label = variant.ident;
+      let label = &variant.ident;
       let label_name = renamed_label.to_string();
 
       match variant.fields {
@@ -206,7 +206,7 @@ pub fn parse(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut tokens, token| {
+    .fold(TokenStream::empty(), |mut tokens, token| {
       tokens.append_all(token);
       tokens
     });
@@ -274,9 +274,9 @@ pub fn parse(
 
 fn build_default_value(
   label: &Option<Ident>,
-  field_type: &Tokens,
-  default: &Tokens,
-) -> Option<Tokens> {
+  field_type: &TokenStream,
+  default: &TokenStream,
+) -> Option<TokenStream> {
   Some(quote!{
     #[allow(unused_mut)]
     let mut #label : #field_type = #default;

@@ -1,28 +1,28 @@
 use attribute::*;
 use field_type::*;
-use quote::Tokens;
+use quote::TokenStreamExt;
 use std::collections::BTreeMap;
 use syn::Fields;
 use syn::Ident;
 use syn::DataEnum;
-use proc_macro2::Span;
+use proc_macro2::{TokenStream, Span};
 
 pub fn serialize(
   data_enum: &DataEnum,
   name: &Ident,
   root: &str,
   namespaces: &BTreeMap<String, String>,
-) -> Tokens {
-  let write_enum_content: Tokens = data_enum
+) -> TokenStream {
+  let write_enum_content: TokenStream = data_enum
     .variants
     .iter()
     .map(|variant| {
       let variant_attrs = YaSerdeAttribute::parse(&variant.attrs);
       let renamed_label = match variant_attrs.rename {
         Some(value) => Ident::new(&format!("{}", value), Span::call_site()),
-        None => variant.ident,
+        None => variant.ident.clone(),
       };
-      let label = variant.ident;
+      let label = &variant.ident;
       let label_name = if let Some(prefix) = variant_attrs.prefix {
         prefix + ":" + renamed_label.to_string().as_ref()
       } else {
@@ -46,7 +46,7 @@ pub fn serialize(
                 return None;
               }
 
-              let field_label = field.ident;
+              let field_label = &field.ident;
               if field_attrs.text {
                 return Some(quote!(
                 let data_event = XmlEvent::characters(&self.#field_label);
@@ -56,7 +56,7 @@ pub fn serialize(
 
               let renamed_field_label = match field_attrs.rename {
                 Some(value) => Some(Ident::new(&format!("{}", value), Span::call_site())),
-                None => field.ident,
+                None => field.ident.clone(),
               };
               let field_label_name = renamed_field_label.unwrap().to_string();
 
@@ -116,7 +116,7 @@ pub fn serialize(
             })
             .filter(|x| x.is_some())
             .map(|x| x.unwrap())
-            .fold(Tokens::new(), |mut tokens, token| {
+            .fold(TokenStream::empty(), |mut tokens, token| {
               tokens.append_all(token);
               tokens
             });
@@ -138,12 +138,12 @@ pub fn serialize(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut tokens, token| {
+    .fold(TokenStream::empty(), |mut tokens, token| {
       tokens.append_all(token);
       tokens
     });
 
-  let add_namespaces: Tokens = namespaces
+  let add_namespaces: TokenStream = namespaces
     .iter()
     .map(|(prefix, namespace)| {
       Some(quote!(
@@ -152,7 +152,7 @@ pub fn serialize(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(Tokens::new(), |mut tokens, token| {
+    .fold(TokenStream::empty(), |mut tokens, token| {
       tokens.append_all(token);
       tokens
     });
