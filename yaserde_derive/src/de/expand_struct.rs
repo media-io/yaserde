@@ -45,19 +45,19 @@ pub fn parse(
       let label = &field.ident;
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
-          build_default_value(&label, &quote!{String}, &quote!{"".to_string()})
+          build_default_value(label, &quote!{String}, &quote!{"".to_string()})
         }
         Some(FieldType::FieldTypeBool) => {
-          build_default_value(&label, &quote!{bool}, &quote!{false})
+          build_default_value(label, &quote!{bool}, &quote!{false})
         }
-        Some(FieldType::FieldTypeI8) => build_default_value(&label, &quote!{i8}, &quote!{0}),
-        Some(FieldType::FieldTypeU8) => build_default_value(&label, &quote!{u8}, &quote!{0}),
-        Some(FieldType::FieldTypeI16) => build_default_value(&label, &quote!{i16}, &quote!{0}),
-        Some(FieldType::FieldTypeU16) => build_default_value(&label, &quote!{u16}, &quote!{0}),
-        Some(FieldType::FieldTypeI32) => build_default_value(&label, &quote!{i32}, &quote!{0}),
-        Some(FieldType::FieldTypeU32) => build_default_value(&label, &quote!{u32}, &quote!{0}),
-        Some(FieldType::FieldTypeI64) => build_default_value(&label, &quote!{i64}, &quote!{0}),
-        Some(FieldType::FieldTypeU64) => build_default_value(&label, &quote!{u64}, &quote!{0}),
+        Some(FieldType::FieldTypeI8) => build_default_value(label, &quote!{i8}, &quote!{0}),
+        Some(FieldType::FieldTypeU8) => build_default_value(label, &quote!{u8}, &quote!{0}),
+        Some(FieldType::FieldTypeI16) => build_default_value(label, &quote!{i16}, &quote!{0}),
+        Some(FieldType::FieldTypeU16) => build_default_value(label, &quote!{u16}, &quote!{0}),
+        Some(FieldType::FieldTypeI32) => build_default_value(label, &quote!{i32}, &quote!{0}),
+        Some(FieldType::FieldTypeU32) => build_default_value(label, &quote!{u32}, &quote!{0}),
+        Some(FieldType::FieldTypeI64) => build_default_value(label, &quote!{i64}, &quote!{0}),
+        Some(FieldType::FieldTypeU64) => build_default_value(label, &quote!{u64}, &quote!{0}),
         Some(FieldType::FieldTypeStruct { struct_name }) => Some(quote!{
           #[allow(unused_mut, non_snake_case, non_camel_case_types)]
           let mut #label : #struct_name = #struct_name::default();
@@ -66,34 +66,34 @@ pub fn parse(
           let dt = Box::into_raw(data_type);
           match unsafe { dt.as_ref() } {
             Some(&FieldType::FieldTypeString) => {
-              build_default_value(&label, &quote!{Vec<String>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<String>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeBool) => {
-              build_default_value(&label, &quote!{Vec<bool>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<bool>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeI8) => {
-              build_default_value(&label, &quote!{Vec<i8>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<i8>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeU8) => {
-              build_default_value(&label, &quote!{Vec<u8>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<u8>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeI16) => {
-              build_default_value(&label, &quote!{Vec<i16>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<i16>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeU16) => {
-              build_default_value(&label, &quote!{Vec<u16>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<u16>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeI32) => {
-              build_default_value(&label, &quote!{Vec<i32>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<i32>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeU32) => {
-              build_default_value(&label, &quote!{Vec<u32>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<u32>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeI64) => {
-              build_default_value(&label, &quote!{Vec<i64>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<i64>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeU64) => {
-              build_default_value(&label, &quote!{Vec<u64>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<u64>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeStruct { ref struct_name }) => Some(quote!{
               #[allow(unused_mut)]
@@ -265,7 +265,7 @@ pub fn parse(
             &visitor,
             &quote!{= value},
             &visitor_label,
-            &label,
+            label,
             &label_name,
           )
         }
@@ -276,7 +276,7 @@ pub fn parse(
             &visitor,
             &quote!{= value},
             &visitor_label,
-            &label,
+            label,
             &label_name,
           )
         }
@@ -287,7 +287,7 @@ pub fn parse(
             &visitor,
             &quote!{= value},
             &visitor_label,
-            &label,
+            label,
             &label_name,
           )
         }
@@ -298,7 +298,7 @@ pub fn parse(
             &visitor,
             &quote!{= value},
             &visitor_label,
-            &label,
+            label,
             &label_name,
           )
         }
@@ -309,7 +309,7 @@ pub fn parse(
             &visitor,
             &quote!{= value},
             &visitor_label,
-            &label,
+            label,
             &label_name,
           )
         }
@@ -320,7 +320,7 @@ pub fn parse(
             &visitor,
             &quote!{= value},
             &visitor_label,
-            &label,
+            label,
             &label_name,
           )
         }
@@ -331,7 +331,7 @@ pub fn parse(
             &visitor,
             &quote!{= value},
             &visitor_label,
-            &label,
+            label,
             &label_name,
           )
         }
@@ -342,7 +342,7 @@ pub fn parse(
             &visitor,
             &quote!{= value},
             &visitor_label,
-            &label,
+            label,
             &label_name,
           )
         }
@@ -353,7 +353,7 @@ pub fn parse(
             &visitor,
             &quote!{= value},
             &visitor_label,
-            &label,
+            label,
             &label_name,
           )
         }
@@ -364,7 +364,7 @@ pub fn parse(
             &visitor,
             &quote!{= value},
             &visitor_label,
-            &label,
+            label,
             &label_name,
           )
         }
@@ -392,7 +392,7 @@ pub fn parse(
                 &visitor,
                 &quote!{.push(value)},
                 &visitor_label,
-                &label,
+                label,
                 &label_name,
               )
             }
@@ -403,7 +403,7 @@ pub fn parse(
                 &visitor,
                 &quote!{.push(value)},
                 &visitor_label,
-                &label,
+                label,
                 &label_name,
               )
             }
@@ -414,7 +414,7 @@ pub fn parse(
                 &visitor,
                 &quote!{.push(value)},
                 &visitor_label,
-                &label,
+                label,
                 &label_name,
               )
             }
@@ -425,7 +425,7 @@ pub fn parse(
                 &visitor,
                 &quote!{.push(value)},
                 &visitor_label,
-                &label,
+                label,
                 &label_name,
               )
             }
@@ -436,7 +436,7 @@ pub fn parse(
                 &visitor,
                 &quote!{.push(value)},
                 &visitor_label,
-                &label,
+                label,
                 &label_name,
               )
             }
@@ -447,7 +447,7 @@ pub fn parse(
                 &visitor,
                 &quote!{.push(value)},
                 &visitor_label,
-                &label,
+                label,
                 &label_name,
               )
             }
@@ -458,7 +458,7 @@ pub fn parse(
                 &visitor,
                 &quote!{.push(value)},
                 &visitor_label,
-                &label,
+                label,
                 &label_name,
               )
             }
@@ -469,7 +469,7 @@ pub fn parse(
                 &visitor,
                 &quote!{.push(value)},
                 &visitor_label,
-                &label,
+                label,
                 &label_name,
               )
             }
@@ -480,7 +480,7 @@ pub fn parse(
                 &visitor,
                 &quote!{.push(value)},
                 &visitor_label,
-                &label,
+                label,
                 &label_name,
               )
             }
@@ -491,7 +491,7 @@ pub fn parse(
                 &visitor,
                 &quote!{.push(value)},
                 &visitor_label,
-                &label,
+                label,
                 &label_name,
               )
             }
@@ -552,31 +552,31 @@ pub fn parse(
           }
         }),
         Some(FieldType::FieldTypeBool) => {
-          build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_bool}, &visitor_label)
+          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_bool}, &visitor_label)
         }
         Some(FieldType::FieldTypeI8) => {
-          build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_i8}, &visitor_label)
+          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_i8}, &visitor_label)
         }
         Some(FieldType::FieldTypeU8) => {
-          build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_u8}, &visitor_label)
+          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_u8}, &visitor_label)
         }
         Some(FieldType::FieldTypeI16) => {
-          build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_i16}, &visitor_label)
+          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_i16}, &visitor_label)
         }
         Some(FieldType::FieldTypeU16) => {
-          build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_u16}, &visitor_label)
+          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_u16}, &visitor_label)
         }
         Some(FieldType::FieldTypeI32) => {
-          build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_i32}, &visitor_label)
+          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_i32}, &visitor_label)
         }
         Some(FieldType::FieldTypeU32) => {
-          build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_u32}, &visitor_label)
+          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_u32}, &visitor_label)
         }
         Some(FieldType::FieldTypeI64) => {
-          build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_i64}, &visitor_label)
+          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_i64}, &visitor_label)
         }
         Some(FieldType::FieldTypeU64) => {
-          build_call_visitor_for_attribute(&label, &label_name, &quote!{visit_u64}, &visitor_label)
+          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_u64}, &visitor_label)
         }
 
         Some(FieldType::FieldTypeStruct { struct_name }) => {
@@ -616,51 +616,51 @@ pub fn parse(
 
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
-          build_set_text_to_value(&field_attrs, &label, &quote!{text_content.to_owned()})
+          build_set_text_to_value(&field_attrs, label, &quote!{text_content.to_owned()})
         }
         Some(FieldType::FieldTypeBool) => build_set_text_to_value(
           &field_attrs,
-          &label,
+          label,
           &quote!{bool::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeI8) => build_set_text_to_value(
           &field_attrs,
-          &label,
+          label,
           &quote!{i8::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeU8) => build_set_text_to_value(
           &field_attrs,
-          &label,
+          label,
           &quote!{u8::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeI16) => build_set_text_to_value(
           &field_attrs,
-          &label,
+          label,
           &quote!{i16::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeU16) => build_set_text_to_value(
           &field_attrs,
-          &label,
+          label,
           &quote!{u16::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeI32) => build_set_text_to_value(
           &field_attrs,
-          &label,
+          label,
           &quote!{i32::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeU32) => build_set_text_to_value(
           &field_attrs,
-          &label,
+          label,
           &quote!{u32::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeI64) => build_set_text_to_value(
           &field_attrs,
-          &label,
+          label,
           &quote!{i64::from_str(text_content).unwrap()},
         ),
         Some(FieldType::FieldTypeU64) => build_set_text_to_value(
           &field_attrs,
-          &label,
+          label,
           &quote!{u64::from_str(text_content).unwrap()},
         ),
 
