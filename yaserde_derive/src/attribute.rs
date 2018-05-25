@@ -1,4 +1,3 @@
-
 use proc_macro2::TokenTree;
 use proc_macro2::Delimiter;
 use proc_macro2::token_stream::IntoIter;
@@ -16,7 +15,9 @@ pub struct YaSerdeAttribute {
 }
 
 fn get_value(iter: &mut IntoIter) -> Option<String> {
-  if let (Some(TokenTree::Punct(operator)), Some(TokenTree::Literal(value))) = (iter.next(), iter.next()) {
+  if let (Some(TokenTree::Punct(operator)), Some(TokenTree::Literal(value))) =
+    (iter.next(), iter.next())
+  {
     if operator.as_char() == '=' {
       Some(value.to_string().replace("\"", ""))
     } else {

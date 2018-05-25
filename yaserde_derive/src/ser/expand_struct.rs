@@ -4,7 +4,7 @@ use quote::TokenStreamExt;
 use std::collections::BTreeMap;
 use syn::Ident;
 use syn::DataStruct;
-use proc_macro2::{TokenStream, Span};
+use proc_macro2::{Span, TokenStream};
 use std::string::ToString;
 
 pub fn serialize(

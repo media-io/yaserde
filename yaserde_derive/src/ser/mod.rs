@@ -2,7 +2,7 @@ pub mod expand_enum;
 pub mod expand_struct;
 
 use attribute;
-use proc_macro2::{TokenStream, Span};
+use proc_macro2::{Span, TokenStream};
 use syn;
 use syn::Ident;
 

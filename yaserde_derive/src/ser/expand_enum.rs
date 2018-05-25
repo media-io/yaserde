@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use syn::Fields;
 use syn::Ident;
 use syn::DataEnum;
-use proc_macro2::{TokenStream, Span};
+use proc_macro2::{Span, TokenStream};
 
 pub fn serialize(
   data_enum: &DataEnum,
