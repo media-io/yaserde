@@ -47,9 +47,7 @@ pub fn parse(
         Some(FieldType::FieldTypeString) => {
           build_default_value(label, &quote!{String}, &quote!{"".to_string()})
         }
-        Some(FieldType::FieldTypeBool) => {
-          build_default_value(label, &quote!{bool}, &quote!{false})
-        }
+        Some(FieldType::FieldTypeBool) => build_default_value(label, &quote!{bool}, &quote!{false}),
         Some(FieldType::FieldTypeI8) => build_default_value(label, &quote!{i8}, &quote!{0}),
         Some(FieldType::FieldTypeU8) => build_default_value(label, &quote!{u8}, &quote!{0}),
         Some(FieldType::FieldTypeI16) => build_default_value(label, &quote!{i16}, &quote!{0}),
