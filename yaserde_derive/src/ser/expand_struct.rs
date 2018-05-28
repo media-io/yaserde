@@ -43,7 +43,9 @@ pub fn serialize(
         | Some(FieldType::FieldTypeI32)
         | Some(FieldType::FieldTypeU32)
         | Some(FieldType::FieldTypeI64)
-        | Some(FieldType::FieldTypeU64) => Some(quote!{
+        | Some(FieldType::FieldTypeU64)
+        | Some(FieldType::FieldTypeF32)
+        | Some(FieldType::FieldTypeF64) => Some(quote!{
           .attr(#label_name, &*{
             use std::mem;
             unsafe {
@@ -141,7 +143,9 @@ pub fn serialize(
         | Some(FieldType::FieldTypeI32)
         | Some(FieldType::FieldTypeU32)
         | Some(FieldType::FieldTypeI64)
-        | Some(FieldType::FieldTypeU64) => Some(quote!{
+        | Some(FieldType::FieldTypeU64)
+        | Some(FieldType::FieldTypeF32)
+        | Some(FieldType::FieldTypeF64) => Some(quote!{
           let start_event = XmlEvent::start_element(#label_name);
           let _ret = writer.write(start_event);
 
@@ -184,7 +188,9 @@ pub fn serialize(
             | Some(&FieldType::FieldTypeI32)
             | Some(&FieldType::FieldTypeU32)
             | Some(&FieldType::FieldTypeI64)
-            | Some(&FieldType::FieldTypeU64) => Some(quote!{
+            | Some(&FieldType::FieldTypeU64)
+            | Some(&FieldType::FieldTypeF32)
+            | Some(&FieldType::FieldTypeF64) => Some(quote!{
               for item in &self.#label {
                 let start_event = XmlEvent::start_element(#label_name);
                 let _ret = writer.write(start_event);

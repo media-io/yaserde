@@ -57,6 +57,8 @@ fn ser_type() {
   convert_and_validate!(u64, 12 as u64, "12");
   convert_and_validate!(i64, 12 as i64, "12");
   convert_and_validate!(i64, -12 as i64, "-12");
+  convert_and_validate!(f32, -12.5 as f32, "-12.5");
+  convert_and_validate!(f64, -12.5 as f64, "-12.5");
 
   convert_and_validate_as_attribute!(bool, true, "true");
   convert_and_validate_as_attribute!(u8, 12 as u8, "12");
@@ -71,4 +73,6 @@ fn ser_type() {
   convert_and_validate_as_attribute!(u64, 12 as u64, "12");
   convert_and_validate_as_attribute!(i64, 12 as i64, "12");
   convert_and_validate_as_attribute!(i64, -12 as i64, "-12");
+  convert_and_validate_as_attribute!(f32, -12.5 as f32, "-12.5");
+  convert_and_validate_as_attribute!(f64, -12.5 as f64, "-12.5");
 }

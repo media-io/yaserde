@@ -56,6 +56,8 @@ pub fn parse(
         Some(FieldType::FieldTypeU32) => build_default_value(label, &quote!{u32}, &quote!{0}),
         Some(FieldType::FieldTypeI64) => build_default_value(label, &quote!{i64}, &quote!{0}),
         Some(FieldType::FieldTypeU64) => build_default_value(label, &quote!{u64}, &quote!{0}),
+        Some(FieldType::FieldTypeF32) => build_default_value(label, &quote!{f32}, &quote!{0.0}),
+        Some(FieldType::FieldTypeF64) => build_default_value(label, &quote!{f64}, &quote!{0.0}),
         Some(FieldType::FieldTypeStruct { struct_name }) => Some(quote!{
           #[allow(unused_mut, non_snake_case, non_camel_case_types)]
           let mut #label : #struct_name = #struct_name::default();
@@ -92,6 +94,12 @@ pub fn parse(
             }
             Some(&FieldType::FieldTypeU64) => {
               build_default_value(label, &quote!{Vec<u64>}, &quote!{vec![]})
+            }
+            Some(&FieldType::FieldTypeF32) => {
+              build_default_value(label, &quote!{Vec<f32>}, &quote!{vec![]})
+            }
+            Some(&FieldType::FieldTypeF64) => {
+              build_default_value(label, &quote!{Vec<f64>}, &quote!{vec![]})
             }
             Some(&FieldType::FieldTypeStruct { ref struct_name }) => Some(quote!{
               #[allow(unused_mut)]
@@ -159,6 +167,12 @@ pub fn parse(
         Some(FieldType::FieldTypeU64) => {
           build_declare_visitor(&quote!{u64}, &quote!{visit_u64}, &visitor_label)
         }
+        Some(FieldType::FieldTypeF32) => {
+          build_declare_visitor(&quote!{f32}, &quote!{visit_f32}, &visitor_label)
+        }
+        Some(FieldType::FieldTypeF64) => {
+          build_declare_visitor(&quote!{f64}, &quote!{visit_f64}, &visitor_label)
+        }
         Some(FieldType::FieldTypeStruct { struct_name }) => {
           let struct_id = struct_name.to_string();
           let struct_ident = Ident::new(
@@ -212,6 +226,12 @@ pub fn parse(
             }
             Some(&FieldType::FieldTypeU64) => {
               build_declare_visitor(&quote!{u64}, &quote!{visit_u64}, &visitor_label)
+            }
+            Some(&FieldType::FieldTypeF32) => {
+              build_declare_visitor(&quote!{f32}, &quote!{visit_f32}, &visitor_label)
+            }
+            Some(&FieldType::FieldTypeF64) => {
+              build_declare_visitor(&quote!{f64}, &quote!{visit_f64}, &visitor_label)
             }
             Some(&FieldType::FieldTypeStruct { ref struct_name }) => {
               let struct_ident = Ident::new(&format!("{}", struct_name), Span::call_site());
@@ -366,6 +386,28 @@ pub fn parse(
             &label_name,
           )
         }
+        Some(FieldType::FieldTypeF32) => {
+          let visitor = Ident::new("visit_f32", Span::call_site());
+          build_call_visitor(
+            &quote!{f32},
+            &visitor,
+            &quote!{= value},
+            &visitor_label,
+            label,
+            &label_name,
+          )
+        }
+        Some(FieldType::FieldTypeF64) => {
+          let visitor = Ident::new("visit_f64", Span::call_site());
+          build_call_visitor(
+            &quote!{f64},
+            &visitor,
+            &quote!{= value},
+            &visitor_label,
+            label,
+            &label_name,
+          )
+        }
         Some(FieldType::FieldTypeStruct { struct_name }) => Some(quote!{
           #label_name => {
             reader.set_map_value();
@@ -493,6 +535,28 @@ pub fn parse(
                 &label_name,
               )
             }
+            Some(&FieldType::FieldTypeF32) => {
+              let visitor = Ident::new("visit_f32", Span::call_site());
+              build_call_visitor(
+                &quote!{f32},
+                &visitor,
+                &quote!{.push(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
+            Some(&FieldType::FieldTypeF64) => {
+              let visitor = Ident::new("visit_f64", Span::call_site());
+              build_call_visitor(
+                &quote!{f64},
+                &visitor,
+                &quote!{.push(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
             Some(&FieldType::FieldTypeStruct { ref struct_name }) => {
               let struct_ident = Ident::new(&format!("{}", struct_name), Span::call_site());
               Some(quote!{
@@ -575,6 +639,12 @@ pub fn parse(
         }
         Some(FieldType::FieldTypeU64) => {
           build_call_visitor_for_attribute(label, &label_name, &quote!{visit_u64}, &visitor_label)
+        }
+        Some(FieldType::FieldTypeF32) => {
+          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_f32}, &visitor_label)
+        }
+        Some(FieldType::FieldTypeF64) => {
+          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_f64}, &visitor_label)
         }
 
         Some(FieldType::FieldTypeStruct { struct_name }) => {
@@ -660,6 +730,16 @@ pub fn parse(
           &field_attrs,
           label,
           &quote!{u64::from_str(text_content).unwrap()},
+        ),
+        Some(FieldType::FieldTypeF32) => build_set_text_to_value(
+          &field_attrs,
+          label,
+          &quote!{f32::from_str(text_content).unwrap()},
+        ),
+        Some(FieldType::FieldTypeF64) => build_set_text_to_value(
+          &field_attrs,
+          label,
+          &quote!{f64::from_str(text_content).unwrap()},
         ),
 
         Some(FieldType::FieldTypeStruct { .. }) | Some(FieldType::FieldTypeVec { .. }) | None => {

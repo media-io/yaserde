@@ -14,6 +14,8 @@ pub enum FieldType {
   FieldTypeU32,
   FieldTypeI64,
   FieldTypeU64,
+  FieldTypeF32,
+  FieldTypeF64,
   FieldTypeVec { data_type: Box<FieldType> },
   FieldTypeStruct { struct_name: syn::Ident },
 }
@@ -31,6 +33,8 @@ impl FieldType {
       "u32" => Some(FieldType::FieldTypeU32),
       "i64" => Some(FieldType::FieldTypeI64),
       "u64" => Some(FieldType::FieldTypeU64),
+      "f32" => Some(FieldType::FieldTypeF32),
+      "f64" => Some(FieldType::FieldTypeF64),
       "Vec" => get_vec_type(t).map(|data_type| {
         let p = syn::PathSegment {
           ident: data_type,

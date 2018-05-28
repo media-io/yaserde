@@ -56,6 +56,12 @@ pub fn parse(
               Some(FieldType::FieldTypeU64) => {
                 build_default_value(field_label, &quote!{u64}, &quote!{0})
               }
+              Some(FieldType::FieldTypeF32) => {
+                build_default_value(field_label, &quote!{f32}, &quote!{0})
+              }
+              Some(FieldType::FieldTypeF64) => {
+                build_default_value(field_label, &quote!{f64}, &quote!{0})
+              }
               Some(FieldType::FieldTypeStruct { struct_name }) => Some(quote!{
                 #[allow(unused_mut)]
                 let mut #field_label : #struct_name = #struct_name::default();
@@ -93,6 +99,12 @@ pub fn parse(
                   Some(&FieldType::FieldTypeU64) => {
                     build_default_value(field_label, &quote!{Vec<u64>}, &quote!{vec![]})
                   }
+                  Some(&FieldType::FieldTypeF32) => {
+                    build_default_value(field_label, &quote!{Vec<f32>}, &quote!{vec![]})
+                  }
+                  Some(&FieldType::FieldTypeF64) => {
+                    build_default_value(field_label, &quote!{Vec<f64>}, &quote!{vec![]})
+                  }
                   Some(&FieldType::FieldTypeStruct { ref struct_name }) => Some(quote!{
                     #[allow(unused_mut)]
                     let mut #field_label : Vec<#struct_name> = vec![];
@@ -119,61 +131,6 @@ pub fn parse(
       }
       Fields::Unnamed(ref _fields) => {
         unimplemented!();
-      }
-    })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::empty(), |mut sum, val| {
-      sum.append_all(val);
-      sum
-    });
-
-  let enum_visitors: TokenStream = data_enum
-    .variants
-    .iter()
-    .map(|variant| {
-      match variant.fields {
-        Fields::Unit => None,
-        Fields::Named(ref fields) => {
-          let enum_fields = fields
-            .named
-            .iter()
-            .map(|field| {
-              // let label = field.ident;
-              // let label_name = label.unwrap().to_string();
-              // let visitor_label = Ident::new(&format!("__Visitor{}", label_name), Span::call_site());
-
-              match get_field_type(field) {
-                Some(FieldType::FieldTypeString) => {
-                  Some(quote!{
-                    // struct #visitor_label;
-                    // impl<'de> Visitor<'de> for #visitor_label {
-                    //   type Value = String;
-
-                    //   fn visit_str(self, v: &str) -> Result<Self::Value, String> {
-                    //     match v {
-                    //       _ => Err("unable to match \"{}\" with enum {}", v, #label_name)
-                    //     }
-                    //     Ok(String::from(v))
-                    //   }
-                    // }
-                  })
-                }
-                _ => None,
-              }
-            })
-            .filter(|x| x.is_some())
-            .map(|x| x.unwrap())
-            .fold(TokenStream::empty(), |mut sum, val| {
-              sum.append_all(val);
-              sum
-            });
-
-          Some(enum_fields)
-        }
-        Fields::Unnamed(ref _fields) => {
-          unimplemented!();
-        }
       }
     })
     .filter(|x| x.is_some())
@@ -229,7 +186,6 @@ pub fn parse(
         let mut simple_enum_value = None;
 
         #variables
-        #enum_visitors
 
         loop {
           match reader.peek()?.to_owned() {

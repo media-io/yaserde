@@ -60,6 +60,14 @@ pub trait Visitor<'de>: Sized {
     Err(format!("Unexpected u64 {:?}", v))
   }
 
+  fn visit_f32(self, v: &str) -> Result<Self::Value, String> {
+    Err(format!("Unexpected f32 {:?}", v))
+  }
+
+  fn visit_f64(self, v: &str) -> Result<Self::Value, String> {
+    Err(format!("Unexpected f64 {:?}", v))
+  }
+
   fn visit_str(self, v: &str) -> Result<Self::Value, String> {
     Err(format!("Unexpected str {:?}", v))
   }
