@@ -127,7 +127,7 @@ pub fn parse(
           })
           .filter(|x| x.is_some())
           .map(|x| x.unwrap())
-          .fold(TokenStream::empty(), |mut sum, val| {
+          .fold(TokenStream::new(), |mut sum, val| {
             sum.append_all(val);
             sum
           });
@@ -140,7 +140,7 @@ pub fn parse(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(TokenStream::empty(), |mut sum, val| {
+    .fold(TokenStream::new(), |mut sum, val| {
       sum.append_all(val);
       sum
     });
@@ -168,7 +168,7 @@ pub fn parse(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(TokenStream::empty(), |mut tokens, token| {
+    .fold(TokenStream::new(), |mut tokens, token| {
       tokens.append_all(token);
       tokens
     });

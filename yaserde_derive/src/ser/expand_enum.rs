@@ -116,7 +116,7 @@ pub fn serialize(
             })
             .filter(|x| x.is_some())
             .map(|x| x.unwrap())
-            .fold(TokenStream::empty(), |mut tokens, token| {
+            .fold(TokenStream::new(), |mut tokens, token| {
               tokens.append_all(token);
               tokens
             });
@@ -138,7 +138,7 @@ pub fn serialize(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(TokenStream::empty(), |mut tokens, token| {
+    .fold(TokenStream::new(), |mut tokens, token| {
       tokens.append_all(token);
       tokens
     });
@@ -152,7 +152,7 @@ pub fn serialize(
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
-    .fold(TokenStream::empty(), |mut tokens, token| {
+    .fold(TokenStream::new(), |mut tokens, token| {
       tokens.append_all(token);
       tokens
     });
