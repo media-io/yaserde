@@ -44,6 +44,7 @@ macro_rules! convert_and_validate_as_attribute {
 
 #[test]
 fn ser_type() {
+  convert_and_validate!(String, "test".to_string(), "test");
   convert_and_validate!(bool, true, "true");
   convert_and_validate!(u8, 12 as u8, "12");
   convert_and_validate!(i8, 12 as i8, "12");
@@ -60,6 +61,7 @@ fn ser_type() {
   convert_and_validate!(f32, -12.5 as f32, "-12.5");
   convert_and_validate!(f64, -12.5 as f64, "-12.5");
 
+  convert_and_validate_as_attribute!(String, "test".to_string(), "test");
   convert_and_validate_as_attribute!(bool, true, "true");
   convert_and_validate_as_attribute!(u8, 12 as u8, "12");
   convert_and_validate_as_attribute!(i8, 12 as i8, "12");

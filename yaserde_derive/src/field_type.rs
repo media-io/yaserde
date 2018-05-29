@@ -16,6 +16,7 @@ pub enum FieldType {
   FieldTypeU64,
   FieldTypeF32,
   FieldTypeF64,
+  FieldTypeOption { data_type: Box<FieldType> },
   FieldTypeVec { data_type: Box<FieldType> },
   FieldTypeStruct { struct_name: syn::Ident },
 }
@@ -35,7 +36,17 @@ impl FieldType {
       "u64" => Some(FieldType::FieldTypeU64),
       "f32" => Some(FieldType::FieldTypeF32),
       "f64" => Some(FieldType::FieldTypeF64),
-      "Vec" => get_vec_type(t).map(|data_type| {
+      "Option" => get_sub_type(t).map(|data_type| {
+        let p = syn::PathSegment {
+          ident: data_type,
+          arguments: syn::PathArguments::None,
+        };
+
+        FieldType::FieldTypeOption {
+          data_type: Box::new(FieldType::from_ident(&p).unwrap()),
+        }
+      }),
+      "Vec" => get_sub_type(t).map(|data_type| {
         let p = syn::PathSegment {
           ident: data_type,
           arguments: syn::PathArguments::None,
@@ -62,7 +73,7 @@ pub fn get_field_type(field: &syn::Field) -> Option<FieldType> {
   }
 }
 
-fn get_vec_type(t: &syn::PathSegment) -> Option<syn::Ident> {
+fn get_sub_type(t: &syn::PathSegment) -> Option<syn::Ident> {
   if let syn::PathArguments::AngleBracketed(ref args) = t.arguments {
     if let Some(Pair::End(tt)) = args.args.first() {
       if let syn::GenericArgument::Type(ref argument) = *tt {

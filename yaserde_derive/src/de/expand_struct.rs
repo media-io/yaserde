@@ -62,6 +62,10 @@ pub fn parse(
           #[allow(unused_mut, non_snake_case, non_camel_case_types)]
           let mut #label : #struct_name = #struct_name::default();
         }),
+        Some(FieldType::FieldTypeOption { .. }) => Some(quote!{
+          #[allow(unused_mut, non_snake_case, non_camel_case_types)]
+          let mut #label = None;
+        }),
         Some(FieldType::FieldTypeVec { data_type }) => {
           let dt = Box::into_raw(data_type);
           match unsafe { dt.as_ref() } {
@@ -105,7 +109,7 @@ pub fn parse(
               #[allow(unused_mut)]
               let mut #label : Vec<#struct_name> = vec![];
             }),
-            Some(&FieldType::FieldTypeVec { .. }) => {
+            Some(&FieldType::FieldTypeOption { .. }) | Some(&FieldType::FieldTypeVec { .. }) => {
               unimplemented!();
             }
             None => {
@@ -193,6 +197,50 @@ pub fn parse(
               }
             }
           })
+        }
+        Some(FieldType::FieldTypeOption { data_type }) => {
+          let dt = Box::into_raw(data_type);
+          match unsafe { dt.as_ref() } {
+            Some(&FieldType::FieldTypeString) => {
+              build_declare_visitor(&quote!{String}, &quote!{visit_str}, &visitor_label)
+            }
+            Some(&FieldType::FieldTypeBool) => {
+              build_declare_visitor(&quote!{bool}, &quote!{visit_bool}, &visitor_label)
+            }
+            Some(&FieldType::FieldTypeI8) => {
+              build_declare_visitor(&quote!{i8}, &quote!{visit_i8}, &visitor_label)
+            }
+            Some(&FieldType::FieldTypeU8) => {
+              build_declare_visitor(&quote!{u8}, &quote!{visit_u8}, &visitor_label)
+            }
+            Some(&FieldType::FieldTypeI16) => {
+              build_declare_visitor(&quote!{i16}, &quote!{visit_i16}, &visitor_label)
+            }
+            Some(&FieldType::FieldTypeU16) => {
+              build_declare_visitor(&quote!{u16}, &quote!{visit_u16}, &visitor_label)
+            }
+            Some(&FieldType::FieldTypeI32) => {
+              build_declare_visitor(&quote!{i32}, &quote!{visit_i32}, &visitor_label)
+            }
+            Some(&FieldType::FieldTypeU32) => {
+              build_declare_visitor(&quote!{u32}, &quote!{visit_u32}, &visitor_label)
+            }
+            Some(&FieldType::FieldTypeI64) => {
+              build_declare_visitor(&quote!{i64}, &quote!{visit_i64}, &visitor_label)
+            }
+            Some(&FieldType::FieldTypeU64) => {
+              build_declare_visitor(&quote!{u64}, &quote!{visit_u64}, &visitor_label)
+            }
+            Some(&FieldType::FieldTypeF32) => {
+              build_declare_visitor(&quote!{f32}, &quote!{visit_f32}, &visitor_label)
+            }
+            Some(&FieldType::FieldTypeF64) => {
+              build_declare_visitor(&quote!{f64}, &quote!{visit_f64}, &visitor_label)
+            }
+            _ => {
+              unimplemented!();
+            }
+          }
         }
         Some(FieldType::FieldTypeVec { data_type }) => {
           let dt = Box::into_raw(data_type);
@@ -422,6 +470,144 @@ pub fn parse(
             }
           }
         }),
+        Some(FieldType::FieldTypeOption { data_type }) => {
+          let dt = Box::into_raw(data_type);
+          match unsafe { dt.as_ref() } {
+            Some(&FieldType::FieldTypeString) => {
+              let visitor = Ident::new("visit_str", Span::call_site());
+              build_call_visitor(
+                &quote!{String},
+                &visitor,
+                &quote!{= Some(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
+            Some(&FieldType::FieldTypeBool) => {
+              let visitor = Ident::new("visit_bool", Span::call_site());
+              build_call_visitor(
+                &quote!{bool},
+                &visitor,
+                &quote!{= Some(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
+            Some(&FieldType::FieldTypeU8) => {
+              let visitor = Ident::new("visit_u8", Span::call_site());
+              build_call_visitor(
+                &quote!{u8},
+                &visitor,
+                &quote!{= Some(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
+            Some(&FieldType::FieldTypeI8) => {
+              let visitor = Ident::new("visit_i8", Span::call_site());
+              build_call_visitor(
+                &quote!{i8},
+                &visitor,
+                &quote!{= Some(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
+            Some(&FieldType::FieldTypeU16) => {
+              let visitor = Ident::new("visit_u16", Span::call_site());
+              build_call_visitor(
+                &quote!{u16},
+                &visitor,
+                &quote!{= Some(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
+            Some(&FieldType::FieldTypeI16) => {
+              let visitor = Ident::new("visit_i16", Span::call_site());
+              build_call_visitor(
+                &quote!{i16},
+                &visitor,
+                &quote!{= Some(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
+            Some(&FieldType::FieldTypeU32) => {
+              let visitor = Ident::new("visit_u32", Span::call_site());
+              build_call_visitor(
+                &quote!{u32},
+                &visitor,
+                &quote!{= Some(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
+            Some(&FieldType::FieldTypeI32) => {
+              let visitor = Ident::new("visit_i32", Span::call_site());
+              build_call_visitor(
+                &quote!{i32},
+                &visitor,
+                &quote!{= Some(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
+            Some(&FieldType::FieldTypeU64) => {
+              let visitor = Ident::new("visit_u64", Span::call_site());
+              build_call_visitor(
+                &quote!{u64},
+                &visitor,
+                &quote!{= Some(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
+            Some(&FieldType::FieldTypeI64) => {
+              let visitor = Ident::new("visit_i64", Span::call_site());
+              build_call_visitor(
+                &quote!{i64},
+                &visitor,
+                &quote!{= Some(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
+            Some(&FieldType::FieldTypeF32) => {
+              let visitor = Ident::new("visit_f32", Span::call_site());
+              build_call_visitor(
+                &quote!{f32},
+                &visitor,
+                &quote!{= Some(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
+            Some(&FieldType::FieldTypeF64) => {
+              let visitor = Ident::new("visit_f64", Span::call_site());
+              build_call_visitor(
+                &quote!{f64},
+                &visitor,
+                &quote!{= Some(value)},
+                &visitor_label,
+                label,
+                &label_name,
+              )
+            }
+            _ => None,
+          }
+        }
         Some(FieldType::FieldTypeVec { data_type }) => {
           let dt = Box::into_raw(data_type);
           match unsafe { dt.as_ref() } {
@@ -613,40 +799,173 @@ pub fn parse(
             }
           }
         }),
-        Some(FieldType::FieldTypeBool) => {
-          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_bool}, &visitor_label)
+        Some(FieldType::FieldTypeBool) => build_call_visitor_for_attribute(
+          label,
+          &label_name,
+          &quote!{= value},
+          &quote!{visit_bool},
+          &visitor_label,
+        ),
+        Some(FieldType::FieldTypeI8) => build_call_visitor_for_attribute(
+          label,
+          &label_name,
+          &quote!{= value},
+          &quote!{visit_i8},
+          &visitor_label,
+        ),
+        Some(FieldType::FieldTypeU8) => build_call_visitor_for_attribute(
+          label,
+          &label_name,
+          &quote!{= value},
+          &quote!{visit_u8},
+          &visitor_label,
+        ),
+        Some(FieldType::FieldTypeI16) => build_call_visitor_for_attribute(
+          label,
+          &label_name,
+          &quote!{= value},
+          &quote!{visit_i16},
+          &visitor_label,
+        ),
+        Some(FieldType::FieldTypeU16) => build_call_visitor_for_attribute(
+          label,
+          &label_name,
+          &quote!{= value},
+          &quote!{visit_u16},
+          &visitor_label,
+        ),
+        Some(FieldType::FieldTypeI32) => build_call_visitor_for_attribute(
+          label,
+          &label_name,
+          &quote!{= value},
+          &quote!{visit_i32},
+          &visitor_label,
+        ),
+        Some(FieldType::FieldTypeU32) => build_call_visitor_for_attribute(
+          label,
+          &label_name,
+          &quote!{= value},
+          &quote!{visit_u32},
+          &visitor_label,
+        ),
+        Some(FieldType::FieldTypeI64) => build_call_visitor_for_attribute(
+          label,
+          &label_name,
+          &quote!{= value},
+          &quote!{visit_i64},
+          &visitor_label,
+        ),
+        Some(FieldType::FieldTypeU64) => build_call_visitor_for_attribute(
+          label,
+          &label_name,
+          &quote!{= value},
+          &quote!{visit_u64},
+          &visitor_label,
+        ),
+        Some(FieldType::FieldTypeF32) => build_call_visitor_for_attribute(
+          label,
+          &label_name,
+          &quote!{= value},
+          &quote!{visit_f32},
+          &visitor_label,
+        ),
+        Some(FieldType::FieldTypeF64) => build_call_visitor_for_attribute(
+          label,
+          &label_name,
+          &quote!{= value},
+          &quote!{visit_f64},
+          &visitor_label,
+        ),
+        Some(FieldType::FieldTypeOption { data_type }) => {
+          let dt = Box::into_raw(data_type);
+          match unsafe { dt.as_ref() } {
+            Some(&FieldType::FieldTypeString) => build_call_visitor_for_attribute(
+              label,
+              &label_name,
+              &quote!{= Some(value)},
+              &quote!{visit_str},
+              &visitor_label,
+            ),
+            Some(&FieldType::FieldTypeBool) => build_call_visitor_for_attribute(
+              label,
+              &label_name,
+              &quote!{= Some(value)},
+              &quote!{visit_bool},
+              &visitor_label,
+            ),
+            Some(&FieldType::FieldTypeU8) => build_call_visitor_for_attribute(
+              label,
+              &label_name,
+              &quote!{= Some(value)},
+              &quote!{visit_u8},
+              &visitor_label,
+            ),
+            Some(&FieldType::FieldTypeI8) => build_call_visitor_for_attribute(
+              label,
+              &label_name,
+              &quote!{= Some(value)},
+              &quote!{visit_i8},
+              &visitor_label,
+            ),
+            Some(&FieldType::FieldTypeU16) => build_call_visitor_for_attribute(
+              label,
+              &label_name,
+              &quote!{= Some(value)},
+              &quote!{visit_u16},
+              &visitor_label,
+            ),
+            Some(&FieldType::FieldTypeI16) => build_call_visitor_for_attribute(
+              label,
+              &label_name,
+              &quote!{= Some(value)},
+              &quote!{visit_i16},
+              &visitor_label,
+            ),
+            Some(&FieldType::FieldTypeU32) => build_call_visitor_for_attribute(
+              label,
+              &label_name,
+              &quote!{= Some(value)},
+              &quote!{visit_u32},
+              &visitor_label,
+            ),
+            Some(&FieldType::FieldTypeI32) => build_call_visitor_for_attribute(
+              label,
+              &label_name,
+              &quote!{= Some(value)},
+              &quote!{visit_i32},
+              &visitor_label,
+            ),
+            Some(&FieldType::FieldTypeU64) => build_call_visitor_for_attribute(
+              label,
+              &label_name,
+              &quote!{= Some(value)},
+              &quote!{visit_u64},
+              &visitor_label,
+            ),
+            Some(&FieldType::FieldTypeI64) => build_call_visitor_for_attribute(
+              label,
+              &label_name,
+              &quote!{= Some(value)},
+              &quote!{visit_i64},
+              &visitor_label,
+            ),
+            Some(&FieldType::FieldTypeF32) => build_call_visitor_for_attribute(
+              label,
+              &label_name,
+              &quote!{= Some(value)},
+              &quote!{visit_f32},
+              &visitor_label,
+            ),
+            Some(&FieldType::FieldTypeF64) => build_call_visitor_for_attribute(
+              label,
+              &label_name,
+              &quote!{= Some(value)},
+              &quote!{visit_f64},
+              &visitor_label,
+            ),
+            _ => None,
+          }
         }
-        Some(FieldType::FieldTypeI8) => {
-          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_i8}, &visitor_label)
-        }
-        Some(FieldType::FieldTypeU8) => {
-          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_u8}, &visitor_label)
-        }
-        Some(FieldType::FieldTypeI16) => {
-          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_i16}, &visitor_label)
-        }
-        Some(FieldType::FieldTypeU16) => {
-          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_u16}, &visitor_label)
-        }
-        Some(FieldType::FieldTypeI32) => {
-          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_i32}, &visitor_label)
-        }
-        Some(FieldType::FieldTypeU32) => {
-          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_u32}, &visitor_label)
-        }
-        Some(FieldType::FieldTypeI64) => {
-          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_i64}, &visitor_label)
-        }
-        Some(FieldType::FieldTypeU64) => {
-          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_u64}, &visitor_label)
-        }
-        Some(FieldType::FieldTypeF32) => {
-          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_f32}, &visitor_label)
-        }
-        Some(FieldType::FieldTypeF64) => {
-          build_call_visitor_for_attribute(label, &label_name, &quote!{visit_f64}, &visitor_label)
-        }
-
         Some(FieldType::FieldTypeStruct { struct_name }) => {
           let struct_ident = Ident::new(
             &format!("__Visitor_{}_{}", label_name, struct_name),
@@ -742,9 +1061,10 @@ pub fn parse(
           &quote!{f64::from_str(text_content).unwrap()},
         ),
 
-        Some(FieldType::FieldTypeStruct { .. }) | Some(FieldType::FieldTypeVec { .. }) | None => {
-          None
-        }
+        Some(FieldType::FieldTypeStruct { .. })
+        | Some(FieldType::FieldTypeOption { .. })
+        | Some(FieldType::FieldTypeVec { .. })
+        | None => None,
       }
     })
     .filter(|x| x.is_some())
@@ -900,6 +1220,7 @@ fn build_call_visitor(
 fn build_call_visitor_for_attribute(
   label: &Option<Ident>,
   label_name: &str,
+  action: &TokenStream,
   visitor: &TokenStream,
   visitor_label: &Ident,
 ) -> Option<TokenStream> {
@@ -908,7 +1229,7 @@ fn build_call_visitor_for_attribute(
       if attr.name.local_name == #label_name {
         let visitor = #visitor_label{};
         match visitor.#visitor(&attr.value) {
-          Ok(value) => {#label = value;}
+          Ok(value) => {#label #action;}
           Err(msg) => {return Err(msg);}
         }
       }

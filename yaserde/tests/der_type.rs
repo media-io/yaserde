@@ -48,6 +48,7 @@ macro_rules! convert_and_validate_for_attribute {
 
 #[test]
 fn de_type() {
+  convert_and_validate!(String, "test".to_string(), "test");
   convert_and_validate!(bool, true, "true");
   convert_and_validate!(u8, 12 as u8, "12");
   convert_and_validate!(i8, 12 as i8, "12");
@@ -64,6 +65,7 @@ fn de_type() {
   convert_and_validate!(f32, -12.5_f32 as f32, "-12.5");
   convert_and_validate!(f64, -12.5 as f64, "-12.5");
 
+  convert_and_validate_for_attribute!(String, "test".to_string(), "test");
   convert_and_validate_for_attribute!(bool, true, "true");
   convert_and_validate_for_attribute!(u8, 12 as u8, "12");
   convert_and_validate_for_attribute!(i8, 12 as i8, "12");

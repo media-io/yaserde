@@ -66,6 +66,10 @@ pub fn parse(
                 #[allow(unused_mut)]
                 let mut #field_label : #struct_name = #struct_name::default();
               }),
+              Some(FieldType::FieldTypeOption { .. }) => Some(quote!{
+                #[allow(unused_mut)]
+                let mut #field_label = None;
+              }),
               Some(FieldType::FieldTypeVec { data_type }) => {
                 let dt = Box::into_raw(data_type);
                 match unsafe { dt.as_ref() } {
@@ -109,7 +113,8 @@ pub fn parse(
                     #[allow(unused_mut)]
                     let mut #field_label : Vec<#struct_name> = vec![];
                   }),
-                  Some(&FieldType::FieldTypeVec { .. }) => {
+                  Some(&FieldType::FieldTypeOption { .. })
+                  | Some(&FieldType::FieldTypeVec { .. }) => {
                     unimplemented!();
                   }
                   None => {
