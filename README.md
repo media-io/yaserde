@@ -19,7 +19,7 @@ This library will support XML de/ser-ializing with all specific features.
 - [x] Vec<AnyType>
 - [x] Enum
 - [ ] Enum with complex types
-- [ ] Option
+- [x] Option
 - [x] String
 - [x] bool
 - [x] number (u8, i8, u32, i32, f32, f64)
