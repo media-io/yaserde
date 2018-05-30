@@ -16,11 +16,9 @@ pub fn parse(
     .iter()
     .map(|(_prefix, namespace)| {
       Some(quote!(
-
         let mut found = false;
-        println!("{:?}", namespace);
+        debug!("{:?}", namespace);
         for (key, value) in namespace {
-          println!("{:?}", value);
           if #namespace == value {
             found = true;
           }
@@ -28,7 +26,6 @@ pub fn parse(
         if !found {
           return Err("bad namespace".to_string());
         }
-        // println!("{}: {}", #prefix, #namespace);
       ))
     })
     .filter(|x| x.is_some())
