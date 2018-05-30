@@ -24,14 +24,15 @@ This library will support XML de/ser-ializing with all specific features.
 - [x] bool
 - [x] number (u8, i8, u32, i32, f32, f64)
 
-## Decorators
+## Attributes
 
-- [x] **root**: rename the based element. Used only at the XML root.
-- [x] **rename**: be able to rename a field
 - [x] **attribute**: this field is defined as an attribute
-- [x] **text**: this field match to the text content
-- [x] **namespace**: defines the namespace of the field
 - [ ] **flatten**: Flatten the contents of the field
+- [x] **namespace**: defines the namespace of the field
+- [x] **rename**: be able to rename a field
+- [x] **root**: rename the based element. Used only at the XML root.
+- [ ] **skip_serializing_if**: Skip the serialisation for this field if the condition is true
+- [x] **text**: this field match to the text content
 
 ## Custom De/Ser-rializer
 
