@@ -21,7 +21,7 @@ matrix:
       before_script:
         - cargo-fmt fmt -- --version
       script:
-        - cargo fmt -- --write-mode=diff
+        - cargo fmt
 
     # Clippy
     - env: CLIPPY_VERSION="0.0.212"
