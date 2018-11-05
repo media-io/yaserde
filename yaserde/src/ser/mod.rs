@@ -7,7 +7,7 @@ use YaSerialize;
 
 pub fn to_string<T: YaSerialize>(model: &T) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());
-  let cursor = serialize_with_writer(model, buf).unwrap();
+  let cursor = serialize_with_writer(model, buf)?;
   let data = str::from_utf8(cursor.get_ref()).expect("Found invalid UTF-8");
   Ok(String::from(data))
 }
@@ -22,7 +22,7 @@ pub fn serialize_with_writer<W: Write, T: YaSerialize>(model: &T, writer: W) -> 
 
 pub fn to_string_content<T: YaSerialize>(model: &T) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());
-  let cursor = serialize_with_writer_content(model, buf).unwrap();
+  let cursor = serialize_with_writer_content(model, buf)?;
   let data = str::from_utf8(cursor.get_ref()).expect("Found invalid UTF-8");
   Ok(String::from(data))
 }
