@@ -23,7 +23,7 @@ pub fn serialize(
       }
 
       let renamed_label = match field_attrs.rename {
-        Some(value) => Ident::new(&format!("{}", value), Span::call_site()),
+        Some(value) => Ident::new(&value.to_string(), Span::call_site()),
         None => field.ident.clone().unwrap(),
       };
       let label = &field.ident;
@@ -165,7 +165,7 @@ pub fn serialize(
       }
 
       let renamed_label = match field_attrs.rename {
-        Some(value) => Ident::new(&format!("{}", value), Span::call_site()),
+        Some(value) => Ident::new(&value.to_string(), Span::call_site()),
         None => field.ident.clone().unwrap(),
       };
 

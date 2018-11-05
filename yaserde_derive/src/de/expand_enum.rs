@@ -151,7 +151,7 @@ pub fn parse(
     .map(|variant| {
       let field_attrs = YaSerdeAttribute::parse(&variant.attrs);
       let renamed_label = match field_attrs.rename {
-        Some(value) => Ident::new(&format!("{}", value), Span::call_site()),
+        Some(value) => Ident::new(&value.to_string(), Span::call_site()),
         None => variant.ident.clone(),
       };
       let label = &variant.ident;

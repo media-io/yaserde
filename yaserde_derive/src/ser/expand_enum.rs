@@ -19,7 +19,7 @@ pub fn serialize(
     .map(|variant| {
       let variant_attrs = YaSerdeAttribute::parse(&variant.attrs);
       let renamed_label = match variant_attrs.rename {
-        Some(value) => Ident::new(&format!("{}", value), Span::call_site()),
+        Some(value) => Ident::new(&value.to_string(), Span::call_site()),
         None => variant.ident.clone(),
       };
       let label = &variant.ident;
@@ -55,7 +55,7 @@ pub fn serialize(
               }
 
               let renamed_field_label = match field_attrs.rename {
-                Some(value) => Some(Ident::new(&format!("{}", value), Span::call_site())),
+                Some(value) => Some(Ident::new(&value.to_string(), Span::call_site())),
                 None => field.ident.clone(),
               };
               let field_label_name = renamed_field_label.unwrap().to_string();

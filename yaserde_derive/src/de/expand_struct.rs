@@ -130,7 +130,7 @@ pub fn parse(
     .map(|field| {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
       let label_name = if let Some(value) = field_attrs.rename {
-        Ident::new(&format!("{}", value), Span::call_site()).to_string()
+        Ident::new(&value.to_string(), Span::call_site()).to_string()
       } else {
         field.ident.clone().unwrap().to_string()
       };
@@ -313,7 +313,7 @@ pub fn parse(
       }
 
       let label_name = if let Some(value) = field_attrs.rename {
-        Ident::new(&format!("{}", value), Span::call_site()).to_string()
+        Ident::new(&value.to_string(), Span::call_site()).to_string()
       } else {
         field.ident.clone().unwrap().to_string()
       };
@@ -781,7 +781,7 @@ pub fn parse(
 
       let label = &field.ident;
       let label_name = if let Some(value) = field_attrs.rename {
-        Ident::new(&format!("{}", value), Span::call_site()).to_string()
+        Ident::new(&value.to_string(), Span::call_site()).to_string()
       } else {
         field.ident.clone().unwrap().to_string()
       };
