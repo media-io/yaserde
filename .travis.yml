@@ -13,8 +13,8 @@ matrix:
     - rust: nightly
   include:
     # Rustfmt
-    - env: RUSTFMT_VERSION="0.4.1"
-      rust: nightly-2018-04-01
+    - env: RUSTFMT_VERSION="0.99.5"
+      rust: nightly-2018-09-26
       install:
         - rustup component add rustfmt-preview
         - cargo install rustfmt-nightly --force --version $RUSTFMT_VERSION || echo "rustfmt already installed"
