@@ -85,6 +85,11 @@ fn ser_option() {
   convert_and_validate!(f64, Some(-12.5 as f64), Some("-12.5"));
   convert_and_validate!(f64, None, None);
 
+  convert_and_validate!(Vec<u8>, None, None);
+  convert_and_validate!(Vec<u8>, Some(vec![0]), Some("0"));
+  convert_and_validate!(Vec<String>, None, None);
+  convert_and_validate!(Vec<String>, Some(vec!["test".to_string()]), Some("test"));
+
   convert_and_validate_as_attribute!(String, Some("test".to_string()), Some("test"));
   convert_and_validate_as_attribute!(String, None, None);
   convert_and_validate_as_attribute!(bool, Some(true), Some("true"));

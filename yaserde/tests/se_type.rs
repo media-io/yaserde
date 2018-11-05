@@ -19,8 +19,12 @@ macro_rules! convert_and_validate {
     let model = Data { item: $value };
 
     let data: Result<String, String> = to_string(&model);
-    let content = String::from("<?xml version=\"1.0\" encoding=\"utf-8\"?><data><item>") + $content
-      + "</item></data>";
+    let content = if $content == "" {
+        String::from("<?xml version=\"1.0\" encoding=\"utf-8\"?><data />")
+      } else {
+        String::from("<?xml version=\"1.0\" encoding=\"utf-8\"?><data><item>") + $content
+        + "</item></data>"
+      };
     assert_eq!(data, Ok(content));
   }};
 }
@@ -60,6 +64,8 @@ fn ser_type() {
   convert_and_validate!(i64, -12 as i64, "-12");
   convert_and_validate!(f32, -12.5 as f32, "-12.5");
   convert_and_validate!(f64, -12.5 as f64, "-12.5");
+  convert_and_validate!(Vec<String>, vec![], "");
+  convert_and_validate!(Vec<String>, vec!["test".to_string()], "test");
 
   convert_and_validate_as_attribute!(String, "test".to_string(), "test");
   convert_and_validate_as_attribute!(bool, true, "true");

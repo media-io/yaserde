@@ -37,49 +37,47 @@ impl FieldType {
       "f32" => Some(FieldType::FieldTypeF32),
       "f64" => Some(FieldType::FieldTypeF64),
       "Option" => get_sub_type(t).map(|data_type| {
-        let p = syn::PathSegment {
-          ident: data_type,
-          arguments: syn::PathArguments::None,
-        };
-
         FieldType::FieldTypeOption {
-          data_type: Box::new(FieldType::from_ident(&p).unwrap()),
+          data_type: Box::new(FieldType::from_ident(&data_type).unwrap()),
         }
       }),
       "Vec" => get_sub_type(t).map(|data_type| {
-        let p = syn::PathSegment {
-          ident: data_type,
-          arguments: syn::PathArguments::None,
-        };
-
         FieldType::FieldTypeVec {
-          data_type: Box::new(FieldType::from_ident(&p).unwrap()),
+          data_type: Box::new(FieldType::from_ident(&data_type).unwrap()),
         }
       }),
-      _struct_name => Some(FieldType::FieldTypeStruct {
+      _struct_name => {
+        Some(FieldType::FieldTypeStruct {
         struct_name: t.ident.clone(),
-      }),
+      })},
     }
   }
 }
 
 pub fn get_field_type(field: &syn::Field) -> Option<FieldType> {
   match field.ty {
-    Path(ref path) => match path.path.segments.first() {
-      Some(Pair::End(t)) => FieldType::from_ident(t),
-      _ => None,
+    Path(ref path) => {
+      if path.path.segments.len() != 1 {
+        return None;
+      }
+      match path.path.segments.first() {
+        Some(Pair::End(t)) => FieldType::from_ident(t),
+        _ => {
+          None
+        },
+      }
     },
     _ => None,
   }
 }
 
-fn get_sub_type(t: &syn::PathSegment) -> Option<syn::Ident> {
+fn get_sub_type(t: &syn::PathSegment) -> Option<syn::PathSegment> {
   if let syn::PathArguments::AngleBracketed(ref args) = t.arguments {
     if let Some(Pair::End(tt)) = args.args.first() {
       if let syn::GenericArgument::Type(ref argument) = *tt {
         if let Path(ref path2) = *argument {
           if let Some(Pair::End(ttt)) = path2.path.segments.first() {
-            return Some(ttt.ident.clone());
+            return Some(ttt.clone());
           }
         }
       }
