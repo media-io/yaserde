@@ -1,11 +1,11 @@
 use attribute::*;
 use field_type::*;
+use proc_macro2::{Span, TokenStream};
 use quote::TokenStreamExt;
 use std::collections::BTreeMap;
+use syn::DataEnum;
 use syn::Fields;
 use syn::Ident;
-use syn::DataEnum;
-use proc_macro2::{Span, TokenStream};
 
 pub fn serialize(
   data_enum: &DataEnum,

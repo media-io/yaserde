@@ -6,8 +6,8 @@ extern crate yaserde;
 extern crate yaserde_derive;
 
 use std::io::Write;
-use yaserde::YaSerialize;
 use yaserde::ser::to_string;
+use yaserde::YaSerialize;
 
 macro_rules! convert_and_validate {
   ($model: expr, $content: expr) => {

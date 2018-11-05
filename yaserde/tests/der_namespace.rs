@@ -6,8 +6,8 @@ extern crate yaserde;
 extern crate yaserde_derive;
 
 use std::io::Read;
-use yaserde::YaDeserialize;
 use yaserde::de::from_str;
+use yaserde::YaDeserialize;
 
 macro_rules! convert_and_validate {
   ($content: expr, $struct: tt, $model: expr) => {
@@ -19,7 +19,11 @@ macro_rules! convert_and_validate {
 #[test]
 fn de_struct_namespace() {
   #[derive(YaDeserialize, PartialEq, Debug)]
-  #[yaserde(root = "book", prefix = "ns", namespace = "ns: http://www.sample.com/ns/domain")]
+  #[yaserde(
+    root = "book",
+    prefix = "ns",
+    namespace = "ns: http://www.sample.com/ns/domain"
+  )]
   pub struct Book {
     #[yaserde(prefix = "ns")]
     author: String,
@@ -45,7 +49,11 @@ fn de_struct_namespace() {
 #[test]
 fn de_enum_namespace() {
   #[derive(YaDeserialize, PartialEq, Debug)]
-  #[yaserde(root = "root", prefix = "ns", namespace = "ns: http://www.sample.com/ns/domain")]
+  #[yaserde(
+    root = "root",
+    prefix = "ns",
+    namespace = "ns: http://www.sample.com/ns/domain"
+  )]
   pub enum XmlStruct {
     #[yaserde(prefix = "ns")]
     Item,

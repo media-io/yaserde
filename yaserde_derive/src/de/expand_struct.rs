@@ -1,10 +1,10 @@
 use attribute::*;
 use field_type::*;
+use proc_macro2::{Span, TokenStream};
 use quote::TokenStreamExt;
 use std::collections::BTreeMap;
-use syn::Ident;
 use syn::DataStruct;
-use proc_macro2::{Span, TokenStream};
+use syn::Ident;
 
 pub fn parse(
   data_struct: &DataStruct,

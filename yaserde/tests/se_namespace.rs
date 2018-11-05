@@ -6,11 +6,11 @@ extern crate yaserde;
 extern crate yaserde_derive;
 
 use std::io::Write;
-use yaserde::YaSerialize;
 use yaserde::ser::to_string;
+use yaserde::YaSerialize;
 
 macro_rules! convert_and_validate {
-  ($model: expr, $content: expr) => {
+  ($model:expr, $content:expr) => {
     let data: Result<String, String> = to_string(&$model);
     assert_eq!(data, Ok(String::from($content)));
   };
@@ -19,7 +19,11 @@ macro_rules! convert_and_validate {
 #[test]
 fn ser_struct_namespace() {
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "root", prefix = "ns", namespace = "ns: http://www.sample.com/ns/domain")]
+  #[yaserde(
+    root = "root",
+    prefix = "ns",
+    namespace = "ns: http://www.sample.com/ns/domain"
+  )]
   pub struct XmlStruct {
     #[yaserde(prefix = "ns")]
     item: String,
@@ -36,7 +40,11 @@ fn ser_struct_namespace() {
 #[test]
 fn ser_enum_namespace() {
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "root", prefix = "ns", namespace = "ns: http://www.sample.com/ns/domain")]
+  #[yaserde(
+    root = "root",
+    prefix = "ns",
+    namespace = "ns: http://www.sample.com/ns/domain"
+  )]
   pub enum XmlStruct {
     #[yaserde(prefix = "ns")]
     Item,
@@ -51,8 +59,11 @@ fn ser_enum_namespace() {
 #[test]
 fn ser_struct_multi_namespace() {
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "root", namespace = "ns1: http://www.sample.com/ns/domain1",
-            namespace = "ns2: http://www.sample.com/ns/domain2")]
+  #[yaserde(
+    root = "root",
+    namespace = "ns1: http://www.sample.com/ns/domain1",
+    namespace = "ns2: http://www.sample.com/ns/domain2"
+  )]
   pub struct XmlStruct {
     #[yaserde(prefix = "ns1")]
     item_1: String,
@@ -72,8 +83,11 @@ fn ser_struct_multi_namespace() {
 #[test]
 fn ser_enum_multi_namespace() {
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "root", namespace = "ns1: http://www.sample.com/ns/domain1",
-            namespace = "ns2: http://www.sample.com/ns/domain2")]
+  #[yaserde(
+    root = "root",
+    namespace = "ns1: http://www.sample.com/ns/domain1",
+    namespace = "ns2: http://www.sample.com/ns/domain2"
+  )]
   pub enum XmlStruct {
     #[yaserde(prefix = "ns1")]
     Item1,
@@ -92,8 +106,11 @@ fn ser_enum_multi_namespace() {
 #[test]
 fn ser_struct_attribute_namespace() {
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "root", namespace = "ns1: http://www.sample.com/ns/domain1",
-            namespace = "ns2: http://www.sample.com/ns/domain2")]
+  #[yaserde(
+    root = "root",
+    namespace = "ns1: http://www.sample.com/ns/domain1",
+    namespace = "ns2: http://www.sample.com/ns/domain2"
+  )]
   pub struct XmlStruct {
     #[yaserde(prefix = "ns1")]
     item_1: String,
@@ -113,8 +130,11 @@ fn ser_struct_attribute_namespace() {
 #[test]
 fn ser_struct_default_namespace() {
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "tt", namespace = "http://www.w3.org/ns/ttml",
-            namespace = "ttm: http://www.w3.org/ns/ttml#metadata")]
+  #[yaserde(
+    root = "tt",
+    namespace = "http://www.w3.org/ns/ttml",
+    namespace = "ttm: http://www.w3.org/ns/ttml#metadata"
+  )]
   pub struct XmlStruct {
     item: String,
   }

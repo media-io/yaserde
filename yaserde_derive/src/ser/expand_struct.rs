@@ -1,11 +1,11 @@
 use attribute::*;
 use field_type::*;
+use proc_macro2::{Span, TokenStream};
 use quote::TokenStreamExt;
 use std::collections::BTreeMap;
-use syn::Ident;
-use syn::DataStruct;
-use proc_macro2::{Span, TokenStream};
 use std::string::ToString;
+use syn::DataStruct;
+use syn::Ident;
 
 pub fn serialize(
   data_struct: &DataStruct,
@@ -93,20 +93,18 @@ pub fn serialize(
                   struct_start_event
                 };
             }),
-            Some(&FieldType::FieldTypeVec{..}) => {
-              Some(quote!{
-                for item in &self.#label {
-                  let start_event = XmlEvent::start_element(#label_name);
-                  let _ret = writer.write(start_event);
+            Some(&FieldType::FieldTypeVec { .. }) => Some(quote!{
+              for item in &self.#label {
+                let start_event = XmlEvent::start_element(#label_name);
+                let _ret = writer.write(start_event);
 
-                  let data_event = XmlEvent::characters(item);
-                  let _ret = writer.write(data_event);
+                let data_event = XmlEvent::characters(item);
+                let _ret = writer.write(data_event);
 
-                  let end_event = XmlEvent::end_element();
-                  let _ret = writer.write(end_event);
-                }
-              })
-            }
+                let end_event = XmlEvent::end_element();
+                let _ret = writer.write(end_event);
+              }
+            }),
             _ => None,
           }
         }
@@ -247,7 +245,7 @@ pub fn serialize(
                 let _ret = writer.write(end_event);
               }
             }),
-            Some(&FieldType::FieldTypeVec{ .. }) => Some(quote!{
+            Some(&FieldType::FieldTypeVec { .. }) => Some(quote!{
               if let Some(ref items) = &self.#label {
                 for item in items.iter() {
                   let start_event = XmlEvent::start_element(#label_name);
@@ -265,17 +263,15 @@ pub fn serialize(
             _ => None,
           }
         }
-        Some(FieldType::FieldTypeStruct { .. }) => {
-          Some(quote!{
-            writer.set_skip_start_end(false);
-            match self.#label.serialize(writer) {
-              Ok(()) => {},
-              Err(msg) => {
-                return Err(msg);
-              },
-            };
-          })
-        },
+        Some(FieldType::FieldTypeStruct { .. }) => Some(quote!{
+          writer.set_skip_start_end(false);
+          match self.#label.serialize(writer) {
+            Ok(()) => {},
+            Err(msg) => {
+              return Err(msg);
+            },
+          };
+        }),
         Some(FieldType::FieldTypeVec { data_type }) => {
           let dt = Box::into_raw(data_type);
           match unsafe { dt.as_ref() } {
@@ -344,7 +340,7 @@ pub fn serialize(
               unimplemented!();
             }
           }
-        },
+        }
         None => None,
       }
     })

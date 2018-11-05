@@ -1,8 +1,8 @@
-use std::str;
 use std::io::{Cursor, Write};
-use xml::{EmitterConfig, EventWriter};
+use std::str;
 use xml;
 use xml::writer::XmlEvent;
+use xml::{EmitterConfig, EventWriter};
 use YaSerialize;
 
 pub fn to_string<T: YaSerialize>(model: &T) -> Result<String, String> {

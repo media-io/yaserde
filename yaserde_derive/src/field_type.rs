@@ -36,20 +36,15 @@ impl FieldType {
       "u64" => Some(FieldType::FieldTypeU64),
       "f32" => Some(FieldType::FieldTypeF32),
       "f64" => Some(FieldType::FieldTypeF64),
-      "Option" => get_sub_type(t).map(|data_type| {
-        FieldType::FieldTypeOption {
-          data_type: Box::new(FieldType::from_ident(&data_type).unwrap()),
-        }
+      "Option" => get_sub_type(t).map(|data_type| FieldType::FieldTypeOption {
+        data_type: Box::new(FieldType::from_ident(&data_type).unwrap()),
       }),
-      "Vec" => get_sub_type(t).map(|data_type| {
-        FieldType::FieldTypeVec {
-          data_type: Box::new(FieldType::from_ident(&data_type).unwrap()),
-        }
+      "Vec" => get_sub_type(t).map(|data_type| FieldType::FieldTypeVec {
+        data_type: Box::new(FieldType::from_ident(&data_type).unwrap()),
       }),
-      _struct_name => {
-        Some(FieldType::FieldTypeStruct {
+      _struct_name => Some(FieldType::FieldTypeStruct {
         struct_name: t.ident.clone(),
-      })},
+      }),
     }
   }
 }
@@ -62,11 +57,9 @@ pub fn get_field_type(field: &syn::Field) -> Option<FieldType> {
       }
       match path.path.segments.first() {
         Some(Pair::End(t)) => FieldType::from_ident(t),
-        _ => {
-          None
-        },
+        _ => None,
       }
-    },
+    }
     _ => None,
   }
 }

@@ -6,11 +6,11 @@ extern crate yaserde;
 extern crate yaserde_derive;
 
 use std::io::Read;
-use yaserde::YaDeserialize;
 use yaserde::de::from_str;
+use yaserde::YaDeserialize;
 
 macro_rules! convert_and_validate {
-  ($type: ty, $value: expr, $content: expr) => {{
+  ($type:ty, $value:expr, $content:expr) => {{
     #[derive(YaDeserialize, PartialEq, Debug)]
     #[yaserde(root = "data")]
     pub struct Data {
@@ -19,7 +19,8 @@ macro_rules! convert_and_validate {
 
     let model = Data { item: $value };
 
-    let content = String::from("<?xml version=\"1.0\" encoding=\"utf-8\"?><data><item>") + $content
+    let content = String::from("<?xml version=\"1.0\" encoding=\"utf-8\"?><data><item>")
+      + $content
       + "</item></data>";
 
     let loaded: Result<Data, String> = from_str(&content);
@@ -28,7 +29,7 @@ macro_rules! convert_and_validate {
 }
 
 macro_rules! convert_and_validate_for_attribute {
-  ($type: ty, $value: expr, $content: expr) => {{
+  ($type:ty, $value:expr, $content:expr) => {{
     #[derive(YaDeserialize, PartialEq, Debug)]
     #[yaserde(root = "data")]
     pub struct Data {

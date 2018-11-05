@@ -6,8 +6,8 @@ extern crate yaserde;
 extern crate yaserde_derive;
 
 use std::io::Write;
-use yaserde::YaSerialize;
 use yaserde::ser::to_string;
+use yaserde::YaSerialize;
 
 macro_rules! convert_and_validate {
   ($type: ty, $value: expr, $content: expr) => {{
@@ -20,11 +20,12 @@ macro_rules! convert_and_validate {
 
     let data: Result<String, String> = to_string(&model);
     let content = if $content == "" {
-        String::from("<?xml version=\"1.0\" encoding=\"utf-8\"?><data />")
-      } else {
-        String::from("<?xml version=\"1.0\" encoding=\"utf-8\"?><data><item>") + $content
+      String::from("<?xml version=\"1.0\" encoding=\"utf-8\"?><data />")
+    } else {
+      String::from("<?xml version=\"1.0\" encoding=\"utf-8\"?><data><item>")
+        + $content
         + "</item></data>"
-      };
+    };
     assert_eq!(data, Ok(content));
   }};
 }

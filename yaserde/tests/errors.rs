@@ -6,8 +6,8 @@ extern crate yaserde;
 extern crate yaserde_derive;
 
 use std::io::Read;
-use yaserde::YaDeserialize;
 use yaserde::de::from_str;
+use yaserde::YaDeserialize;
 
 #[test]
 fn de_no_content() {

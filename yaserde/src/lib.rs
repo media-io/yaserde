@@ -74,7 +74,7 @@ pub trait Visitor<'de>: Sized {
 }
 
 macro_rules! serialize_type {
-  ($type: ty) => {
+  ($type:ty) => {
     impl YaSerialize for $type {
       fn serialize<W: Write>(&self, writer: &mut ser::Serializer<W>) -> Result<(), String> {
         let content = format!("{}", self);
@@ -112,7 +112,7 @@ fn default_visitor() {
   }
 
   macro_rules! test_type {
-    ($visitor: tt, $message: expr) => {{
+    ($visitor:tt, $message:expr) => {{
       let t = Test {};
       assert_eq!(t.$visitor(""), Err($message.to_string()));
     }};

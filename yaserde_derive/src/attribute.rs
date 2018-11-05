@@ -1,6 +1,6 @@
-use proc_macro2::TokenTree;
-use proc_macro2::Delimiter;
 use proc_macro2::token_stream::IntoIter;
+use proc_macro2::Delimiter;
+use proc_macro2::TokenTree;
 use std::collections::BTreeMap;
 use syn::Attribute;
 
