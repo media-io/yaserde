@@ -114,7 +114,7 @@ pub fn parse(
             }
           }
         }
-        _ => None,
+        None => None,
       }
     })
     .filter(|x| x.is_some())
@@ -291,7 +291,7 @@ pub fn parse(
             _ => None,
           }
         }
-        _ => None,
+        None => None,
       }
     })
     .filter(|x| x.is_some())
@@ -760,7 +760,7 @@ pub fn parse(
             _ => unimplemented!(),
           }
         }
-        _ => None,
+        None => None,
       }
     })
     .filter(|x| x.is_some())
