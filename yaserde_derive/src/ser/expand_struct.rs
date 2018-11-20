@@ -262,8 +262,14 @@ pub fn serialize(
             }),
             Some(&FieldType::FieldTypeStruct { .. }) => Some(quote!{
               if let Some(ref item) = &self.#label {
-                let start_event = XmlEvent::start_element(#label_name);
-                let _ret = writer.write(start_event);
+                writer.set_start_event_name(Some(#label_name.to_string()));
+                match item.serialize(writer) {
+                  Ok(()) => {},
+                  Err(msg) => {
+                    return Err(msg);
+                  },
+                };
+                writer.set_start_event_name(None);
 
                 writer.set_skip_start_end(true);
                 match item.serialize(writer) {
