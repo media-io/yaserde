@@ -1,6 +1,6 @@
 [package]
 name = "yaserde"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Marc-Antoine Arnaud <arnaud.marcantoine@gmail.com>"]
 description = "Serialization and deserialization library"
 keywords = ["Serialization", "Deserialization", "XML"]
