@@ -265,7 +265,7 @@ pub fn serialize(
                 let start_event = XmlEvent::start_element(#label_name);
                 let _ret = writer.write(start_event);
 
-                writer.set_skip_start_end(false);
+                writer.set_skip_start_end(true);
                 match item.serialize(writer) {
                   Ok(()) => {},
                   Err(msg) => {

@@ -137,6 +137,6 @@ fn de_option_struct() {
     }
   }
 
-  convert_and_validate!(Test, Some(Test{field: SubTest{content: Some("value".to_string())}}), Some("<Test><field><content>value</content></field></Test>"));
+  convert_and_validate!(Test, Some(Test{field: SubTest{content: Some("value".to_string())}}), Some("<field><content>value</content></field>"));
   convert_and_validate!(Test, None, None);
 }
