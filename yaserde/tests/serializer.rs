@@ -273,7 +273,7 @@ fn ser_enum() {
     },
   };
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><custom><enabled>true</enabled><color><red>0</red><green>128</green><blue>255</blue></color><alpha>Opaque</alpha><alphas>Opaque</alphas><alphas>Transparent</alphas></custom></color></base>";
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><enabled>true</enabled><color><red>0</red><green>128</green><blue>255</blue></color><alpha>Opaque</alpha><alphas>Opaque</alphas><alphas>Transparent</alphas></color></base>";
   convert_and_validate!(model, content);
 }
 

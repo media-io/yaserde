@@ -116,3 +116,27 @@ fn de_option() {
   convert_and_validate_for_attribute!(f64, Some(-12.5 as f64), Some("-12.5"));
   convert_and_validate_for_attribute!(f64, None, None);
 }
+
+#[test]
+fn de_option_struct() {
+  #[derive(YaDeserialize, Debug, PartialEq)]
+  struct Test {
+    field: SubTest
+  }
+
+  #[derive(YaDeserialize, Debug, PartialEq)]
+  struct SubTest {
+    content: Option<String>
+  }
+
+  impl Default for SubTest {
+    fn default() -> Self {
+      SubTest {
+        content: None
+      }
+    }
+  }
+
+  convert_and_validate!(Test, Some(Test{field: SubTest{content: Some("value".to_string())}}), Some("<Test><field><content>value</content></field></Test>"));
+  convert_and_validate!(Test, None, None);
+}

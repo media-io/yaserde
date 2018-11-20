@@ -123,13 +123,7 @@ pub fn serialize(
 
           Some(quote!{
             &#name::#label{..} => {
-              let struct_start_event = XmlEvent::start_element(#label_name);
-              let _ret = writer.write(struct_start_event);
-
               #enum_fields
-
-              let struct_end_event = XmlEvent::end_element();
-              let _ret = writer.write(struct_end_event);
             }
           })
         }
@@ -164,6 +158,11 @@ pub fn serialize(
       #[allow(unused_variables)]
       fn serialize<W: Write>(&self, writer: &mut yaserde::ser::Serializer<W>)
         -> Result<(), String> {
+        if let Some(label) = writer.get_start_event_name() {
+          let struct_start_event = XmlEvent::start_element(label.as_ref());
+          let _ret = writer.write(struct_start_event);
+          return Ok(());
+        }
         error!("Enum: start to expand {:?}", #root);
 
         if !writer.skip_start_end() {

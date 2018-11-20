@@ -234,7 +234,18 @@ pub fn parse(
             Some(&FieldType::FieldTypeF64) => {
               build_declare_visitor(&quote!{f64}, &quote!{visit_f64}, &visitor_label)
             }
-            _ => {
+            Some(&FieldType::FieldTypeStruct{ref struct_name}) => {
+              let struct_ident = Ident::new(&format!("{}", struct_name), Span::call_site());
+              Some(quote!{
+                #[allow(non_snake_case, non_camel_case_types)]
+                struct #visitor_label;
+                impl<'de> Visitor<'de> for #visitor_label {
+                  type Value = #struct_ident;
+                }
+              })
+            }
+            dude => {
+              println!("{:?}", dude);
               unimplemented!();
             }
           }
@@ -602,7 +613,24 @@ pub fn parse(
                 &label_name,
               )
             }
-            _ => None,
+            Some(&FieldType::FieldTypeStruct { ref struct_name }) => {
+              let struct_ident = Ident::new(&format!("{}", struct_name), Span::call_site());
+              Some(quote!{
+                #label_name => {
+                  reader.set_map_value();
+                  match #struct_ident::deserialize(reader) {
+                    Ok(parsed_item) => {
+                      #label = Some(parsed_item);
+                      let _root = reader.next_event();
+                    },
+                    Err(msg) => {
+                      return Err(msg);
+                    },
+                  }
+                }
+              })
+            }
+            _ => unimplemented!(),
           }
         }
         Some(FieldType::FieldTypeVec { data_type }) => {

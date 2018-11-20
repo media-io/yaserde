@@ -42,6 +42,7 @@ pub fn serialize_with_writer_content<W: Write, T: YaSerialize>(
 pub struct Serializer<W: Write> {
   writer: EventWriter<W>,
   skip_start_end: bool,
+  start_event_name: Option<String>,
 }
 
 impl<'de, W: Write> Serializer<W> {
@@ -49,6 +50,7 @@ impl<'de, W: Write> Serializer<W> {
     Serializer {
       writer,
       skip_start_end: false,
+      start_event_name: None,
     }
   }
 
@@ -74,6 +76,14 @@ impl<'de, W: Write> Serializer<W> {
 
   pub fn set_skip_start_end(&mut self, state: bool) {
     self.skip_start_end = state;
+  }
+
+  pub fn get_start_event_name<'a>(&self) -> Option<String> {
+    self.start_event_name.clone()
+  }
+
+  pub fn set_start_event_name<'a>(&mut self, name: Option<String>) {
+    self.start_event_name = name;
   }
 
   pub fn write<'a, E>(&mut self, event: E) -> xml::writer::Result<()>

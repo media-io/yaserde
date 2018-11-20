@@ -105,7 +105,7 @@ pub fn serialize(
                 let _ret = writer.write(end_event);
               }
             }),
-            _ => None,
+            _ => unimplemented!(),
           }
         }
         Some(FieldType::FieldTypeStruct { .. }) => Some(quote!{
@@ -170,7 +170,7 @@ pub fn serialize(
       };
 
       let label_name = if let Some(prefix) = field_attrs.prefix {
-        prefix + ":" + renamed_label.to_string().as_ref()
+        format!("{}:{}", prefix, renamed_label)
       } else {
         renamed_label.to_string()
       };
@@ -260,17 +260,46 @@ pub fn serialize(
                 }
               }
             }),
-            _ => None,
+            Some(&FieldType::FieldTypeStruct { .. }) => Some(quote!{
+              if let Some(ref item) = &self.#label {
+                let start_event = XmlEvent::start_element(#label_name);
+                let _ret = writer.write(start_event);
+
+                writer.set_skip_start_end(false);
+                match item.serialize(writer) {
+                  Ok(()) => {},
+                  Err(msg) => {
+                    return Err(msg);
+                  },
+                };
+
+                let end_event = XmlEvent::end_element();
+                let _ret = writer.write(end_event);
+              }
+            }),
+            _ => unimplemented!(),
           }
         }
         Some(FieldType::FieldTypeStruct { .. }) => Some(quote!{
-          writer.set_skip_start_end(false);
+          writer.set_start_event_name(Some(#label_name.to_string()));
           match self.#label.serialize(writer) {
             Ok(()) => {},
             Err(msg) => {
               return Err(msg);
             },
           };
+          writer.set_start_event_name(None);
+
+          writer.set_skip_start_end(true);
+          match self.#label.serialize(writer) {
+            Ok(()) => {},
+            Err(msg) => {
+              return Err(msg);
+            },
+          };
+
+          let end_event = XmlEvent::end_element();
+          let _ret = writer.write(end_event);
         }),
         Some(FieldType::FieldTypeVec { data_type }) => {
           let dt = Box::into_raw(data_type);
@@ -358,6 +387,12 @@ pub fn serialize(
       #[allow(unused_variables)]
       fn serialize<W: Write>(&self, writer: &mut yaserde::ser::Serializer<W>)
         -> Result<(), String> {
+        if let Some(label) = writer.get_start_event_name() {
+          let struct_start_event = XmlEvent::start_element(label.as_ref());
+          #build_attributes
+          let _ret = writer.write(struct_start_event);
+          return Ok(())
+        }
         error!("Struct: start to expand {:?}", #root);
         let skip = writer.skip_start_end();
         if !skip {
