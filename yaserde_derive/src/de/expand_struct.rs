@@ -40,21 +40,23 @@ pub fn parse(
     .iter()
     .map(|field| {
       let label = &field.ident;
+      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
+
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
-          build_default_value(label, &quote!{String}, &quote!{"".to_string()})
+          build_default_value(label, &quote!{String}, &quote!{"".to_string()}, &field_attrs.default)
         }
-        Some(FieldType::FieldTypeBool) => build_default_value(label, &quote!{bool}, &quote!{false}),
-        Some(FieldType::FieldTypeI8) => build_default_value(label, &quote!{i8}, &quote!{0}),
-        Some(FieldType::FieldTypeU8) => build_default_value(label, &quote!{u8}, &quote!{0}),
-        Some(FieldType::FieldTypeI16) => build_default_value(label, &quote!{i16}, &quote!{0}),
-        Some(FieldType::FieldTypeU16) => build_default_value(label, &quote!{u16}, &quote!{0}),
-        Some(FieldType::FieldTypeI32) => build_default_value(label, &quote!{i32}, &quote!{0}),
-        Some(FieldType::FieldTypeU32) => build_default_value(label, &quote!{u32}, &quote!{0}),
-        Some(FieldType::FieldTypeI64) => build_default_value(label, &quote!{i64}, &quote!{0}),
-        Some(FieldType::FieldTypeU64) => build_default_value(label, &quote!{u64}, &quote!{0}),
-        Some(FieldType::FieldTypeF32) => build_default_value(label, &quote!{f32}, &quote!{0.0}),
-        Some(FieldType::FieldTypeF64) => build_default_value(label, &quote!{f64}, &quote!{0.0}),
+        Some(FieldType::FieldTypeBool) => build_default_value(label, &quote!{bool}, &quote!{false}, &field_attrs.default),
+        Some(FieldType::FieldTypeI8) => build_default_value(label, &quote!{i8}, &quote!{0}, &field_attrs.default),
+        Some(FieldType::FieldTypeU8) => build_default_value(label, &quote!{u8}, &quote!{0}, &field_attrs.default),
+        Some(FieldType::FieldTypeI16) => build_default_value(label, &quote!{i16}, &quote!{0}, &field_attrs.default),
+        Some(FieldType::FieldTypeU16) => build_default_value(label, &quote!{u16}, &quote!{0}, &field_attrs.default),
+        Some(FieldType::FieldTypeI32) => build_default_value(label, &quote!{i32}, &quote!{0}, &field_attrs.default),
+        Some(FieldType::FieldTypeU32) => build_default_value(label, &quote!{u32}, &quote!{0}, &field_attrs.default),
+        Some(FieldType::FieldTypeI64) => build_default_value(label, &quote!{i64}, &quote!{0}, &field_attrs.default),
+        Some(FieldType::FieldTypeU64) => build_default_value(label, &quote!{u64}, &quote!{0}, &field_attrs.default),
+        Some(FieldType::FieldTypeF32) => build_default_value(label, &quote!{f32}, &quote!{0.0}, &field_attrs.default),
+        Some(FieldType::FieldTypeF64) => build_default_value(label, &quote!{f64}, &quote!{0.0}, &field_attrs.default),
         Some(FieldType::FieldTypeStruct { struct_name }) => Some(quote!{
           #[allow(unused_mut, non_snake_case, non_camel_case_types)]
           let mut #label : #struct_name = #struct_name::default();
@@ -67,40 +69,40 @@ pub fn parse(
           let dt = Box::into_raw(data_type);
           match unsafe { dt.as_ref() } {
             Some(&FieldType::FieldTypeString) => {
-              build_default_value(label, &quote!{Vec<String>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<String>}, &quote!{vec![]}, &field_attrs.default)
             }
             Some(&FieldType::FieldTypeBool) => {
-              build_default_value(label, &quote!{Vec<bool>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<bool>}, &quote!{vec![]}, &field_attrs.default)
             }
             Some(&FieldType::FieldTypeI8) => {
-              build_default_value(label, &quote!{Vec<i8>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<i8>}, &quote!{vec![]}, &field_attrs.default)
             }
             Some(&FieldType::FieldTypeU8) => {
-              build_default_value(label, &quote!{Vec<u8>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<u8>}, &quote!{vec![]}, &field_attrs.default)
             }
             Some(&FieldType::FieldTypeI16) => {
-              build_default_value(label, &quote!{Vec<i16>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<i16>}, &quote!{vec![]}, &field_attrs.default)
             }
             Some(&FieldType::FieldTypeU16) => {
-              build_default_value(label, &quote!{Vec<u16>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<u16>}, &quote!{vec![]}, &field_attrs.default)
             }
             Some(&FieldType::FieldTypeI32) => {
-              build_default_value(label, &quote!{Vec<i32>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<i32>}, &quote!{vec![]}, &field_attrs.default)
             }
             Some(&FieldType::FieldTypeU32) => {
-              build_default_value(label, &quote!{Vec<u32>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<u32>}, &quote!{vec![]}, &field_attrs.default)
             }
             Some(&FieldType::FieldTypeI64) => {
-              build_default_value(label, &quote!{Vec<i64>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<i64>}, &quote!{vec![]}, &field_attrs.default)
             }
             Some(&FieldType::FieldTypeU64) => {
-              build_default_value(label, &quote!{Vec<u64>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<u64>}, &quote!{vec![]}, &field_attrs.default)
             }
             Some(&FieldType::FieldTypeF32) => {
-              build_default_value(label, &quote!{Vec<f32>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<f32>}, &quote!{vec![]}, &field_attrs.default)
             }
             Some(&FieldType::FieldTypeF64) => {
-              build_default_value(label, &quote!{Vec<f64>}, &quote!{vec![]})
+              build_default_value(label, &quote!{Vec<f64>}, &quote!{vec![]}, &field_attrs.default)
             }
             Some(&FieldType::FieldTypeStruct { ref struct_name }) => Some(quote!{
               #[allow(unused_mut)]
@@ -1181,12 +1183,22 @@ pub fn parse(
 fn build_default_value(
   label: &Option<Ident>,
   field_type: &TokenStream,
-  default: &TokenStream,
+  value: &TokenStream,
+  default: &Option<String>,
 ) -> Option<TokenStream> {
-  Some(quote!{
-    #[allow(unused_mut)]
-    let mut #label : #field_type = #default;
-  })
+  if let Some(d) = default {
+    let default_function = Ident::new(&d, Span::call_site());
+
+    Some(quote!{
+      #[allow(unused_mut)]
+      let mut #label : #field_type = #default_function();
+    })
+  } else {
+    Some(quote!{
+      #[allow(unused_mut)]
+      let mut #label : #field_type = #value;
+    })
+  }
 }
 
 fn build_declare_visitor(
