@@ -57,14 +57,24 @@ pub fn parse(
         Some(FieldType::FieldTypeU64) => build_default_value(label, &quote!{u64}, &quote!{0}, &field_attrs.default),
         Some(FieldType::FieldTypeF32) => build_default_value(label, &quote!{f32}, &quote!{0.0}, &field_attrs.default),
         Some(FieldType::FieldTypeF64) => build_default_value(label, &quote!{f64}, &quote!{0.0}, &field_attrs.default),
-        Some(FieldType::FieldTypeStruct { struct_name }) => Some(quote!{
-          #[allow(unused_mut, non_snake_case, non_camel_case_types)]
-          let mut #label : #struct_name = #struct_name::default();
-        }),
-        Some(FieldType::FieldTypeOption { .. }) => Some(quote!{
-          #[allow(unused_mut, non_snake_case, non_camel_case_types)]
-          let mut #label = None;
-        }),
+        Some(FieldType::FieldTypeStruct { struct_name }) => {
+          build_default_value(label, &quote!{#struct_name}, &quote!{#struct_name::default()}, &field_attrs.default)
+        }
+        Some(FieldType::FieldTypeOption { .. }) => {
+          if let Some(d) = &field_attrs.default {
+            let default_function = Ident::new(&d, Span::call_site());
+
+            Some(quote!{
+              #[allow(unused_mut, non_snake_case, non_camel_case_types)]
+              let mut #label = #default_function();
+            })
+          } else {
+            Some(quote!{
+              #[allow(unused_mut, non_snake_case, non_camel_case_types)]
+              let mut #label = None;
+            })
+          }
+        }
         Some(FieldType::FieldTypeVec { data_type }) => {
           let dt = Box::into_raw(data_type);
           match unsafe { dt.as_ref() } {
@@ -104,10 +114,9 @@ pub fn parse(
             Some(&FieldType::FieldTypeF64) => {
               build_default_value(label, &quote!{Vec<f64>}, &quote!{vec![]}, &field_attrs.default)
             }
-            Some(&FieldType::FieldTypeStruct { ref struct_name }) => Some(quote!{
-              #[allow(unused_mut)]
-              let mut #label : Vec<#struct_name> = vec![];
-            }),
+            Some(&FieldType::FieldTypeStruct { ref struct_name }) => {
+              build_default_value(label, &quote!{Vec<#struct_name>}, &quote!{vec![]}, &field_attrs.default)
+            }
             Some(&FieldType::FieldTypeOption { .. }) | Some(&FieldType::FieldTypeVec { .. }) => {
               unimplemented!();
             }
