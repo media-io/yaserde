@@ -78,11 +78,11 @@ impl<'de, W: Write> Serializer<W> {
     self.skip_start_end = state;
   }
 
-  pub fn get_start_event_name<'a>(&self) -> Option<String> {
+  pub fn get_start_event_name(&self) -> Option<String> {
     self.start_event_name.clone()
   }
 
-  pub fn set_start_event_name<'a>(&mut self, name: Option<String>) {
+  pub fn set_start_event_name(&mut self, name: Option<String>) {
     self.start_event_name = name;
   }
 
