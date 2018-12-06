@@ -87,3 +87,27 @@ fn de_default_field_number() {
     }
   );
 }
+
+#[test]
+fn de_default_attribute_string() {
+  fn default_string() -> String {
+    "my_default_value".to_string()
+  }
+
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(root = "base")]
+  pub struct XmlStruct {
+    #[yaserde(attribute, default = "default_string")]
+    background: String,
+  }
+
+  let content =
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?><base></base>";
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: "my_default_value".to_string(),
+    }
+  );
+}
