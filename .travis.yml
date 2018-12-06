@@ -33,7 +33,7 @@ matrix:
         - cargo clippy 2>&1 | tee ./clippy.out && ! grep -qe  "error:\|warning:" ./clippy.out
 
     # Test coverage (with Tarpaulin)
-    - env: TARPAULIN_VERSION="0.5.6"
+    - env: TARPAULIN_VERSION="0.6.10"
       rust: stable
       # To avoid "Error: EPERM: operation not permitted" error (see https://github.com/valery-barysok/session-file-store/issues/58)
       sudo: true
