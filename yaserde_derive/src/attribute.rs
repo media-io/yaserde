@@ -104,59 +104,63 @@ fn parse_empty_attributes() {
   let attributes = vec![];
   let attrs = YaSerdeAttribute::parse(&attributes);
 
-  assert_eq!(YaSerdeAttribute {
-    root: None,
-    rename: None,
-    prefix: None,
-    default: None,
-    namespaces: BTreeMap::new(),
-    attribute: false,
-    text: false,
-  }, attrs);
+  assert_eq!(
+    YaSerdeAttribute {
+      root: None,
+      rename: None,
+      prefix: None,
+      default: None,
+      namespaces: BTreeMap::new(),
+      attribute: false,
+      text: false,
+    },
+    attrs
+  );
 }
 
 #[test]
 fn parse_attributes() {
   use proc_macro2::{Span, TokenStream};
   use std::str::FromStr;
+  use syn::punctuated::Punctuated;
+  use syn::token::Bracket;
+  use syn::token::Pound;
   use syn::AttrStyle::Outer;
   use syn::{Ident, Path, PathArguments, PathSegment};
-  use syn::token::Pound;
-  use syn::token::Bracket;
-  use syn::punctuated::Punctuated;
 
   let mut punctuated = Punctuated::new();
   punctuated.push(PathSegment {
     ident: Ident::new("yaserde", Span::call_site()),
-    arguments: PathArguments::None
+    arguments: PathArguments::None,
   });
 
-  let attributes = vec![
-    Attribute {
-      pound_token: Pound {
-        spans: [Span::call_site()]
-      },
-      style: Outer,
-      bracket_token: Bracket {
-        span: Span::call_site()
-      },
-      path: Path {
-        leading_colon: None,
-        segments: punctuated
-      },
-      tts: TokenStream::from_str("(attribute)").unwrap()
-    }
-  ];
+  let attributes = vec![Attribute {
+    pound_token: Pound {
+      spans: [Span::call_site()],
+    },
+    style: Outer,
+    bracket_token: Bracket {
+      span: Span::call_site(),
+    },
+    path: Path {
+      leading_colon: None,
+      segments: punctuated,
+    },
+    tts: TokenStream::from_str("(attribute)").unwrap(),
+  }];
 
   let attrs = YaSerdeAttribute::parse(&attributes);
 
-  assert_eq!(YaSerdeAttribute {
-    root: None,
-    rename: None,
-    prefix: None,
-    default: None,
-    namespaces: BTreeMap::new(),
-    attribute: true,
-    text: false,
-  }, attrs);
+  assert_eq!(
+    YaSerdeAttribute {
+      root: None,
+      rename: None,
+      prefix: None,
+      default: None,
+      namespaces: BTreeMap::new(),
+      attribute: true,
+      text: false,
+    },
+    attrs
+  );
 }

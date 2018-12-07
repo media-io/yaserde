@@ -30,7 +30,7 @@ pub fn serialize(
       };
 
       match variant.fields {
-        Fields::Unit => Some(quote!{
+        Fields::Unit => Some(quote! {
           &#name::#label => {
             let data_event = XmlEvent::characters(#label_name);
             let _ret = writer.write(data_event);
@@ -49,9 +49,9 @@ pub fn serialize(
               let field_label = &field.ident;
               if field_attrs.text {
                 return Some(quote!(
-                let data_event = XmlEvent::characters(&self.#field_label);
-                let _ret = writer.write(data_event);
-              ));
+                  let data_event = XmlEvent::characters(&self.#field_label);
+                  let _ret = writer.write(data_event);
+                ));
               }
 
               let renamed_field_label = match field_attrs.rename {
@@ -61,7 +61,7 @@ pub fn serialize(
               let field_label_name = renamed_field_label.unwrap().to_string();
 
               match get_field_type(field) {
-                Some(FieldType::FieldTypeString) => Some(quote!{
+                Some(FieldType::FieldTypeString) => Some(quote! {
                   match self {
                     &#name::#label{ref #field_label, ..} => {
                       let struct_start_event = XmlEvent::start_element(#field_label_name);
@@ -76,7 +76,7 @@ pub fn serialize(
                     _ => {},
                   }
                 }),
-                Some(FieldType::FieldTypeStruct { .. }) => Some(quote!{
+                Some(FieldType::FieldTypeStruct { .. }) => Some(quote! {
                   let struct_start_event = XmlEvent::start_element(#field_label_name);
                   let _ret = writer.write(struct_start_event);
 
@@ -93,7 +93,7 @@ pub fn serialize(
                   let struct_end_event = XmlEvent::end_element();
                   let _ret = writer.write(struct_end_event);
                 }),
-                Some(FieldType::FieldTypeVec { .. }) => Some(quote!{
+                Some(FieldType::FieldTypeVec { .. }) => Some(quote! {
                   match self {
                     &#name::#label{ref #field_label, ..} => {
                       for item in #field_label {
@@ -121,7 +121,7 @@ pub fn serialize(
               tokens
             });
 
-          Some(quote!{
+          Some(quote! {
             &#name::#label{..} => {
               #enum_fields
             }

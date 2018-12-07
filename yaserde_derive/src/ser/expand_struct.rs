@@ -7,6 +7,8 @@ use std::string::ToString;
 use syn::DataStruct;
 use syn::Ident;
 
+use ser::element::*;
+
 pub fn serialize(
   data_struct: &DataStruct,
   name: &Ident,
@@ -45,28 +47,68 @@ pub fn serialize(
         | Some(FieldType::FieldTypeI64)
         | Some(FieldType::FieldTypeU64)
         | Some(FieldType::FieldTypeF32)
-        | Some(FieldType::FieldTypeF64) => Some(quote!{
-          let struct_start_event = struct_start_event.attr(#label_name, &*{
-            use std::mem;
-            unsafe {
-              let content = format!("{}", self.#label);
-              let ret : &'static str = mem::transmute(&content as &str);
-              mem::forget(content);
-              ret
-            }
-          });
-        }),
-        Some(FieldType::FieldTypeOption { data_type }) => {
-          let dt = Box::into_raw(data_type);
-          match unsafe { dt.as_ref() } {
-            Some(&FieldType::FieldTypeString) => Some(quote!{
+        | Some(FieldType::FieldTypeF64) => {
+          if let Some(ref d) = field_attrs.default {
+            let default_function = Ident::new(&d, Span::call_site());
+            Some(quote! {
               let struct_start_event =
-                if let Some(ref value) = self.#label {
-                  struct_start_event.attr(#label_name, &value)
+                if self.#label != #default_function() {
+                  struct_start_event.attr(#label_name, &*{
+                    use std::mem;
+                    unsafe {
+                      let content = format!("{}", self.#label);
+                      let ret : &'static str = mem::transmute(&content as &str);
+                      mem::forget(content);
+                      ret
+                    }
+                  })
                 } else {
                   struct_start_event
                 };
-            }),
+            })
+          } else {
+            Some(quote! {
+              let struct_start_event = struct_start_event.attr(#label_name, &*{
+                use std::mem;
+                unsafe {
+                  let content = format!("{}", self.#label);
+                  let ret : &'static str = mem::transmute(&content as &str);
+                  mem::forget(content);
+                  ret
+                }
+              });
+            })
+          }
+        },
+        Some(FieldType::FieldTypeOption { data_type }) => {
+          let dt = Box::into_raw(data_type);
+          match unsafe { dt.as_ref() } {
+            Some(&FieldType::FieldTypeString) => {
+              if let Some(ref d) = field_attrs.default {
+                let default_function = Ident::new(&d, Span::call_site());
+                Some(quote! {
+                  let struct_start_event =
+                    if self.#label != #default_function() {
+                      if let Some(ref value) = self.#label {
+                        struct_start_event.attr(#label_name, &value)
+                      } else {
+                        struct_start_event
+                      }
+                    } else {
+                      struct_start_event
+                    };
+                })
+              } else {
+                Some(quote! {
+                  let struct_start_event =
+                    if let Some(ref value) = self.#label {
+                      struct_start_event.attr(#label_name, &value)
+                    } else {
+                      struct_start_event
+                    };
+                })
+              }
+            },
             Some(&FieldType::FieldTypeBool)
             | Some(&FieldType::FieldTypeI8)
             | Some(&FieldType::FieldTypeU8)
@@ -77,52 +119,116 @@ pub fn serialize(
             | Some(&FieldType::FieldTypeI64)
             | Some(&FieldType::FieldTypeU64)
             | Some(&FieldType::FieldTypeF32)
-            | Some(&FieldType::FieldTypeF64) => Some(quote!{
+            | Some(&FieldType::FieldTypeF64) => {
+              if let Some(ref d) = field_attrs.default {
+                let default_function = Ident::new(&d, Span::call_site());
+                Some(quote! {
+                  let struct_start_event =
+                    if self.#label != #default_function() {
+                      if let Some(ref value) = self.#label {
+                        struct_start_event.attr(#label_name, &*{
+                          use std::mem;
+                          unsafe {
+                            let content = format!("{}", value);
+                            let ret : &'static str = mem::transmute(&content as &str);
+                            mem::forget(content);
+                            ret
+                          }
+                        })
+                      } else {
+                        struct_start_event
+                      }
+                    } else {
+                      struct_start_event
+                    };
+                })
+              } else {
+                Some(quote! {
+                  let struct_start_event =
+                    if let Some(ref value) = self.#label {
+                      struct_start_event.attr(#label_name, &*{
+                        use std::mem;
+                        unsafe {
+                          let content = format!("{}", value);
+                          let ret : &'static str = mem::transmute(&content as &str);
+                          mem::forget(content);
+                          ret
+                        }
+                      })
+                    } else {
+                      struct_start_event
+                    };
+                })
+              }
+            },
+            Some(&FieldType::FieldTypeVec { .. }) => {
+              let item_ident = Ident::new("yas_item", Span::call_site());
+              let inner = enclose_formatted_characters(&item_ident, label_name);
+
+              if let Some(ref d) = field_attrs.default {
+                let default_function = Ident::new(&d, Span::call_site());
+
+                Some(quote! {
+                  if self.#label != #default_function() {
+                    if let Some(ref yas_list) = self.#label {
+                      for yas_item in yas_list.iter() {
+                        #inner
+                      }
+                    }
+                  }
+                })
+              } else {
+                Some(quote! {
+                  for yas_item in &self.#label {
+                    #inner
+                  }
+                })
+              }
+            },
+            _ => unimplemented!(),
+          }
+        }
+        Some(FieldType::FieldTypeStruct { .. }) => {
+          if let Some(ref d) = field_attrs.default {
+            let default_function = Ident::new(&d, Span::call_site());
+            Some(quote! {
               let struct_start_event =
-                if let Some(value) = self.#label {
+                if self.#label != #default_function() {
                   struct_start_event.attr(#label_name, &*{
                     use std::mem;
-                    unsafe {
-                      let content = format!("{}", value);
-                      let ret : &'static str = mem::transmute(&content as &str);
-                      mem::forget(content);
-                      ret
+                    match yaserde::ser::to_string_content(&self.#label) {
+                      Ok(value) => {
+                        unsafe {
+                          let ret : &'static str = mem::transmute(&value as &str);
+                          mem::forget(value);
+                          ret
+                        }
+                      },
+                      Err(msg) => return Err("Unable to serialize content".to_owned()),
                     }
                   })
                 } else {
                   struct_start_event
                 };
-            }),
-            Some(&FieldType::FieldTypeVec { .. }) => Some(quote!{
-              for item in &self.#label {
-                let start_event = XmlEvent::start_element(#label_name);
-                let _ret = writer.write(start_event);
-
-                let data_event = XmlEvent::characters(item);
-                let _ret = writer.write(data_event);
-
-                let end_event = XmlEvent::end_element();
-                let _ret = writer.write(end_event);
-              }
-            }),
-            _ => unimplemented!(),
-          }
-        }
-        Some(FieldType::FieldTypeStruct { .. }) => Some(quote!{
-          let struct_start_event = struct_start_event.attr(#label_name, &*{
-            use std::mem;
-            match yaserde::ser::to_string_content(&self.#label) {
-              Ok(value) => {
-                unsafe {
-                  let ret : &'static str = mem::transmute(&value as &str);
-                  mem::forget(value);
-                  ret
+            })
+          } else {
+            Some(quote! {
+              let struct_start_event = struct_start_event.attr(#label_name, &*{
+                use std::mem;
+                match yaserde::ser::to_string_content(&self.#label) {
+                  Ok(value) => {
+                    unsafe {
+                      let ret : &'static str = mem::transmute(&value as &str);
+                      mem::forget(value);
+                      ret
+                    }
+                  },
+                  Err(msg) => return Err("Unable to serialize content".to_owned()),
                 }
-              },
-              Err(msg) => return Err("Unable to serialize content".to_owned()),
-            }
-          });
-        }),
+              });
+            })
+          }
+        },
         _ => None,
       }
     })
@@ -176,17 +282,8 @@ pub fn serialize(
       };
 
       match get_field_type(field) {
-        Some(FieldType::FieldTypeString) => Some(quote!{
-          let start_event = XmlEvent::start_element(#label_name);
-          let _ret = writer.write(start_event);
-
-          let data_event = XmlEvent::characters(&self.#label);
-          let _ret = writer.write(data_event);
-
-          let end_event = XmlEvent::end_element();
-          let _ret = writer.write(end_event);
-        }),
-        Some(FieldType::FieldTypeBool)
+        Some(FieldType::FieldTypeString)
+        | Some(FieldType::FieldTypeBool)
         | Some(FieldType::FieldTypeI8)
         | Some(FieldType::FieldTypeU8)
         | Some(FieldType::FieldTypeI16)
@@ -196,33 +293,13 @@ pub fn serialize(
         | Some(FieldType::FieldTypeI64)
         | Some(FieldType::FieldTypeU64)
         | Some(FieldType::FieldTypeF32)
-        | Some(FieldType::FieldTypeF64) => Some(quote!{
-          let start_event = XmlEvent::start_element(#label_name);
-          let _ret = writer.write(start_event);
-
-          let content = format!("{}", &self.#label);
-          let data_event = XmlEvent::characters(&content);
-          let _ret = writer.write(data_event);
-
-          let end_event = XmlEvent::end_element();
-          let _ret = writer.write(end_event);
-        }),
+        | Some(FieldType::FieldTypeF64) =>
+          serialize_element(label, label_name, &field_attrs.default),
         Some(FieldType::FieldTypeOption { data_type }) => {
           let dt = Box::into_raw(data_type);
           match unsafe { dt.as_ref() } {
-            Some(&FieldType::FieldTypeString) => Some(quote!{
-              if let Some(ref item) = self.#label {
-                let start_event = XmlEvent::start_element(#label_name);
-                let _ret = writer.write(start_event);
-
-                let data_event = XmlEvent::characters(&item);
-                let _ret = writer.write(data_event);
-
-                let end_event = XmlEvent::end_element();
-                let _ret = writer.write(end_event);
-              }
-            }),
-            Some(&FieldType::FieldTypeBool)
+            Some(&FieldType::FieldTypeString)
+            | Some(&FieldType::FieldTypeBool)
             | Some(&FieldType::FieldTypeI8)
             | Some(&FieldType::FieldTypeU8)
             | Some(&FieldType::FieldTypeI16)
@@ -232,35 +309,55 @@ pub fn serialize(
             | Some(&FieldType::FieldTypeI64)
             | Some(&FieldType::FieldTypeU64)
             | Some(&FieldType::FieldTypeF32)
-            | Some(&FieldType::FieldTypeF64) => Some(quote!{
-              if let Some(item) = self.#label {
-                let start_event = XmlEvent::start_element(#label_name);
-                let _ret = writer.write(start_event);
+            | Some(&FieldType::FieldTypeF64) => {
+              let item_ident = Ident::new("yas_item", Span::call_site());
+              let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
-                let content = format!("{}", item);
-                let data_event = XmlEvent::characters(&content);
-                let _ret = writer.write(data_event);
+              if let Some(ref d) = field_attrs.default {
+                let default_function = Ident::new(&d, Span::call_site());
 
-                let end_event = XmlEvent::end_element();
-                let _ret = writer.write(end_event);
+                Some(quote! {
+                  if self.#label != #default_function() {
+                    if let Some(ref yas_item) = self.#label {
+                      #inner
+                    }
+                  }
+                })
+              } else {
+                Some(quote! {
+                  if let Some(ref yas_item) = self.#label {
+                    #inner
+                  }
+                })
               }
-            }),
-            Some(&FieldType::FieldTypeVec { .. }) => Some(quote!{
-              if let Some(ref items) = &self.#label {
-                for item in items.iter() {
-                  let start_event = XmlEvent::start_element(#label_name);
-                  let _ret = writer.write(start_event);
+            },
+            Some(&FieldType::FieldTypeVec { .. }) => {
+              let item_ident = Ident::new("yas_item", Span::call_site());
+              let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
-                  let value = format!("{}", item);
-                  let data_event = XmlEvent::characters(&value);
-                  let _ret = writer.write(data_event);
+              if let Some(ref d) = field_attrs.default {
+                let default_function = Ident::new(&d, Span::call_site());
 
-                  let end_event = XmlEvent::end_element();
-                  let _ret = writer.write(end_event);
-                }
+                Some(quote! {
+                  if self.#label != #default_function() {
+                    if let Some(ref yas_items) = &self.#label {
+                      for yas_item in yas_items.iter() {
+                        #inner
+                      }
+                    }
+                  }
+                })
+              } else {
+                Some(quote! {
+                  if let Some(ref yas_items) = &self.#label {
+                    for yas_item in yas_items.iter() {
+                      #inner
+                    }
+                  }
+                })
               }
-            }),
-            Some(&FieldType::FieldTypeStruct { .. }) => Some(quote!{
+            },
+            Some(&FieldType::FieldTypeStruct { .. }) => Some(quote! {
               if let Some(ref item) = &self.#label {
                 writer.set_start_event_name(Some(#label_name.to_string()));
                 match item.serialize(writer) {
@@ -286,7 +383,7 @@ pub fn serialize(
             _ => unimplemented!(),
           }
         }
-        Some(FieldType::FieldTypeStruct { .. }) => Some(quote!{
+        Some(FieldType::FieldTypeStruct { .. }) => Some(quote! {
           writer.set_start_event_name(Some(#label_name.to_string()));
           match self.#label.serialize(writer) {
             Ok(()) => {},
@@ -310,18 +407,16 @@ pub fn serialize(
         Some(FieldType::FieldTypeVec { data_type }) => {
           let dt = Box::into_raw(data_type);
           match unsafe { dt.as_ref() } {
-            Some(&FieldType::FieldTypeString) => Some(quote!{
-              for item in &self.#label {
-                let start_event = XmlEvent::start_element(#label_name);
-                let _ret = writer.write(start_event);
+            Some(&FieldType::FieldTypeString) => {
+              let item_ident = Ident::new("yas_item", Span::call_site());
+              let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
-                let data_event = XmlEvent::characters(item);
-                let _ret = writer.write(data_event);
-
-                let end_event = XmlEvent::end_element();
-                let _ret = writer.write(end_event);
-              }
-            }),
+              Some(quote! {
+                for yas_item in &self.#label {
+                  #inner
+                }
+              })
+            },
             Some(&FieldType::FieldTypeBool)
             | Some(&FieldType::FieldTypeI8)
             | Some(&FieldType::FieldTypeU8)
@@ -332,19 +427,17 @@ pub fn serialize(
             | Some(&FieldType::FieldTypeI64)
             | Some(&FieldType::FieldTypeU64)
             | Some(&FieldType::FieldTypeF32)
-            | Some(&FieldType::FieldTypeF64) => Some(quote!{
-              for item in &self.#label {
-                let start_event = XmlEvent::start_element(#label_name);
-                let _ret = writer.write(start_event);
+            | Some(&FieldType::FieldTypeF64) => {
+              let item_ident = Ident::new("yas_item", Span::call_site());
+              let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
-                let data_event = XmlEvent::characters(format!("{}", item));
-                let _ret = writer.write(data_event);
-
-                let end_event = XmlEvent::end_element();
-                let _ret = writer.write(end_event);
-              }
-            }),
-            Some(&FieldType::FieldTypeOption { .. }) => Some(quote!{
+              Some(quote! {
+                for yas_item in &self.#label {
+                  #inner
+                }
+              })
+            },
+            Some(&FieldType::FieldTypeOption { .. }) => Some(quote! {
               for item in &self.#label {
                 if let Some(value) = item {
                   writer.set_skip_start_end(false);
@@ -357,7 +450,7 @@ pub fn serialize(
                 }
               }
             }),
-            Some(&FieldType::FieldTypeStruct { .. }) => Some(quote!{
+            Some(&FieldType::FieldTypeStruct { .. }) => Some(quote! {
               for item in &self.#label {
                 writer.set_skip_start_end(false);
                 match item.serialize(writer) {

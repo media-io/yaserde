@@ -124,22 +124,28 @@ fn ser_option() {
 fn de_option_struct() {
   #[derive(YaSerialize, Debug, PartialEq)]
   struct Test {
-    field: SubTest
+    field: SubTest,
   }
 
   #[derive(YaSerialize, Debug, PartialEq)]
   struct SubTest {
-    content: Option<String>
+    content: Option<String>,
   }
 
   impl Default for SubTest {
     fn default() -> Self {
-      SubTest {
-        content: None
-      }
+      SubTest { content: None }
     }
   }
 
-  convert_and_validate!(Test, Some(Test{field: SubTest{content: Some("value".to_string())}}), Some("<field><content>value</content></field>"));
+  convert_and_validate!(
+    Test,
+    Some(Test {
+      field: SubTest {
+        content: Some("value".to_string())
+      }
+    }),
+    Some("<field><content>value</content></field>")
+  );
   convert_and_validate!(Test, None, None);
 }
