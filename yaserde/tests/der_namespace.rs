@@ -43,7 +43,7 @@ fn de_struct_namespace() {
 
   let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><ns:book xmlns:ns=\"http://www.sample.com/ns/domain2\"><ns:author>Antoine de Saint-Exupéry</ns:author><ns:title>Little prince</ns:title></ns:book>";
   let loaded: Result<Book, String> = from_str(content);
-  assert_eq!(loaded, Err("bad namespace".to_string()));
+  assert_eq!(loaded, Err("bad namespace for book with http://www.sample.com/ns/domain".to_string()));
 }
 
 #[test]
