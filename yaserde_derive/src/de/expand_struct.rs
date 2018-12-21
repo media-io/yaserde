@@ -25,7 +25,8 @@ pub fn parse(
           }
         }
         if !found {
-          return Err("bad namespace".to_string());
+          let msg = format!("bad namespace for {} with {}", name.local_name.as_str(), #namespace);
+          return Err(msg);
         }
       ))
     })
