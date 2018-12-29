@@ -11,24 +11,19 @@ pub fn parse(
   data_struct: &DataStruct,
   name: &Ident,
   root: &str,
+  prefix: &Option<String>,
   namespaces: &BTreeMap<String, String>,
 ) -> TokenStream {
-  let validate_namespace: TokenStream = namespaces
+
+  let namespaces_matches: TokenStream = namespaces
     .iter()
-    .map(|(_prefix, namespace)| {
-      Some(quote!(
-        let mut found = false;
-        debug!("{:?}", namespace);
-        for (key, value) in namespace {
-          if #namespace == value {
-            found = true;
-          }
-        }
-        if !found {
-          let msg = format!("bad namespace for {} with {}", name.local_name.as_str(), #namespace);
-          return Err(msg);
-        }
-      ))
+    .map(|(p, ns)| {
+      let str_ns = ns.as_str();
+      if *prefix == Some(p.to_string()) {
+        Some(quote!(#str_ns => {}))
+      } else {
+        None
+      }
     })
     .filter(|x| x.is_some())
     .map(|x| x.unwrap())
@@ -324,8 +319,7 @@ pub fn parse(
                 }
               })
             }
-            dude => {
-              println!("{:?}", dude);
+            _ => {
               unimplemented!();
             }
           }
@@ -421,6 +415,8 @@ pub fn parse(
             &visitor_label,
             label,
             &label_name,
+            &field_attrs.prefix,
+            &namespaces,
           )
         }
         Some(FieldType::FieldTypeBool) => {
@@ -432,6 +428,8 @@ pub fn parse(
             &visitor_label,
             label,
             &label_name,
+            &field_attrs.prefix,
+            &namespaces,
           )
         }
         Some(FieldType::FieldTypeI8) => {
@@ -443,6 +441,8 @@ pub fn parse(
             &visitor_label,
             label,
             &label_name,
+            &field_attrs.prefix,
+            &namespaces,
           )
         }
         Some(FieldType::FieldTypeU8) => {
@@ -454,6 +454,8 @@ pub fn parse(
             &visitor_label,
             label,
             &label_name,
+            &field_attrs.prefix,
+            &namespaces,
           )
         }
         Some(FieldType::FieldTypeU16) => {
@@ -465,6 +467,8 @@ pub fn parse(
             &visitor_label,
             label,
             &label_name,
+            &field_attrs.prefix,
+            &namespaces,
           )
         }
         Some(FieldType::FieldTypeI16) => {
@@ -476,6 +480,8 @@ pub fn parse(
             &visitor_label,
             label,
             &label_name,
+            &field_attrs.prefix,
+            &namespaces,
           )
         }
         Some(FieldType::FieldTypeU32) => {
@@ -487,6 +493,8 @@ pub fn parse(
             &visitor_label,
             label,
             &label_name,
+            &field_attrs.prefix,
+            &namespaces,
           )
         }
         Some(FieldType::FieldTypeI32) => {
@@ -498,6 +506,8 @@ pub fn parse(
             &visitor_label,
             label,
             &label_name,
+            &field_attrs.prefix,
+            &namespaces,
           )
         }
         Some(FieldType::FieldTypeU64) => {
@@ -509,6 +519,8 @@ pub fn parse(
             &visitor_label,
             label,
             &label_name,
+            &field_attrs.prefix,
+            &namespaces,
           )
         }
         Some(FieldType::FieldTypeI64) => {
@@ -520,6 +532,8 @@ pub fn parse(
             &visitor_label,
             label,
             &label_name,
+            &field_attrs.prefix,
+            &namespaces,
           )
         }
         Some(FieldType::FieldTypeF32) => {
@@ -531,6 +545,8 @@ pub fn parse(
             &visitor_label,
             label,
             &label_name,
+            &field_attrs.prefix,
+            &namespaces,
           )
         }
         Some(FieldType::FieldTypeF64) => {
@@ -542,6 +558,8 @@ pub fn parse(
             &visitor_label,
             label,
             &label_name,
+            &field_attrs.prefix,
+            &namespaces,
           )
         }
         Some(FieldType::FieldTypeStruct { struct_name }) => Some(quote! {
@@ -570,6 +588,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeBool) => {
@@ -581,6 +601,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeU8) => {
@@ -592,6 +614,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeI8) => {
@@ -603,6 +627,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeU16) => {
@@ -614,6 +640,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeI16) => {
@@ -625,6 +653,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeU32) => {
@@ -636,6 +666,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeI32) => {
@@ -647,6 +679,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeU64) => {
@@ -658,6 +692,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeI64) => {
@@ -669,6 +705,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeF32) => {
@@ -680,6 +718,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeF64) => {
@@ -691,6 +731,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeStruct { ref struct_name }) => {
@@ -725,6 +767,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeBool) => {
@@ -736,6 +780,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeI8) => {
@@ -747,6 +793,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeU8) => {
@@ -758,6 +806,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeI16) => {
@@ -769,6 +819,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeU16) => {
@@ -780,6 +832,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeI32) => {
@@ -791,6 +845,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeU32) => {
@@ -802,6 +858,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeI64) => {
@@ -813,6 +871,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeU64) => {
@@ -824,6 +884,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeF32) => {
@@ -835,6 +897,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeF64) => {
@@ -846,6 +910,8 @@ pub fn parse(
                 &visitor_label,
                 label,
                 &label_name,
+                &field_attrs.prefix,
+                &namespaces,
               )
             }
             Some(&FieldType::FieldTypeStruct { ref struct_name }) => {
@@ -1209,21 +1275,30 @@ pub fn parse(
     impl YaDeserialize for #name {
       #[allow(unused_variables)]
       fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, String> {
-        let named_element =
+        let (named_element, struct_namespace) =
           if let XmlEvent::StartElement{name, ..} = reader.peek()?.to_owned() {
-            name.local_name.to_owned()
+            (name.local_name.to_owned(), name.namespace.clone())
           } else {
-            String::from(#root)
+            (String::from(#root), None)
           };
         debug!("Struct: start to parse {:?}", named_element);
+
+        if let Some(ref namespace) = struct_namespace {
+          match namespace.as_str() {
+            #namespaces_matches
+            bad_ns => {
+              let msg = format!("bad namespace for {}, found {}", named_element, bad_ns);
+              return Err(msg);
+            }
+          }
+        };
 
         #variables
         #field_visitors
 
         loop {
           match reader.peek()?.to_owned() {
-            XmlEvent::StartElement{ref name, ref attributes, ref namespace} => {
-              #validate_namespace
+            XmlEvent::StartElement{ref name, ref attributes, ..} => {
 
               match name.local_name.as_str() {
                 #call_visitors
@@ -1283,12 +1358,41 @@ fn build_call_visitor(
   visitor_label: &Ident,
   label: &Option<Ident>,
   label_name: &str,
+  prefix: &Option<String>,
+  namespaces: &BTreeMap<String, String>,
 ) -> Option<TokenStream> {
+
+  let namespaces_matches: TokenStream = namespaces
+    .iter()
+    .map(|(p, ns)| {
+      let str_ns = ns.as_str();
+      if *prefix == Some(p.to_string()) {
+        Some(quote!(#str_ns => {}))
+      } else {
+        None
+      }
+    })
+    .filter(|x| x.is_some())
+    .map(|x| x.unwrap())
+    .fold(TokenStream::new(), |mut tokens, token| {
+      tokens.append_all(token);
+      tokens
+    });
+
   Some(quote! {
     #label_name => {
       let visitor = #visitor_label{};
 
-      if let XmlEvent::StartElement { .. } = *reader.peek()? {
+      if let XmlEvent::StartElement {name, ..} = reader.peek()?.clone() {
+        if let Some(namespace) = name.namespace {
+          match namespace.as_str() {
+            #namespaces_matches
+            bad_ns => {
+              let msg = format!("bad field namespace for {}, found {}", name.local_name.as_str(), bad_ns);
+              return Err(msg);
+            }
+          }
+        }
         reader.set_map_value()
       }
 

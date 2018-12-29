@@ -22,16 +22,22 @@ fn de_struct_namespace() {
   #[yaserde(
     root = "book",
     prefix = "ns",
-    namespace = "ns: http://www.sample.com/ns/domain"
+    namespace = "ns: http://www.sample.com/ns/domain",
+    namespace = "ns2: http://www.sample.com/ns/domain_2",
   )]
   pub struct Book {
     #[yaserde(prefix = "ns")]
     author: String,
-    #[yaserde(prefix = "ns")]
+    #[yaserde(prefix = "ns2")]
     title: String,
   }
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><ns:book xmlns:ns=\"http://www.sample.com/ns/domain\"><ns:author>Antoine de Saint-Exupéry</ns:author><ns:title>Little prince</ns:title></ns:book>";
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <ns:book xmlns:ns="http://www.sample.com/ns/domain" xmlns:ns2="http://www.sample.com/ns/domain_2">
+      <ns:author>Antoine de Saint-Exupéry</ns:author>
+      <ns2:title>Little prince</ns2:title>
+    </ns:book>
+  "#;
   convert_and_validate!(
     content,
     Book,
@@ -41,9 +47,43 @@ fn de_struct_namespace() {
     }
   );
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><ns:book xmlns:ns=\"http://www.sample.com/ns/domain2\"><ns:author>Antoine de Saint-Exupéry</ns:author><ns:title>Little prince</ns:title></ns:book>";
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <ns:book xmlns:ns="http://www.sample.com/ns/domain">
+      <ns:author>Antoine de Saint-Exupéry</ns:author>
+      <ns2:title xmlns:ns2="http://www.sample.com/ns/domain_2">Little prince</ns2:title>
+    </ns:book>
+  "#;
+  convert_and_validate!(
+    content,
+    Book,
+    Book {
+      author: String::from("Antoine de Saint-Exupéry"),
+      title: String::from("Little prince"),
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <book xmlns="http://www.sample.com/ns/domain">
+      <author>Antoine de Saint-Exupéry</author>
+      <ns2:title xmlns:ns2="http://www.sample.com/ns/domain_2">Little prince</ns2:title>
+    </book>
+  "#;
+  convert_and_validate!(
+    content,
+    Book,
+    Book {
+      author: String::from("Antoine de Saint-Exupéry"),
+      title: String::from("Little prince"),
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+  <ns:book xmlns:ns="http://www.sample.com/ns/domain2">
+    <ns:author>Antoine de Saint-Exupéry</ns:author>
+    <ns:title>Little prince</ns:title>
+  </ns:book>"#;
   let loaded: Result<Book, String> = from_str(content);
-  assert_eq!(loaded, Err("bad namespace for book with http://www.sample.com/ns/domain".to_string()));
+  assert_eq!(loaded, Err("bad namespace for book, found http://www.sample.com/ns/domain2".to_string()));
 }
 
 #[test]
