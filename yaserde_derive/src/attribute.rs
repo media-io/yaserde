@@ -9,6 +9,7 @@ pub struct YaSerdeAttribute {
   pub root: Option<String>,
   pub rename: Option<String>,
   pub prefix: Option<String>,
+  pub strict: bool,
   pub default: Option<String>,
   pub namespaces: BTreeMap<String, String>,
   pub attribute: bool,
@@ -34,6 +35,7 @@ impl YaSerdeAttribute {
     let mut attribute = false;
     let mut namespaces = BTreeMap::new();
     let mut prefix = None;
+    let mut strict = false;
     let mut rename = None;
     let mut root = None;
     let mut default = None;
@@ -66,6 +68,9 @@ impl YaSerdeAttribute {
                   "prefix" => {
                     prefix = get_value(&mut attr_iter);
                   }
+                  "strict" => {
+                    strict = true;
+                  }
                   "rename" => {
                     rename = get_value(&mut attr_iter);
                   }
@@ -91,6 +96,7 @@ impl YaSerdeAttribute {
       attribute,
       namespaces,
       prefix,
+      strict,
       rename,
       root,
       default,
@@ -107,6 +113,7 @@ fn parse_empty_attributes() {
   assert_eq!(
     YaSerdeAttribute {
       root: None,
+      strict: false,
       rename: None,
       prefix: None,
       default: None,
@@ -154,6 +161,7 @@ fn parse_attributes() {
   assert_eq!(
     YaSerdeAttribute {
       root: None,
+      strict: false,
       rename: None,
       prefix: None,
       default: None,

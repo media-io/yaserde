@@ -12,6 +12,7 @@ pub fn parse(
   name: &Ident,
   root: &str,
   prefix: &Option<String>,
+  strict: bool,
   namespaces: &BTreeMap<String, String>,
 ) -> TokenStream {
   let namespaces_matches: TokenStream = namespaces
@@ -966,10 +967,15 @@ pub fn parse(
           for attr in attributes {
             if attr.name.local_name == #label_name {
               #label = attr.value.to_owned();
+
+              if #strict {
+                attribute_found(&attr.name.local_name);
+              }
             }
           }
         }),
         Some(FieldType::FieldTypeBool) => build_call_visitor_for_attribute(
+          strict,
           label,
           &label_name,
           &quote! {= value},
@@ -977,6 +983,7 @@ pub fn parse(
           &visitor_label,
         ),
         Some(FieldType::FieldTypeI8) => build_call_visitor_for_attribute(
+          strict,
           label,
           &label_name,
           &quote! {= value},
@@ -984,6 +991,7 @@ pub fn parse(
           &visitor_label,
         ),
         Some(FieldType::FieldTypeU8) => build_call_visitor_for_attribute(
+          strict,
           label,
           &label_name,
           &quote! {= value},
@@ -991,6 +999,7 @@ pub fn parse(
           &visitor_label,
         ),
         Some(FieldType::FieldTypeI16) => build_call_visitor_for_attribute(
+          strict,
           label,
           &label_name,
           &quote! {= value},
@@ -998,6 +1007,7 @@ pub fn parse(
           &visitor_label,
         ),
         Some(FieldType::FieldTypeU16) => build_call_visitor_for_attribute(
+          strict,
           label,
           &label_name,
           &quote! {= value},
@@ -1005,6 +1015,7 @@ pub fn parse(
           &visitor_label,
         ),
         Some(FieldType::FieldTypeI32) => build_call_visitor_for_attribute(
+          strict,
           label,
           &label_name,
           &quote! {= value},
@@ -1012,6 +1023,7 @@ pub fn parse(
           &visitor_label,
         ),
         Some(FieldType::FieldTypeU32) => build_call_visitor_for_attribute(
+          strict,
           label,
           &label_name,
           &quote! {= value},
@@ -1019,6 +1031,7 @@ pub fn parse(
           &visitor_label,
         ),
         Some(FieldType::FieldTypeI64) => build_call_visitor_for_attribute(
+          strict,
           label,
           &label_name,
           &quote! {= value},
@@ -1026,6 +1039,7 @@ pub fn parse(
           &visitor_label,
         ),
         Some(FieldType::FieldTypeU64) => build_call_visitor_for_attribute(
+          strict,
           label,
           &label_name,
           &quote! {= value},
@@ -1033,6 +1047,7 @@ pub fn parse(
           &visitor_label,
         ),
         Some(FieldType::FieldTypeF32) => build_call_visitor_for_attribute(
+          strict,
           label,
           &label_name,
           &quote! {= value},
@@ -1040,6 +1055,7 @@ pub fn parse(
           &visitor_label,
         ),
         Some(FieldType::FieldTypeF64) => build_call_visitor_for_attribute(
+          strict,
           label,
           &label_name,
           &quote! {= value},
@@ -1050,6 +1066,7 @@ pub fn parse(
           let dt = Box::into_raw(data_type);
           match unsafe { dt.as_ref() } {
             Some(&FieldType::FieldTypeString) => build_call_visitor_for_attribute(
+              strict,
               label,
               &label_name,
               &quote! {= Some(value)},
@@ -1057,6 +1074,7 @@ pub fn parse(
               &visitor_label,
             ),
             Some(&FieldType::FieldTypeBool) => build_call_visitor_for_attribute(
+              strict,
               label,
               &label_name,
               &quote! {= Some(value)},
@@ -1064,6 +1082,7 @@ pub fn parse(
               &visitor_label,
             ),
             Some(&FieldType::FieldTypeU8) => build_call_visitor_for_attribute(
+              strict,
               label,
               &label_name,
               &quote! {= Some(value)},
@@ -1071,6 +1090,7 @@ pub fn parse(
               &visitor_label,
             ),
             Some(&FieldType::FieldTypeI8) => build_call_visitor_for_attribute(
+              strict,
               label,
               &label_name,
               &quote! {= Some(value)},
@@ -1078,6 +1098,7 @@ pub fn parse(
               &visitor_label,
             ),
             Some(&FieldType::FieldTypeU16) => build_call_visitor_for_attribute(
+              strict,
               label,
               &label_name,
               &quote! {= Some(value)},
@@ -1085,6 +1106,7 @@ pub fn parse(
               &visitor_label,
             ),
             Some(&FieldType::FieldTypeI16) => build_call_visitor_for_attribute(
+              strict,
               label,
               &label_name,
               &quote! {= Some(value)},
@@ -1092,6 +1114,7 @@ pub fn parse(
               &visitor_label,
             ),
             Some(&FieldType::FieldTypeU32) => build_call_visitor_for_attribute(
+              strict,
               label,
               &label_name,
               &quote! {= Some(value)},
@@ -1099,6 +1122,7 @@ pub fn parse(
               &visitor_label,
             ),
             Some(&FieldType::FieldTypeI32) => build_call_visitor_for_attribute(
+              strict,
               label,
               &label_name,
               &quote! {= Some(value)},
@@ -1106,6 +1130,7 @@ pub fn parse(
               &visitor_label,
             ),
             Some(&FieldType::FieldTypeU64) => build_call_visitor_for_attribute(
+              strict,
               label,
               &label_name,
               &quote! {= Some(value)},
@@ -1113,6 +1138,7 @@ pub fn parse(
               &visitor_label,
             ),
             Some(&FieldType::FieldTypeI64) => build_call_visitor_for_attribute(
+              strict,
               label,
               &label_name,
               &quote! {= Some(value)},
@@ -1120,6 +1146,7 @@ pub fn parse(
               &visitor_label,
             ),
             Some(&FieldType::FieldTypeF32) => build_call_visitor_for_attribute(
+              strict,
               label,
               &label_name,
               &quote! {= Some(value)},
@@ -1127,6 +1154,7 @@ pub fn parse(
               &visitor_label,
             ),
             Some(&FieldType::FieldTypeF64) => build_call_visitor_for_attribute(
+              strict,
               label,
               &label_name,
               &quote! {= Some(value)},
@@ -1295,20 +1323,60 @@ pub fn parse(
         #variables
         #field_visitors
 
+        let mut first_tag = true;
+
         loop {
           match reader.peek()?.to_owned() {
             XmlEvent::StartElement{ref name, ref attributes, ..} => {
+              let mut missing_attributes: Vec<(String, bool)> = attributes
+                .iter()
+                .map(|attr| (attr.name.local_name.to_string(), true))
+                .collect();
+
+              let mut attribute_found = |attr_name: &str| {
+                missing_attributes.iter_mut().for_each(|mut attr| {
+                  if attr.0 == attr_name {
+                    // mark this attribute as found
+                    attr.1 = false;
+                  }
+                });
+              };
 
               match name.local_name.as_str() {
                 #call_visitors
-                named_element => {
-                  let _root = reader.next_event();
+                name => {
+                  let _root = reader.next_event()?;
+
+                  if #strict {
+                    if first_tag {
+                      if name != #root {
+                        return Err(format!("unexpected root tag {}, expected {}", name, #root))
+                      }
+                    } else {
+                      return Err(format!("unknown key {}", name))
+                    }
+                  }
                 }
-                // name => {
-                //   return Err(format!("unknown key {}", name))
-                // }
               }
+
               #attributes_loading
+
+              if #strict && missing_attributes.len() != 0 {
+                return Err(format!(
+                  "unknown attribute(s) {} on tag {}",
+                  missing_attributes
+                    .iter()
+                    // only include missing attributes
+                    .filter(|x| x.1)
+                    // only take the attribute name
+                    .map(|x| x.0.clone())
+                    .collect::<Vec<String>>()
+                    .join(", "),
+                  name
+                ));
+              }
+
+              first_tag = false;
             }
             XmlEvent::EndElement{ref name} => {
               if name.local_name == named_element {
@@ -1414,6 +1482,7 @@ fn build_call_visitor(
 }
 
 fn build_call_visitor_for_attribute(
+  strict: bool,
   label: &Option<Ident>,
   label_name: &str,
   action: &TokenStream,
@@ -1427,6 +1496,10 @@ fn build_call_visitor_for_attribute(
         match visitor.#visitor(&attr.value) {
           Ok(value) => {#label #action;}
           Err(msg) => {return Err(msg);}
+        }
+
+        if #strict {
+          attribute_found(&attr.name.local_name);
         }
       }
     }

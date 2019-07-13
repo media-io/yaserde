@@ -21,6 +21,7 @@ pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<TokenStream, 
       name,
       &root,
       &root_attrs.prefix,
+      root_attrs.strict,
       &root_attrs.namespaces,
     ),
     syn::Data::Enum(ref data_enum) => {

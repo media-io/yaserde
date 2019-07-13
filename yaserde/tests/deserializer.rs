@@ -16,6 +16,13 @@ macro_rules! convert_and_validate {
   };
 }
 
+macro_rules! convert_and_validate_err {
+  ($content: expr, $struct: tt, $model: expr) => {
+    let loaded: Result<$struct, String> = from_str($content);
+    assert_eq!(loaded, Err($model));
+  };
+}
+
 #[test]
 fn de_basic() {
   #[derive(YaDeserialize, PartialEq, Debug)]
@@ -162,6 +169,47 @@ fn de_rename() {
         subitem: "sub_something".to_string(),
       },
     }
+  );
+}
+
+#[test]
+fn de_unexpected_tag() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(strict, root = "root")]
+  pub struct XmlStruct {
+    expected_tag: String,
+  }
+
+  let content = "<badroot></badroot>";
+  convert_and_validate_err!(
+    content,
+    XmlStruct,
+    "unexpected root tag badroot, expected root".to_owned()
+  );
+
+  let content =
+    "<root><expected_tag>expected</expected_tag><unexpected_tag>unexpected</unexpected_tag></root>";
+  convert_and_validate_err!(content, XmlStruct, "unknown key unexpected_tag".to_owned());
+}
+
+#[test]
+fn de_unexpected_attribute() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(strict, root = "root")]
+  pub struct XmlStruct {
+    #[yaserde(attribute)]
+    some_number: i32,
+    #[yaserde(attribute)]
+    expected_attribute: String,
+    expected_tag: String,
+  }
+
+  let content =
+    "<root><expected_tag expected_attribute=\"expected\" unexpected_attribute=\"unexpected\">expected</expected_tag></root>";
+  convert_and_validate_err!(
+    content,
+    XmlStruct,
+    "unknown attribute(s) unexpected_attribute on tag expected_tag".to_owned()
   );
 }
 
