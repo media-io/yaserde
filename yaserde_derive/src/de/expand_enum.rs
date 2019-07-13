@@ -1,4 +1,5 @@
 use attribute::*;
+use de::build_default_value::build_default_value;
 use field_type::*;
 use proc_macro2::{Span, TokenStream};
 use quote::TokenStreamExt;
@@ -6,7 +7,6 @@ use std::collections::BTreeMap;
 use syn::DataEnum;
 use syn::Fields;
 use syn::Ident;
-use de::build_default_value::build_default_value;
 
 pub fn parse(
   data_enum: &DataEnum,
@@ -28,42 +28,72 @@ pub fn parse(
             let field_attrs = YaSerdeAttribute::parse(&field.attrs);
 
             match get_field_type(field) {
-              Some(FieldType::FieldTypeString) => {
-                build_default_value(field_label, &quote! {String}, &quote! {"".to_string()}, &field_attrs.default)
-              }
-              Some(FieldType::FieldTypeBool) => {
-                build_default_value(field_label, &quote! {bool}, &quote! {false}, &field_attrs.default)
-              }
+              Some(FieldType::FieldTypeString) => build_default_value(
+                field_label,
+                &quote! {String},
+                &quote! {"".to_string()},
+                &field_attrs.default,
+              ),
+              Some(FieldType::FieldTypeBool) => build_default_value(
+                field_label,
+                &quote! {bool},
+                &quote! {false},
+                &field_attrs.default,
+              ),
               Some(FieldType::FieldTypeI8) => {
                 build_default_value(field_label, &quote! {i8}, &quote! {0}, &field_attrs.default)
               }
               Some(FieldType::FieldTypeU8) => {
                 build_default_value(field_label, &quote! {u8}, &quote! {0}, &field_attrs.default)
               }
-              Some(FieldType::FieldTypeI16) => {
-                build_default_value(field_label, &quote! {i16}, &quote! {0}, &field_attrs.default)
-              }
-              Some(FieldType::FieldTypeU16) => {
-                build_default_value(field_label, &quote! {u16}, &quote! {0}, &field_attrs.default)
-              }
-              Some(FieldType::FieldTypeI32) => {
-                build_default_value(field_label, &quote! {i32}, &quote! {0}, &field_attrs.default)
-              }
-              Some(FieldType::FieldTypeU32) => {
-                build_default_value(field_label, &quote! {u32}, &quote! {0}, &field_attrs.default)
-              }
-              Some(FieldType::FieldTypeI64) => {
-                build_default_value(field_label, &quote! {i64}, &quote! {0}, &field_attrs.default)
-              }
-              Some(FieldType::FieldTypeU64) => {
-                build_default_value(field_label, &quote! {u64}, &quote! {0}, &field_attrs.default)
-              }
-              Some(FieldType::FieldTypeF32) => {
-                build_default_value(field_label, &quote! {f32}, &quote! {0}, &field_attrs.default)
-              }
-              Some(FieldType::FieldTypeF64) => {
-                build_default_value(field_label, &quote! {f64}, &quote! {0}, &field_attrs.default)
-              }
+              Some(FieldType::FieldTypeI16) => build_default_value(
+                field_label,
+                &quote! {i16},
+                &quote! {0},
+                &field_attrs.default,
+              ),
+              Some(FieldType::FieldTypeU16) => build_default_value(
+                field_label,
+                &quote! {u16},
+                &quote! {0},
+                &field_attrs.default,
+              ),
+              Some(FieldType::FieldTypeI32) => build_default_value(
+                field_label,
+                &quote! {i32},
+                &quote! {0},
+                &field_attrs.default,
+              ),
+              Some(FieldType::FieldTypeU32) => build_default_value(
+                field_label,
+                &quote! {u32},
+                &quote! {0},
+                &field_attrs.default,
+              ),
+              Some(FieldType::FieldTypeI64) => build_default_value(
+                field_label,
+                &quote! {i64},
+                &quote! {0},
+                &field_attrs.default,
+              ),
+              Some(FieldType::FieldTypeU64) => build_default_value(
+                field_label,
+                &quote! {u64},
+                &quote! {0},
+                &field_attrs.default,
+              ),
+              Some(FieldType::FieldTypeF32) => build_default_value(
+                field_label,
+                &quote! {f32},
+                &quote! {0},
+                &field_attrs.default,
+              ),
+              Some(FieldType::FieldTypeF64) => build_default_value(
+                field_label,
+                &quote! {f64},
+                &quote! {0},
+                &field_attrs.default,
+              ),
               Some(FieldType::FieldTypeStruct { struct_name }) => build_default_value(
                 field_label,
                 &quote! {#struct_name},
@@ -88,42 +118,78 @@ pub fn parse(
               Some(FieldType::FieldTypeVec { data_type }) => {
                 let dt = Box::into_raw(data_type);
                 match unsafe { dt.as_ref() } {
-                  Some(&FieldType::FieldTypeString) => {
-                    build_default_value(field_label, &quote! {Vec<String>}, &quote! {vec![]}, &field_attrs.default)
-                  }
-                  Some(&FieldType::FieldTypeBool) => {
-                    build_default_value(field_label, &quote! {Vec<bool>}, &quote! {vec![]}, &field_attrs.default)
-                  }
-                  Some(&FieldType::FieldTypeI8) => {
-                    build_default_value(field_label, &quote! {Vec<i8>}, &quote! {vec![]}, &field_attrs.default)
-                  }
-                  Some(&FieldType::FieldTypeU8) => {
-                    build_default_value(field_label, &quote! {Vec<u8>}, &quote! {vec![]}, &field_attrs.default)
-                  }
-                  Some(&FieldType::FieldTypeI16) => {
-                    build_default_value(field_label, &quote! {Vec<i16>}, &quote! {vec![]}, &field_attrs.default)
-                  }
-                  Some(&FieldType::FieldTypeU16) => {
-                    build_default_value(field_label, &quote! {Vec<u16>}, &quote! {vec![]}, &field_attrs.default)
-                  }
-                  Some(&FieldType::FieldTypeI32) => {
-                    build_default_value(field_label, &quote! {Vec<i32>}, &quote! {vec![]}, &field_attrs.default)
-                  }
-                  Some(&FieldType::FieldTypeU32) => {
-                    build_default_value(field_label, &quote! {Vec<u32>}, &quote! {vec![]}, &field_attrs.default)
-                  }
-                  Some(&FieldType::FieldTypeI64) => {
-                    build_default_value(field_label, &quote! {Vec<i64>}, &quote! {vec![]}, &field_attrs.default)
-                  }
-                  Some(&FieldType::FieldTypeU64) => {
-                    build_default_value(field_label, &quote! {Vec<u64>}, &quote! {vec![]}, &field_attrs.default)
-                  }
-                  Some(&FieldType::FieldTypeF32) => {
-                    build_default_value(field_label, &quote! {Vec<f32>}, &quote! {vec![]}, &field_attrs.default)
-                  }
-                  Some(&FieldType::FieldTypeF64) => {
-                    build_default_value(field_label, &quote! {Vec<f64>}, &quote! {vec![]}, &field_attrs.default)
-                  }
+                  Some(&FieldType::FieldTypeString) => build_default_value(
+                    field_label,
+                    &quote! {Vec<String>},
+                    &quote! {vec![]},
+                    &field_attrs.default,
+                  ),
+                  Some(&FieldType::FieldTypeBool) => build_default_value(
+                    field_label,
+                    &quote! {Vec<bool>},
+                    &quote! {vec![]},
+                    &field_attrs.default,
+                  ),
+                  Some(&FieldType::FieldTypeI8) => build_default_value(
+                    field_label,
+                    &quote! {Vec<i8>},
+                    &quote! {vec![]},
+                    &field_attrs.default,
+                  ),
+                  Some(&FieldType::FieldTypeU8) => build_default_value(
+                    field_label,
+                    &quote! {Vec<u8>},
+                    &quote! {vec![]},
+                    &field_attrs.default,
+                  ),
+                  Some(&FieldType::FieldTypeI16) => build_default_value(
+                    field_label,
+                    &quote! {Vec<i16>},
+                    &quote! {vec![]},
+                    &field_attrs.default,
+                  ),
+                  Some(&FieldType::FieldTypeU16) => build_default_value(
+                    field_label,
+                    &quote! {Vec<u16>},
+                    &quote! {vec![]},
+                    &field_attrs.default,
+                  ),
+                  Some(&FieldType::FieldTypeI32) => build_default_value(
+                    field_label,
+                    &quote! {Vec<i32>},
+                    &quote! {vec![]},
+                    &field_attrs.default,
+                  ),
+                  Some(&FieldType::FieldTypeU32) => build_default_value(
+                    field_label,
+                    &quote! {Vec<u32>},
+                    &quote! {vec![]},
+                    &field_attrs.default,
+                  ),
+                  Some(&FieldType::FieldTypeI64) => build_default_value(
+                    field_label,
+                    &quote! {Vec<i64>},
+                    &quote! {vec![]},
+                    &field_attrs.default,
+                  ),
+                  Some(&FieldType::FieldTypeU64) => build_default_value(
+                    field_label,
+                    &quote! {Vec<u64>},
+                    &quote! {vec![]},
+                    &field_attrs.default,
+                  ),
+                  Some(&FieldType::FieldTypeF32) => build_default_value(
+                    field_label,
+                    &quote! {Vec<f32>},
+                    &quote! {vec![]},
+                    &field_attrs.default,
+                  ),
+                  Some(&FieldType::FieldTypeF64) => build_default_value(
+                    field_label,
+                    &quote! {Vec<f64>},
+                    &quote! {vec![]},
+                    &field_attrs.default,
+                  ),
                   Some(&FieldType::FieldTypeStruct { ref struct_name }) => build_default_value(
                     field_label,
                     &quote! {Vec<#struct_name>},

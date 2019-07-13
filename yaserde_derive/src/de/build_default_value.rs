@@ -1,4 +1,3 @@
-
 use proc_macro2::{Span, TokenStream};
 use syn::Ident;
 

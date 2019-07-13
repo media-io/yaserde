@@ -1,11 +1,11 @@
 use attribute::*;
+use de::build_default_value::build_default_value;
 use field_type::*;
 use proc_macro2::{Span, TokenStream};
 use quote::TokenStreamExt;
 use std::collections::BTreeMap;
 use syn::DataStruct;
 use syn::Ident;
-use de::build_default_value::build_default_value;
 
 pub fn parse(
   data_struct: &DataStruct,
@@ -14,7 +14,6 @@ pub fn parse(
   prefix: &Option<String>,
   namespaces: &BTreeMap<String, String>,
 ) -> TokenStream {
-
   let namespaces_matches: TokenStream = namespaces
     .iter()
     .map(|(p, ns)| {
@@ -1361,7 +1360,6 @@ fn build_call_visitor(
   prefix: &Option<String>,
   namespaces: &BTreeMap<String, String>,
 ) -> Option<TokenStream> {
-
   let namespaces_matches: TokenStream = namespaces
     .iter()
     .map(|(p, ns)| {
