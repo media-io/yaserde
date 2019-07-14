@@ -1361,13 +1361,15 @@ pub fn parse(
 
               #attributes_loading
 
-              if #strict && missing_attributes.len() != 0 {
+              let actually_missing = missing_attributes
+                .iter()
+                // only include missing attributes
+                .filter(|x| x.1);
+
+              if #strict && actually_missing.clone().peekable().peek() != None {
                 return Err(format!(
                   "unknown attribute(s) {} on tag {}",
-                  missing_attributes
-                    .iter()
-                    // only include missing attributes
-                    .filter(|x| x.1)
+                  actually_missing
                     // only take the attribute name
                     .map(|x| x.0.clone())
                     .collect::<Vec<String>>()

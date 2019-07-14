@@ -173,6 +173,33 @@ fn de_rename() {
 }
 
 #[test]
+fn de_no_unexpected_tag() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(strict, root = "root")]
+  pub struct XmlStruct {
+    expected_tag: String,
+  }
+
+  let content = "<root></root>";
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      expected_tag: "".to_owned()
+    }
+  );
+
+  let content = "<root><expected_tag>expected</expected_tag></root>";
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      expected_tag: "expected".to_owned()
+    }
+  );
+}
+
+#[test]
 fn de_unexpected_tag() {
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(strict, root = "root")]
@@ -190,6 +217,31 @@ fn de_unexpected_tag() {
   let content =
     "<root><expected_tag>expected</expected_tag><unexpected_tag>unexpected</unexpected_tag></root>";
   convert_and_validate_err!(content, XmlStruct, "unknown key unexpected_tag".to_owned());
+}
+
+#[test]
+fn de_no_unexpected_attribute() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(strict, root = "root")]
+  pub struct XmlStruct {
+    #[yaserde(attribute)]
+    some_number: i32,
+    #[yaserde(attribute)]
+    expected_attribute: String,
+    expected_tag: String,
+  }
+
+  let content =
+    "<root><expected_tag expected_attribute=\"expected\">expected</expected_tag></root>";
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      some_number: 0,
+      expected_attribute: "expected".to_owned(),
+      expected_tag: "expected".to_owned()
+    }
+  );
 }
 
 #[test]
