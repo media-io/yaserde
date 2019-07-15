@@ -1192,6 +1192,47 @@ pub fn parse(
       sum
     });
 
+  let get_expected_attributes: TokenStream = data_struct
+    .fields
+    .iter()
+    .map(|field| {
+      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
+      if !field_attrs.attribute {
+        return None;
+      }
+
+      let label_name = if let Some(value) = field_attrs.rename {
+        Ident::new(&value.to_string(), Span::call_site()).to_string()
+      } else {
+        field.ident.clone().unwrap().to_string()
+      };
+
+      match get_field_type(field) {
+        Some(FieldType::FieldTypeString)
+        | Some(FieldType::FieldTypeBool)
+        | Some(FieldType::FieldTypeI8)
+        | Some(FieldType::FieldTypeU8)
+        | Some(FieldType::FieldTypeI16)
+        | Some(FieldType::FieldTypeU16)
+        | Some(FieldType::FieldTypeI32)
+        | Some(FieldType::FieldTypeU32)
+        | Some(FieldType::FieldTypeI64)
+        | Some(FieldType::FieldTypeU64)
+        | Some(FieldType::FieldTypeF32)
+        | Some(FieldType::FieldTypeF64) => Some(label_name),
+        _ => None,
+      }
+    })
+    .filter(|x| x.is_some())
+    .map(|x| {
+      let s = x.unwrap();
+      quote! { #s.to_owned(), }
+    })
+    .fold(TokenStream::new(), |mut sum, val| {
+      sum.append_all(val);
+      sum
+    });
+
   let set_text: TokenStream = data_struct
     .fields
     .iter()
@@ -1376,6 +1417,25 @@ pub fn parse(
                     .join(", "),
                   name
                 ));
+              }
+
+              if #strict && !first_tag {
+                let found_attribute_names: Vec<String> = attributes
+                  .iter()
+                  .map(|attr| attr.name.local_name.to_string())
+                  .collect();
+                let missing_expected_attributes: Vec<String> = vec![#get_expected_attributes]
+                  .into_iter()
+                  .filter(|x| !found_attribute_names.contains(&x))
+                  .collect();
+
+                if missing_expected_attributes.len() != 0 {
+                  return Err(format!(
+                    "expected attribute(s) {} were missing on tag {}",
+                    missing_expected_attributes.join(", "),
+                    name
+                  ));
+                }
               }
 
               first_tag = false;

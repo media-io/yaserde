@@ -225,8 +225,6 @@ fn de_no_unexpected_attribute() {
   #[yaserde(strict, root = "root")]
   pub struct XmlStruct {
     #[yaserde(attribute)]
-    some_number: i32,
-    #[yaserde(attribute)]
     expected_attribute: String,
     expected_tag: String,
   }
@@ -237,7 +235,6 @@ fn de_no_unexpected_attribute() {
     content,
     XmlStruct,
     XmlStruct {
-      some_number: 0,
       expected_attribute: "expected".to_owned(),
       expected_tag: "expected".to_owned()
     }
@@ -250,8 +247,6 @@ fn de_unexpected_attribute() {
   #[yaserde(strict, root = "root")]
   pub struct XmlStruct {
     #[yaserde(attribute)]
-    some_number: i32,
-    #[yaserde(attribute)]
     expected_attribute: String,
     expected_tag: String,
   }
@@ -262,6 +257,30 @@ fn de_unexpected_attribute() {
     content,
     XmlStruct,
     "unknown attribute(s) unexpected_attribute on tag expected_tag".to_owned()
+  );
+}
+
+#[test]
+fn de_expected_attribute_missing() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(strict, root = "root")]
+  pub struct XmlStruct {
+    #[yaserde(attribute)]
+    expected_attribute1: String,
+    #[yaserde(attribute)]
+    expected_attribute2: String,
+    #[yaserde(attribute)]
+    expected_attribute3: String,
+    expected_tag: String,
+  }
+
+  let content =
+    "<root><expected_tag expected_attribute1=\"expected\">expected</expected_tag></root>";
+  convert_and_validate_err!(
+    content,
+    XmlStruct,
+    "expected attribute(s) expected_attribute2, expected_attribute3 were missing on tag expected_tag"
+      .to_owned()
   );
 }
 
