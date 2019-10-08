@@ -12,7 +12,10 @@ pub fn to_string<T: YaSerialize>(model: &T) -> Result<String, String> {
   Ok(String::from(data))
 }
 
-pub fn to_string_with_config<T: YaSerialize>(model: &T, _config: &Config) -> Result<String, String> {
+pub fn to_string_with_config<T: YaSerialize>(
+  model: &T,
+  _config: &Config,
+) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());
   let cursor = serialize_with_writer(model, buf)?;
   let data = str::from_utf8(cursor.get_ref()).expect("Found invalid UTF-8");
@@ -104,5 +107,5 @@ impl<'de, W: Write> Serializer<W> {
 pub struct Config {
   perform_indent: bool,
   write_document_declaration: bool,
-  indent_string: Option<String>
+  indent_string: Option<String>,
 }

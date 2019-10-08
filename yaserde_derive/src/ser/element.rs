@@ -1,11 +1,6 @@
-
 use proc_macro2::{Ident, Span, TokenStream};
 
-
-pub fn enclose_formatted_characters(
-  label: &Ident,
-  label_name: String
-  ) -> TokenStream {
+pub fn enclose_formatted_characters(label: &Ident, label_name: String) -> TokenStream {
   quote! {
     let start_event = XmlEvent::start_element(#label_name);
     let _ret = writer.write(start_event);
@@ -19,10 +14,7 @@ pub fn enclose_formatted_characters(
   }
 }
 
-pub fn enclose_formatted_characters_for_value(
-  label: &Ident,
-  label_name: String
-  ) -> TokenStream {
+pub fn enclose_formatted_characters_for_value(label: &Ident, label_name: String) -> TokenStream {
   quote! {
     let start_event = XmlEvent::start_element(#label_name);
     let _ret = writer.write(start_event);
@@ -36,10 +28,7 @@ pub fn enclose_formatted_characters_for_value(
   }
 }
 
-pub fn enclose_characters(
-  label: &Option<Ident>,
-  label_name: String
-  ) -> TokenStream {
+pub fn enclose_characters(label: &Option<Ident>, label_name: String) -> TokenStream {
   quote! {
     let start_event = XmlEvent::start_element(#label_name);
     let _ret = writer.write(start_event);
@@ -57,7 +46,7 @@ pub fn serialize_element(
   label: &Option<Ident>,
   label_name: String,
   default: &Option<String>,
-  ) -> Option<TokenStream> {
+) -> Option<TokenStream> {
   let inner = enclose_characters(label, label_name);
 
   if let Some(ref d) = default {
