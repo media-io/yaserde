@@ -7,22 +7,22 @@ use YaSerialize;
 
 pub fn to_string<T: YaSerialize>(model: &T) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());
-  let cursor = serialize_with_writer(model, buf)?;
+  let cursor = serialize_with_writer(model, buf, &Config::default())?;
   let data = str::from_utf8(cursor.get_ref()).expect("Found invalid UTF-8");
   Ok(String::from(data))
 }
 
 pub fn to_string_with_config<T: YaSerialize>(
   model: &T,
-  _config: &Config,
+  config: &Config,
 ) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());
-  let cursor = serialize_with_writer(model, buf)?;
+  let cursor = serialize_with_writer(model, buf, config)?;
   let data = str::from_utf8(cursor.get_ref()).expect("Found invalid UTF-8");
   Ok(String::from(data))
 }
 
-pub fn serialize_with_writer<W: Write, T: YaSerialize>(model: &T, writer: W) -> Result<W, String> {
+pub fn serialize_with_writer<W: Write, T: YaSerialize>(model: &T, writer: W, _config: &Config) -> Result<W, String> {
   let mut serializer = Serializer::new_from_writer(writer);
   match model.serialize(&mut serializer) {
     Ok(()) => Ok(serializer.into_inner()),
@@ -105,7 +105,17 @@ impl<'de, W: Write> Serializer<W> {
 }
 
 pub struct Config {
-  perform_indent: bool,
-  write_document_declaration: bool,
-  indent_string: Option<String>,
+  pub perform_indent: bool,
+  pub write_document_declaration: bool,
+  pub indent_string: Option<String>,
+}
+
+impl Default for Config {
+  fn default() -> Self {
+    Config{
+      perform_indent: false,
+      write_document_declaration: true,
+      indent_string: None
+    }
+  }
 }
