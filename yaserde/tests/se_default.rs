@@ -36,7 +36,8 @@ fn se_default_field_string() {
     },
     content
   );
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><background>my_value</background></base>";
+  let content =
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><background>my_value</background></base>";
   convert_and_validate!(
     XmlStruct {
       background: "my_value".to_string(),
@@ -61,13 +62,9 @@ fn se_default_field_boolean() {
   let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base />";
   convert_and_validate!(XmlStruct { background: true }, content);
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><background>false</background></base>";
-  convert_and_validate!(
-    XmlStruct {
-      background: false,
-    },
-    content
-  );
+  let content =
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><background>false</background></base>";
+  convert_and_validate!(XmlStruct { background: false }, content);
 }
 
 #[test]

@@ -11,9 +11,9 @@ documentation = "https://docs.rs/yaserde"
 readme = "../README.md"
 
 [dependencies]
-syn = { version = "0.15.22", features = ["visit", "extra-traits"] }
-proc-macro2 = "0.4.24"
-quote = "0.6.10"
+syn = { version = "1.0.5", features = ["visit", "extra-traits"] }
+proc-macro2 = "1.0.5"
+quote = "1.0.2"
 
 [lib]
 name = "yaserde_derive"

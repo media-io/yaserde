@@ -79,7 +79,7 @@ pub fn serialize(
               });
             })
           }
-        },
+        }
         Some(FieldType::FieldTypeOption { data_type }) => {
           let dt = Box::into_raw(data_type);
           match unsafe { dt.as_ref() } {
@@ -108,7 +108,7 @@ pub fn serialize(
                     };
                 })
               }
-            },
+            }
             Some(&FieldType::FieldTypeBool)
             | Some(&FieldType::FieldTypeI8)
             | Some(&FieldType::FieldTypeU8)
@@ -160,7 +160,7 @@ pub fn serialize(
                     };
                 })
               }
-            },
+            }
             Some(&FieldType::FieldTypeVec { .. }) => {
               let item_ident = Ident::new("yas_item", Span::call_site());
               let inner = enclose_formatted_characters(&item_ident, label_name);
@@ -184,7 +184,7 @@ pub fn serialize(
                   }
                 })
               }
-            },
+            }
             _ => unimplemented!(),
           }
         }
@@ -228,7 +228,7 @@ pub fn serialize(
               });
             })
           }
-        },
+        }
         _ => None,
       }
     })
@@ -293,8 +293,9 @@ pub fn serialize(
         | Some(FieldType::FieldTypeI64)
         | Some(FieldType::FieldTypeU64)
         | Some(FieldType::FieldTypeF32)
-        | Some(FieldType::FieldTypeF64) =>
-          serialize_element(label, label_name, &field_attrs.default),
+        | Some(FieldType::FieldTypeF64) => {
+          serialize_element(label, label_name, &field_attrs.default)
+        }
         Some(FieldType::FieldTypeOption { data_type }) => {
           let dt = Box::into_raw(data_type);
           match unsafe { dt.as_ref() } {
@@ -330,7 +331,7 @@ pub fn serialize(
                   }
                 })
               }
-            },
+            }
             Some(&FieldType::FieldTypeVec { .. }) => {
               let item_ident = Ident::new("yas_item", Span::call_site());
               let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
@@ -356,7 +357,7 @@ pub fn serialize(
                   }
                 })
               }
-            },
+            }
             Some(&FieldType::FieldTypeStruct { .. }) => Some(quote! {
               if let Some(ref item) = &self.#label {
                 writer.set_start_event_name(Some(#label_name.to_string()));
@@ -416,7 +417,7 @@ pub fn serialize(
                   #inner
                 }
               })
-            },
+            }
             Some(&FieldType::FieldTypeBool)
             | Some(&FieldType::FieldTypeI8)
             | Some(&FieldType::FieldTypeU8)
@@ -436,7 +437,7 @@ pub fn serialize(
                   #inner
                 }
               })
-            },
+            }
             Some(&FieldType::FieldTypeOption { .. }) => Some(quote! {
               for item in &self.#label {
                 if let Some(value) = item {

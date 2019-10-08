@@ -23,7 +23,7 @@ fn de_struct_namespace() {
     root = "book",
     prefix = "ns",
     namespace = "ns: http://www.sample.com/ns/domain",
-    namespace = "ns2: http://www.sample.com/ns/domain_2",
+    namespace = "ns2: http://www.sample.com/ns/domain_2"
   )]
   pub struct Book {
     #[yaserde(prefix = "ns")]
@@ -83,7 +83,10 @@ fn de_struct_namespace() {
     <ns:title>Little prince</ns:title>
   </ns:book>"#;
   let loaded: Result<Book, String> = from_str(content);
-  assert_eq!(loaded, Err("bad namespace for book, found http://www.sample.com/ns/domain2".to_string()));
+  assert_eq!(
+    loaded,
+    Err("bad namespace for book, found http://www.sample.com/ns/domain2".to_string())
+  );
 }
 
 #[test]

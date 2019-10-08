@@ -1,5 +1,4 @@
 use syn;
-use syn::punctuated::Pair;
 use syn::Type::Path;
 
 #[derive(Debug)]
@@ -56,7 +55,7 @@ pub fn get_field_type(field: &syn::Field) -> Option<FieldType> {
         return None;
       }
       match path.path.segments.first() {
-        Some(Pair::End(t)) => FieldType::from_ident(t),
+        Some(path_segment) => FieldType::from_ident(path_segment),
         _ => None,
       }
     }
@@ -66,10 +65,10 @@ pub fn get_field_type(field: &syn::Field) -> Option<FieldType> {
 
 fn get_sub_type(t: &syn::PathSegment) -> Option<syn::PathSegment> {
   if let syn::PathArguments::AngleBracketed(ref args) = t.arguments {
-    if let Some(Pair::End(tt)) = args.args.first() {
+    if let Some(tt) = args.args.first() {
       if let syn::GenericArgument::Type(ref argument) = *tt {
         if let Path(ref path2) = *argument {
-          if let Some(Pair::End(ttt)) = path2.path.segments.first() {
+          if let Some(ttt) = path2.path.segments.first() {
             return Some(ttt.clone());
           }
         }

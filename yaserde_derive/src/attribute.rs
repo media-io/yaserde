@@ -40,7 +40,7 @@ impl YaSerdeAttribute {
     let mut text = false;
 
     for attr in attrs.iter() {
-      let mut attr_iter = attr.clone().tts.into_iter();
+      let mut attr_iter = attr.clone().tokens.into_iter();
       if let Some(token) = attr_iter.next() {
         if let TokenTree::Group(group) = token {
           if group.delimiter() == Delimiter::Parenthesis {
@@ -146,7 +146,7 @@ fn parse_attributes() {
       leading_colon: None,
       segments: punctuated,
     },
-    tts: TokenStream::from_str("(attribute)").unwrap(),
+    tokens: TokenStream::from_str("(attribute)").unwrap(),
   }];
 
   let attrs = YaSerdeAttribute::parse(&attributes);
