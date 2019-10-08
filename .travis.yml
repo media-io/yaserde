@@ -9,36 +9,33 @@ rust:
 matrix:
   allow_failures:
     - rust: nightly
+
   include:
     # Rustfmt
-    - env: RUSTFMT_VERSION="0.99.5"
-      rust: nightly-2018-09-26
+    - rust: stable
       install:
         - rustup component add rustfmt-preview
-        - cargo install rustfmt-nightly --force --version $RUSTFMT_VERSION || echo "rustfmt already installed"
       before_script:
-        - cargo-fmt fmt -- --version
+        - cargo fmt --version
       script:
-        - cargo fmt
+        - cargo fmt -- --check
 
     # Clippy
-    - env: CLIPPY_VERSION="0.0.212"
-      rust: nightly
+    - rust: stable
       install:
-      - travis_wait cargo install clippy --version $CLIPPY_VERSION || echo "clippy already installed"
+        - rustup component add clippy-preview
       script:
         # Fail if clippy output contains "error:" or "warning:"
         - cargo clippy 2>&1 | tee ./clippy.out && ! grep -qe  "error:\|warning:" ./clippy.out
 
     # Test coverage (with Tarpaulin)
-    - env: TARPAULIN_VERSION="0.6.10"
-      rust: stable
+    - rust: stable
       # To avoid "Error: EPERM: operation not permitted" error (see https://github.com/valery-barysok/session-file-store/issues/58)
       sudo: true
       install:
-        - curl -sL https://github.com/xd009642/tarpaulin/releases/download/$TARPAULIN_VERSION/cargo-tarpaulin-$TARPAULIN_VERSION-travis.tar.gz | tar xvz -C $HOME/.cargo/bin
+        - RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin --force
       script:
-        - cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+        - cargo tarpaulin -v --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
 
 script:
   - cargo test
