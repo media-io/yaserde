@@ -396,13 +396,11 @@ pub fn parse(
         return None;
       }
 
-      let label_name = if let Some(value) = field_attrs.rename {
+      let label_name = if let Some(ref value) = field_attrs.rename {
         Ident::new(&value.to_string(), Span::call_site()).to_string()
       } else {
         field.ident.clone().unwrap().to_string()
       };
-
-      let visitor_label = Ident::new(&format!("__Visitor{}", label_name), Span::call_site());
 
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
@@ -411,10 +409,8 @@ pub fn parse(
             &quote! {String},
             &visitor,
             &quote! {= value},
-            &visitor_label,
+            &field_attrs,
             label,
-            &label_name,
-            &field_attrs.prefix,
             &namespaces,
           )
         }
@@ -424,10 +420,8 @@ pub fn parse(
             &quote! {bool},
             &visitor,
             &quote! {= value},
-            &visitor_label,
+            &field_attrs,
             label,
-            &label_name,
-            &field_attrs.prefix,
             &namespaces,
           )
         }
@@ -437,10 +431,8 @@ pub fn parse(
             &quote! {i8},
             &visitor,
             &quote! {= value},
-            &visitor_label,
+            &field_attrs,
             label,
-            &label_name,
-            &field_attrs.prefix,
             &namespaces,
           )
         }
@@ -450,10 +442,8 @@ pub fn parse(
             &quote! {u8},
             &visitor,
             &quote! {= value},
-            &visitor_label,
+            &field_attrs,
             label,
-            &label_name,
-            &field_attrs.prefix,
             &namespaces,
           )
         }
@@ -463,10 +453,8 @@ pub fn parse(
             &quote! {u16},
             &visitor,
             &quote! {= value},
-            &visitor_label,
+            &field_attrs,
             label,
-            &label_name,
-            &field_attrs.prefix,
             &namespaces,
           )
         }
@@ -476,10 +464,8 @@ pub fn parse(
             &quote! {i16},
             &visitor,
             &quote! {= value},
-            &visitor_label,
+            &field_attrs,
             label,
-            &label_name,
-            &field_attrs.prefix,
             &namespaces,
           )
         }
@@ -489,10 +475,8 @@ pub fn parse(
             &quote! {u32},
             &visitor,
             &quote! {= value},
-            &visitor_label,
+            &field_attrs,
             label,
-            &label_name,
-            &field_attrs.prefix,
             &namespaces,
           )
         }
@@ -502,10 +486,8 @@ pub fn parse(
             &quote! {i32},
             &visitor,
             &quote! {= value},
-            &visitor_label,
+            &field_attrs,
             label,
-            &label_name,
-            &field_attrs.prefix,
             &namespaces,
           )
         }
@@ -515,10 +497,8 @@ pub fn parse(
             &quote! {u64},
             &visitor,
             &quote! {= value},
-            &visitor_label,
+            &field_attrs,
             label,
-            &label_name,
-            &field_attrs.prefix,
             &namespaces,
           )
         }
@@ -528,10 +508,8 @@ pub fn parse(
             &quote! {i64},
             &visitor,
             &quote! {= value},
-            &visitor_label,
+            &field_attrs,
             label,
-            &label_name,
-            &field_attrs.prefix,
             &namespaces,
           )
         }
@@ -541,10 +519,8 @@ pub fn parse(
             &quote! {f32},
             &visitor,
             &quote! {= value},
-            &visitor_label,
+            &field_attrs,
             label,
-            &label_name,
-            &field_attrs.prefix,
             &namespaces,
           )
         }
@@ -554,10 +530,8 @@ pub fn parse(
             &quote! {f64},
             &visitor,
             &quote! {= value},
-            &visitor_label,
+            &field_attrs,
             label,
-            &label_name,
-            &field_attrs.prefix,
             &namespaces,
           )
         }
@@ -584,10 +558,8 @@ pub fn parse(
                 &quote! {String},
                 &visitor,
                 &quote! {= Some(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -597,10 +569,8 @@ pub fn parse(
                 &quote! {bool},
                 &visitor,
                 &quote! {= Some(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -610,10 +580,8 @@ pub fn parse(
                 &quote! {u8},
                 &visitor,
                 &quote! {= Some(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -623,10 +591,8 @@ pub fn parse(
                 &quote! {i8},
                 &visitor,
                 &quote! {= Some(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -636,10 +602,8 @@ pub fn parse(
                 &quote! {u16},
                 &visitor,
                 &quote! {= Some(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -649,10 +613,8 @@ pub fn parse(
                 &quote! {i16},
                 &visitor,
                 &quote! {= Some(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -662,10 +624,8 @@ pub fn parse(
                 &quote! {u32},
                 &visitor,
                 &quote! {= Some(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -675,10 +635,8 @@ pub fn parse(
                 &quote! {i32},
                 &visitor,
                 &quote! {= Some(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -688,10 +646,8 @@ pub fn parse(
                 &quote! {u64},
                 &visitor,
                 &quote! {= Some(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -701,10 +657,8 @@ pub fn parse(
                 &quote! {i64},
                 &visitor,
                 &quote! {= Some(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -714,10 +668,8 @@ pub fn parse(
                 &quote! {f32},
                 &visitor,
                 &quote! {= Some(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -727,10 +679,8 @@ pub fn parse(
                 &quote! {f64},
                 &visitor,
                 &quote! {= Some(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -763,10 +713,8 @@ pub fn parse(
                 &quote! {String},
                 &visitor,
                 &quote! {.push(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -776,10 +724,8 @@ pub fn parse(
                 &quote! {bool},
                 &visitor,
                 &quote! {.push(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -789,10 +735,8 @@ pub fn parse(
                 &quote! {i8},
                 &visitor,
                 &quote! {.push(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -802,10 +746,8 @@ pub fn parse(
                 &quote! {u8},
                 &visitor,
                 &quote! {.push(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -815,10 +757,8 @@ pub fn parse(
                 &quote! {i16},
                 &visitor,
                 &quote! {.push(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -828,10 +768,8 @@ pub fn parse(
                 &quote! {u16},
                 &visitor,
                 &quote! {.push(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -841,10 +779,8 @@ pub fn parse(
                 &quote! {i32},
                 &visitor,
                 &quote! {.push(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -854,10 +790,8 @@ pub fn parse(
                 &quote! {u32},
                 &visitor,
                 &quote! {.push(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -867,10 +801,8 @@ pub fn parse(
                 &quote! {i64},
                 &visitor,
                 &quote! {.push(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -880,10 +812,8 @@ pub fn parse(
                 &quote! {u64},
                 &visitor,
                 &quote! {.push(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -893,10 +823,8 @@ pub fn parse(
                 &quote! {f32},
                 &visitor,
                 &quote! {.push(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -906,10 +834,8 @@ pub fn parse(
                 &quote! {f64},
                 &visitor,
                 &quote! {.push(value)},
-                &visitor_label,
+                &field_attrs,
                 label,
-                &label_name,
-                &field_attrs.prefix,
                 &namespaces,
               )
             }
@@ -1354,17 +1280,25 @@ fn build_call_visitor(
   field_type: &TokenStream,
   visitor: &Ident,
   action: &TokenStream,
-  visitor_label: &Ident,
+  field_attrs: &YaSerdeAttribute,
   label: &Option<Ident>,
-  label_name: &str,
-  prefix: &Option<String>,
   namespaces: &BTreeMap<String, String>,
 ) -> Option<TokenStream> {
+  let prefix = field_attrs.prefix.clone();
+
+  // let label = &field.ident;
+  let label_name = if let Some(ref value) = field_attrs.rename {
+    Ident::new(&value.to_string(), Span::call_site()).to_string()
+  } else {
+    label.clone().unwrap().to_string()
+  };
+  let visitor_label = Ident::new(&format!("__Visitor{}", label_name), Span::call_site());
+
   let namespaces_matches: TokenStream = namespaces
     .iter()
     .map(|(p, ns)| {
       let str_ns = ns.as_str();
-      if *prefix == Some(p.to_string()) {
+      if prefix == Some(p.to_string()) {
         Some(quote!(#str_ns => {}))
       } else {
         None
