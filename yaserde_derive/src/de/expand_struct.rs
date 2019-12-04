@@ -2,7 +2,7 @@ use attribute::*;
 use de::build_default_value::build_default_value;
 use field_type::*;
 use proc_macro2::{Span, TokenStream};
-use quote::TokenStreamExt;
+use quote::{TokenStreamExt, ToTokens};
 use std::collections::BTreeMap;
 use syn::DataStruct;
 use syn::Ident;
@@ -249,9 +249,9 @@ pub fn parse(
           build_declare_visitor(&quote! {f64}, &quote! {visit_f64}, &visitor_label)
         }
         Some(FieldType::FieldTypeStruct { struct_name }) => {
-          let struct_id = struct_name.to_string();
+          let struct_id : String = struct_name.segments.iter().map(|s| s.ident.to_string()).collect();
           let struct_ident = Ident::new(
-            &format!("__Visitor_{}_{}", label_name, struct_name),
+            &format!("__Visitor_{}_{}", label_name, struct_id),
             Span::call_site(),
           );
 
@@ -309,7 +309,7 @@ pub fn parse(
               build_declare_visitor(&quote! {f64}, &quote! {visit_f64}, &visitor_label)
             }
             Some(&FieldType::FieldTypeStruct { ref struct_name }) => {
-              let struct_ident = Ident::new(&format!("{}", struct_name), Span::call_site());
+              let struct_ident = Ident::new(&format!("{}", struct_name.into_token_stream()), Span::call_site());
               Some(quote! {
                 #[allow(non_snake_case, non_camel_case_types)]
                 struct #visitor_label;
@@ -363,7 +363,7 @@ pub fn parse(
               build_declare_visitor(&quote! {f64}, &quote! {visit_f64}, &visitor_label)
             }
             Some(&FieldType::FieldTypeStruct { ref struct_name }) => {
-              let struct_ident = Ident::new(&format!("{}", struct_name), Span::call_site());
+              let struct_ident = Ident::new(&format!("{}", struct_name.into_token_stream()), Span::call_site());
               Some(quote! {
                 #[allow(non_snake_case, non_camel_case_types)]
                 struct #visitor_label;
@@ -685,7 +685,7 @@ pub fn parse(
               )
             }
             Some(&FieldType::FieldTypeStruct { ref struct_name }) => {
-              let struct_ident = Ident::new(&format!("{}", struct_name), Span::call_site());
+              let struct_ident = Ident::new(&format!("{}", struct_name.into_token_stream()), Span::call_site());
               Some(quote! {
                 #label_name => {
                   reader.set_map_value();
@@ -840,7 +840,7 @@ pub fn parse(
               )
             }
             Some(&FieldType::FieldTypeStruct { ref struct_name }) => {
-              let struct_ident = Ident::new(&format!("{}", struct_name), Span::call_site());
+              let struct_ident = Ident::new(&format!("{}", struct_name.into_token_stream()), Span::call_site());
               Some(quote! {
                 #label_name => {
                   reader.set_map_value();
@@ -1064,7 +1064,7 @@ pub fn parse(
         }
         Some(FieldType::FieldTypeStruct { struct_name }) => {
           let struct_ident = Ident::new(
-            &format!("__Visitor_{}_{}", label_name, struct_name),
+            &format!("__Visitor_{}_{}", label_name, struct_name.into_token_stream()),
             Span::call_site(),
           );
 
