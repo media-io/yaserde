@@ -23,30 +23,28 @@ pub enum FieldType {
 impl FieldType {
   fn from_ident(path: &syn::Path) -> Option<FieldType> {
     match path.segments.last() {
-      Some(t) => {
-        match t.ident.to_string().as_str() {
-          "String" => Some(FieldType::FieldTypeString),
-          "bool" => Some(FieldType::FieldTypeBool),
-          "i8" => Some(FieldType::FieldTypeI8),
-          "u8" => Some(FieldType::FieldTypeU8),
-          "i16" => Some(FieldType::FieldTypeI16),
-          "u16" => Some(FieldType::FieldTypeU16),
-          "i32" => Some(FieldType::FieldTypeI32),
-          "u32" => Some(FieldType::FieldTypeU32),
-          "i64" => Some(FieldType::FieldTypeI64),
-          "u64" => Some(FieldType::FieldTypeU64),
-          "f32" => Some(FieldType::FieldTypeF32),
-          "f64" => Some(FieldType::FieldTypeF64),
-          "Option" => get_sub_type(t).map(|data_type| FieldType::FieldTypeOption {
-            data_type: Box::new(FieldType::from_ident(&syn::Path::from(data_type)).unwrap()),
-          }),
-          "Vec" => get_sub_type(t).map(|data_type| FieldType::FieldTypeVec {
-            data_type: Box::new(FieldType::from_ident(&syn::Path::from(data_type)).unwrap()),
-          }),
-          _ => Some(FieldType::FieldTypeStruct {
-            struct_name: path.clone(),
-          }),
-        }
+      Some(t) => match t.ident.to_string().as_str() {
+        "String" => Some(FieldType::FieldTypeString),
+        "bool" => Some(FieldType::FieldTypeBool),
+        "i8" => Some(FieldType::FieldTypeI8),
+        "u8" => Some(FieldType::FieldTypeU8),
+        "i16" => Some(FieldType::FieldTypeI16),
+        "u16" => Some(FieldType::FieldTypeU16),
+        "i32" => Some(FieldType::FieldTypeI32),
+        "u32" => Some(FieldType::FieldTypeU32),
+        "i64" => Some(FieldType::FieldTypeI64),
+        "u64" => Some(FieldType::FieldTypeU64),
+        "f32" => Some(FieldType::FieldTypeF32),
+        "f64" => Some(FieldType::FieldTypeF64),
+        "Option" => get_sub_type(t).map(|data_type| FieldType::FieldTypeOption {
+          data_type: Box::new(FieldType::from_ident(&syn::Path::from(data_type)).unwrap()),
+        }),
+        "Vec" => get_sub_type(t).map(|data_type| FieldType::FieldTypeVec {
+          data_type: Box::new(FieldType::from_ident(&syn::Path::from(data_type)).unwrap()),
+        }),
+        _ => Some(FieldType::FieldTypeStruct {
+          struct_name: path.clone(),
+        }),
       },
       _ => None,
     }
