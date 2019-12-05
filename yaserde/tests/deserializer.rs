@@ -49,6 +49,52 @@ fn de_basic() {
 }
 
 #[test]
+fn de_multiple_segments() {
+  mod other_mod {
+    use std::io::Read;
+    use yaserde::YaDeserialize;
+
+    #[derive(YaDeserialize, PartialEq, Debug, Default)]
+    pub struct Page {
+      pub number: i32,
+      pub text: std::string::String,
+    }
+  }
+
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(root = "book")]
+  pub struct Book {
+    author: std::string::String,
+    title: std::string::String,
+    page: other_mod::Page,
+  }
+
+  let content = r#"
+      <book>
+        <author>Antoine de Saint-Exupéry</author>
+        <title>Little prince</title>
+        <page>
+          <number>40</number>
+          <text>The Earth is not just an ordinary planet!</text>
+        </page>
+      </book>
+    "#;
+
+  convert_and_validate!(
+    content,
+    Book,
+    Book {
+      author: String::from("Antoine de Saint-Exupéry"),
+      title: String::from("Little prince"),
+      page: other_mod::Page {
+        number: 40,
+        text: String::from("The Earth is not just an ordinary planet!"),
+      },
+    }
+  );
+}
+
+#[test]
 fn de_list_of_items() {
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "library")]
