@@ -298,3 +298,19 @@ fn ser_attribute_enum() {
   let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base color=\"pink\" />";
   convert_and_validate!(model, content);
 }
+
+#[test]
+fn ser_name_issue_21() {
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(root = "base")]
+  pub struct XmlStruct {
+    name: String,
+  }
+
+  let model = XmlStruct {
+    name: "something".to_string(),
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><name>something</name></base>";
+  convert_and_validate!(model, content);
+}

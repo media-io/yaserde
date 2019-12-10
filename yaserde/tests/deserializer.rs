@@ -350,3 +350,21 @@ fn de_attribute_enum() {
     }
   );
 }
+
+#[test]
+fn de_name_issue_21() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(root = "book")]
+  pub struct Book {
+    name: String,
+  }
+
+  let content = "<book><name>Little prince</name></book>";
+  convert_and_validate!(
+    content,
+    Book,
+    Book {
+      name: String::from("Little prince"),
+    }
+  );
+}

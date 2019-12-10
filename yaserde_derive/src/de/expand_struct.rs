@@ -35,7 +35,7 @@ pub fn parse(
     .fields
     .iter()
     .map(|field| {
-      let label = &field.ident;
+      let label = &get_value_label(&field.ident);
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
 
       match get_field_type(field) {
@@ -401,6 +401,7 @@ pub fn parse(
     .map(|field| {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
       let label = &field.ident;
+      let value_label = &get_value_label(&field.ident);
 
       if field_attrs.attribute {
         return None;
@@ -550,7 +551,7 @@ pub fn parse(
             reader.set_map_value();
             match #struct_name::deserialize(reader) {
               Ok(parsed_item) => {
-                #label = parsed_item;
+                #value_label = parsed_item;
                 let _root = reader.next_event();
               },
               Err(msg) => {
@@ -704,7 +705,7 @@ pub fn parse(
                   reader.set_map_value();
                   match #struct_ident::deserialize(reader) {
                     Ok(parsed_item) => {
-                      #label = Some(parsed_item);
+                      #value_label = Some(parsed_item);
                       let _root = reader.next_event();
                     },
                     Err(msg) => {
@@ -862,7 +863,7 @@ pub fn parse(
                   reader.set_map_value();
                   match #struct_ident::deserialize(reader) {
                     Ok(parsed_item) => {
-                      #label.push(parsed_item);
+                      #value_label.push(parsed_item);
                       let _root = reader.next_event();
                     },
                     Err(msg) => {
@@ -894,7 +895,7 @@ pub fn parse(
         return None;
       }
 
-      let label = &field.ident;
+      let label = &get_value_label(&field.ident);
       let label_name = if let Some(value) = field_attrs.rename {
         Ident::new(&value.to_string(), Span::call_site()).to_string()
       } else {
@@ -1114,7 +1115,7 @@ pub fn parse(
     .fields
     .iter()
     .map(|field| {
-      let label = &field.ident;
+      let label = &get_value_label(&field.ident);
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
 
       match get_field_type(field) {
@@ -1195,10 +1196,11 @@ pub fn parse(
     .iter()
     .map(|field| {
       let label = &field.ident;
+      let value_label = &get_value_label(&field.ident);
 
       if get_field_type(field).is_some() {
         Some(quote! {
-          #label: #label,
+          #label: #value_label,
         })
       } else {
         None
@@ -1307,6 +1309,7 @@ fn build_call_visitor(
   let prefix = field_attrs.prefix.clone();
 
   // let label = &field.ident;
+  let value_label = get_value_label(label);
   let label_name = if let Some(ref value) = field_attrs.rename {
     Ident::new(&value.to_string(), Span::call_site()).to_string()
   } else {
@@ -1361,7 +1364,7 @@ fn build_call_visitor(
       });
 
       if let Ok(value) = result {
-        #label#action
+        #value_label#action
       }
     }
   })
@@ -1398,5 +1401,15 @@ fn build_set_text_to_value(
     })
   } else {
     None
+  }
+}
+
+fn get_value_label(ident: &Option<syn::Ident>) -> Option<syn::Ident> {
+  match &ident {
+    Some(ident) => Some(syn::Ident::new(
+      &format!("__{}_value", ident.to_string()),
+      ident.span(),
+    )),
+    None => None,
   }
 }
