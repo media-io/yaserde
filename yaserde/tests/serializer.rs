@@ -300,6 +300,132 @@ fn ser_attribute_enum() {
 }
 
 #[test]
+fn ser_unnamed_enum() {
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(root = "base")]
+  pub struct XmlStruct {
+    color: Enum,
+  }
+
+  #[derive(YaSerialize, PartialEq, Debug, Default)]
+  pub struct OtherStruct {
+    fi: i32,
+    se: i32,
+  }
+
+  #[derive(YaSerialize, PartialEq, Debug)]
+  pub enum Enum {
+    Simple,
+    Field(String),
+    FullPath(std::string::String),
+    Integer(i32),
+    UserStruct(OtherStruct),
+    OptionString(Option<String>),
+    OptionUserStruct(Option<OtherStruct>),
+    Strings(Vec<String>),
+    Ints(Vec<i32>),
+    Structs(Vec<OtherStruct>),
+    #[yaserde(rename = "renamed")]
+    ToRename(u32),
+  }
+
+  impl Default for Enum {
+    fn default() -> Enum {
+      Enum::Simple
+    }
+  }
+
+  let model = XmlStruct {
+    color: Enum::Field(String::from("some_text")),
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><Field>some_text</Field></color></base>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct {
+    color: Enum::FullPath(String::from("some_text")),
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><FullPath>some_text</FullPath></color></base>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct {
+    color: Enum::Integer(56),
+  };
+
+  let content =
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><Integer>56</Integer></color></base>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct {
+    color: Enum::UserStruct(OtherStruct { fi: 24, se: 42 }),
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><UserStruct><fi>24</fi><se>42</se></UserStruct></color></base>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct {
+    color: Enum::OptionString(Some(String::from("some_text"))),
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><OptionString>some_text</OptionString></color></base>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct {
+    color: Enum::OptionString(None),
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color /></base>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct {
+    color: Enum::OptionUserStruct(Some(OtherStruct { fi: 12, se: 23 })),
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><OptionUserStruct><fi>12</fi><se>23</se></OptionUserStruct></color></base>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct {
+    color: Enum::OptionUserStruct(None),
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color /></base>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct {
+    color: Enum::Strings(vec![String::from("abc"), String::from("def")]),
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><Strings>abc</Strings><Strings>def</Strings></color></base>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct {
+    color: Enum::Ints(vec![23, 45]),
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><Ints>23</Ints><Ints>45</Ints></color></base>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct {
+    color: Enum::Structs(vec![
+      OtherStruct { fi: 12, se: 23 },
+      OtherStruct { fi: 34, se: 45 },
+    ]),
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><Structs><fi>12</fi><se>23</se></Structs><Structs><fi>34</fi><se>45</se></Structs></color></base>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct {
+    color: Enum::ToRename(87),
+  };
+
+  let content =
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><renamed>87</renamed></color></base>";
+  convert_and_validate!(model, content);
+}
+
+#[test]
 fn ser_name_issue_21() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(root = "base")]
