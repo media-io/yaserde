@@ -419,6 +419,21 @@ fn de_complex_enum() {
   let content = r#"<?xml version="1.0" encoding="utf-8"?>
     <base>
       <background>
+        <Red>56</Red>
+      </background>
+    </base>
+  "#;
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: Color::Red(56),
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <base>
+      <background>
         <Green>
           <fi>12</fi>
           <se>23</se>
@@ -431,6 +446,21 @@ fn de_complex_enum() {
     XmlStruct,
     XmlStruct {
       background: Color::Green(OtherStruct { fi: 12, se: 23 }),
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <base>
+      <background>
+        <Yellow>text</Yellow>
+      </background>
+    </base>
+  "#;
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: Color::Yellow(Some(String::from("text"))),
     }
   );
 
