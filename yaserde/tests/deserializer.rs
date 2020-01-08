@@ -352,6 +352,208 @@ fn de_attribute_enum() {
 }
 
 #[test]
+fn de_complex_enum() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  pub struct XmlStruct {
+    background: Color,
+  }
+
+  #[derive(YaDeserialize, PartialEq, Debug, Default)]
+  pub struct OtherStruct {
+    fi: i32,
+    se: i32,
+  }
+
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  pub enum Color {
+    White,
+    Black(String),
+    Orange(std::string::String),
+    Red(i32),
+    Green(OtherStruct),
+    Yellow(Option<String>),
+    Brown(Option<OtherStruct>),
+    Blue(Vec<String>),
+    Purple(Vec<i32>),
+    Magenta(Vec<OtherStruct>),
+    #[yaserde(rename = "NotSoCyan")]
+    Cyan(Vec<OtherStruct>),
+  }
+
+  impl Default for Color {
+    fn default() -> Color {
+      Color::White
+    }
+  }
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <base>
+      <background>
+        <Black>text</Black>
+      </background>
+    </base>
+  "#;
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: Color::Black(String::from("text")),
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <base>
+      <background>
+        <Orange>text</Orange>
+      </background>
+    </base>
+  "#;
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: Color::Orange(String::from("text")),
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <base>
+      <background>
+        <Red>56</Red>
+      </background>
+    </base>
+  "#;
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: Color::Red(56),
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <base>
+      <background>
+        <Green>
+          <fi>12</fi>
+          <se>23</se>
+        </Green>
+      </background>
+    </base>
+  "#;
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: Color::Green(OtherStruct { fi: 12, se: 23 }),
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <base>
+      <background>
+        <Yellow>text</Yellow>
+      </background>
+    </base>
+  "#;
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: Color::Yellow(Some(String::from("text"))),
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <base>
+      <background>
+        <Brown>
+          <fi>12</fi>
+          <se>23</se>
+        </Brown>
+      </background>
+    </base>
+  "#;
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: Color::Brown(Some(OtherStruct { fi: 12, se: 23 })),
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <base>
+      <background>
+        <Blue>abc</Blue>
+        <Blue>def</Blue>
+      </background>
+    </base>
+  "#;
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: Color::Blue(vec![String::from("abc"), String::from("def")]),
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <base>
+      <background>
+        <Purple>12</Purple>
+        <Purple>43</Purple>
+      </background>
+    </base>
+  "#;
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: Color::Purple(vec![12, 43]),
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <base>
+      <background>
+        <Magenta><fi>12</fi><se>23</se></Magenta>
+        <Magenta><fi>63</fi><se>98</se></Magenta>
+      </background>
+    </base>
+  "#;
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: Color::Magenta(vec![
+        OtherStruct { fi: 12, se: 23 },
+        OtherStruct { fi: 63, se: 98 }
+      ]),
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <base xmlns:ns="http://www.sample.com/ns/domain">
+      <background>
+        <NotSoCyan><fi>12</fi><se>23</se></NotSoCyan>
+        <NotSoCyan><fi>63</fi><se>98</se></NotSoCyan>
+      </background>
+    </base>
+  "#;
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: Color::Cyan(vec![
+        OtherStruct { fi: 12, se: 23 },
+        OtherStruct { fi: 63, se: 98 }
+      ])
+    }
+  );
+}
+
+#[test]
 fn de_name_issue_21() {
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "book")]

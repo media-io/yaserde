@@ -127,7 +127,104 @@ pub fn serialize(
             }
           })
         }
-        Fields::Unnamed(ref _fields) => unimplemented!(),
+        Fields::Unnamed(ref fields) => {
+          let enum_fields: TokenStream = fields
+            .unnamed
+            .iter()
+            .map(|field| {
+              let field_attrs = YaSerdeAttribute::parse(&field.attrs);
+              if field_attrs.attribute {
+                return None;
+              }
+
+              let field_label_name = renamed_label.to_string();
+
+              let write_element = |action: &TokenStream| {
+                quote! {
+                  let struct_start_event = XmlEvent::start_element(#field_label_name);
+                  let _ret = writer.write(struct_start_event);
+
+                  #action
+
+                  let struct_end_event = XmlEvent::end_element();
+                  let _ret = writer.write(struct_end_event);
+                }
+              };
+
+              let write_string_chars = quote! {
+                let data_event = XmlEvent::characters(item);
+                let _ret = writer.write(data_event);
+              };
+
+              let write_simple_type = write_element(&quote! {
+                let s = item.to_string();
+                let data_event = XmlEvent::characters(&s);
+                let _ret = writer.write(data_event);
+              });
+
+              let serialize = quote! {
+                writer.set_skip_start_end(true);
+                if let Err(msg) = item.serialize(writer) {
+                  return Err(msg);
+                };
+              };
+
+              let write_sub_type = |data_type| {
+                write_element(match data_type {
+                  FieldType::FieldTypeString => &write_string_chars,
+                  _ => &serialize,
+                })
+              };
+
+              let match_field = |write: &TokenStream| {
+                quote! {
+                  match self {
+                    &#name::#label(ref item) => {
+                      #write
+                    },
+                    _ => {},
+                  }
+                }
+              };
+
+              match get_field_type(field) {
+                Some(FieldType::FieldTypeOption { data_type }) => {
+                  let write = write_sub_type(*data_type);
+
+                  Some(match_field(&quote! {
+                    if let Some(item) = item {
+                      #write
+                    }
+                  }))
+                }
+                Some(FieldType::FieldTypeVec { data_type }) => {
+                  let write = write_sub_type(*data_type);
+
+                  Some(match_field(&quote! {
+                    for item in item {
+                      #write
+                    }
+                  }))
+                }
+                Some(FieldType::FieldTypeStruct { .. }) => {
+                  Some(write_element(&match_field(&serialize)))
+                }
+                Some(FieldType::FieldTypeString) => {
+                  Some(match_field(&write_element(&write_string_chars)))
+                }
+                Some(_simple_type) => Some(match_field(&write_simple_type)),
+                _ => None,
+              }
+            })
+            .filter_map(|x| x)
+            .collect();
+
+          Some(quote! {
+            &#name::#label{..} => {
+              #enum_fields
+            }
+          })
+        }
       }
     })
     .filter(|x| x.is_some())
