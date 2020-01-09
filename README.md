@@ -18,7 +18,7 @@ This library will support XML de/ser-ializing with all specific features.
 - [x] Struct
 - [x] Vec<AnyType>
 - [x] Enum
-- [ ] Enum with complex types
+- [x] Enum with complex types
 - [x] Option
 - [x] String
 - [x] bool
