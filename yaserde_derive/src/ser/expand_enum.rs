@@ -77,35 +77,22 @@ pub fn serialize(
                   }
                 }),
                 Some(FieldType::FieldTypeStruct { .. }) => Some(quote! {
-                  let struct_start_event = XmlEvent::start_element(#field_label_name);
-                  let _ret = writer.write(struct_start_event);
-
                   match self {
                     &#name::#label{ref #field_label, ..} => {
-                      writer.set_skip_start_end(true);
-                      if let Err(msg) = #field_label.serialize(writer) {
-                        return Err(msg);
-                      };
+                      writer.set_start_event_name(Some(#field_label_name.to_string()));
+                      writer.set_skip_start_end(false);
+                      #field_label.serialize(writer)?;
                     },
                     _ => {}
                   }
-
-                  let struct_end_event = XmlEvent::end_element();
-                  let _ret = writer.write(struct_end_event);
                 }),
                 Some(FieldType::FieldTypeVec { .. }) => Some(quote! {
                   match self {
                     &#name::#label{ref #field_label, ..} => {
                       for item in #field_label {
-                        let struct_start_event = XmlEvent::start_element(#field_label_name);
-                        let _ret = writer.write(struct_start_event);
-
-                        writer.set_skip_start_end(true);
-                        if let Err(msg) = item.serialize(writer) {
-                          return Err(msg);
-                        };
-                        let struct_end_event = XmlEvent::end_element();
-                        let _ret = writer.write(struct_end_event);
+                        writer.set_start_event_name(Some(#field_label_name.to_string()));
+                        writer.set_skip_start_end(false);
+                        item.serialize(writer)?;
                       }
                     },
                     _ => {}
@@ -163,10 +150,9 @@ pub fn serialize(
               });
 
               let serialize = quote! {
+                writer.set_start_event_name(None);
                 writer.set_skip_start_end(true);
-                if let Err(msg) = item.serialize(writer) {
-                  return Err(msg);
-                };
+                item.serialize(writer)?;
               };
 
               let write_sub_type = |data_type| {
@@ -255,27 +241,27 @@ pub fn serialize(
       #[allow(unused_variables)]
       fn serialize<W: Write>(&self, writer: &mut yaserde::ser::Serializer<W>)
         -> Result<(), String> {
-        if let Some(label) = writer.get_start_event_name() {
-          let struct_start_event = XmlEvent::start_element(label.as_ref());
-          let _ret = writer.write(struct_start_event);
-          return Ok(());
-        }
-        error!("Enum: start to expand {:?}", #root);
+        let skip = writer.skip_start_end();
 
-        if !writer.skip_start_end() {
-          let struct_start_event = XmlEvent::start_element(#root)#add_namespaces;
-          let _ret = writer.write(struct_start_event);
+        if !skip {
+          if let Some(label) = writer.get_start_event_name() {
+            let struct_start_event = XmlEvent::start_element(label.as_ref());
+            let _ret = writer.write(struct_start_event);
+          } else {
+            let struct_start_event = XmlEvent::start_element(#root)#add_namespaces;
+            let _ret = writer.write(struct_start_event);
+          }
         }
 
         match self {
           #write_enum_content
         }
 
-        if !writer.skip_start_end() {
+        if !skip {
           let struct_end_event = XmlEvent::end_element();
           let _ret = writer.write(struct_end_event);
         }
-        writer.set_skip_start_end(false);
+
         Ok(())
       }
     }
