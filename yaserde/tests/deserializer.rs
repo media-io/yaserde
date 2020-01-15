@@ -570,3 +570,60 @@ fn de_name_issue_21() {
     }
   );
 }
+
+#[test]
+fn de_custom() {
+  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  struct Date {
+    #[yaserde(rename = "Year")]
+    year: i32,
+    #[yaserde(rename = "Month")]
+    month: i32,
+    #[yaserde(rename = "Day")]
+    day: Day,
+  }
+
+  #[derive(Default, PartialEq, Debug)]
+  struct Day {
+    value: i32,
+  }
+
+  impl YaDeserialize for Day {
+    fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, String> {
+      use std::str::FromStr;
+
+      if let xml::reader::XmlEvent::StartElement { name, .. } = reader.peek()?.to_owned() {
+        let expected_name = String::from("Day");
+        if name.local_name != expected_name {
+          return Err(format!(
+            "Wrong StartElement name: {}, expected: {}",
+            name, expected_name
+          ));
+        }
+        let _next = reader.next_event();
+      } else {
+        return Err("StartElement missing".to_string());
+      }
+
+      if let xml::reader::XmlEvent::Characters(text) = reader.peek()?.to_owned() {
+        Ok(Day {
+          value: 2 * i32::from_str(&text).unwrap(),
+        })
+      } else {
+        Err("Characters missing".to_string())
+      }
+    }
+  }
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><Date><Year>2020</Year><Month>01</Month><Day>11</Day></Date>";
+  let model: Date = from_str(content).unwrap();
+
+  assert_eq!(
+    model,
+    Date {
+      year: 2020,
+      month: 1,
+      day: Day { value: 11 * 2 }
+    }
+  );
+}
