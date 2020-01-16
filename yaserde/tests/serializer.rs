@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate log;
 extern crate xml;
 extern crate yaserde;
@@ -438,5 +437,42 @@ fn ser_name_issue_21() {
   };
 
   let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><name>something</name></base>";
+  convert_and_validate!(model, content);
+}
+
+#[test]
+fn ser_custom() {
+  #[derive(Default, PartialEq, Debug, YaSerialize)]
+  struct Date {
+    #[yaserde(rename = "Year")]
+    year: i32,
+    #[yaserde(rename = "Month")]
+    month: i32,
+    #[yaserde(rename = "Day")]
+    day: Day,
+  }
+
+  #[derive(Default, PartialEq, Debug)]
+  struct Day {
+    value: i32,
+  }
+
+  impl YaSerialize for Day {
+    fn serialize<W: Write>(&self, writer: &mut yaserde::ser::Serializer<W>) -> Result<(), String> {
+      let _ret = writer.write(xml::writer::XmlEvent::start_element("DoubleDay"));
+      let _ret = writer.write(xml::writer::XmlEvent::characters(
+        &(self.value * 2).to_string(),
+      ));
+      let _ret = writer.write(xml::writer::XmlEvent::end_element());
+      Ok(())
+    }
+  }
+
+  let model = Date {
+    year: 2020,
+    month: 1,
+    day: Day { value: 5 },
+  };
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><Date><Year>2020</Year><Month>1</Month><DoubleDay>10</DoubleDay></Date>";
   convert_and_validate!(model, content);
 }
