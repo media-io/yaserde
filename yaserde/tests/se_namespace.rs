@@ -47,11 +47,18 @@ fn ser_enum_namespace() {
   pub enum XmlStruct {
     #[yaserde(prefix = "ns")]
     Item,
+    #[yaserde(prefix = "ns")]
+    ItemWithField(String),
   }
 
   let model = XmlStruct::Item;
 
   let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><ns:root xmlns:ns=\"http://www.sample.com/ns/domain\">ns:Item</ns:root>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct::ItemWithField("Value".to_string());
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><ns:root xmlns:ns=\"http://www.sample.com/ns/domain\"><ns:ItemWithField>Value</ns:ItemWithField></ns:root>";
   convert_and_validate!(model, content);
 }
 
