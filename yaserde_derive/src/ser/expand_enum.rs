@@ -17,16 +17,15 @@ pub fn serialize(
     .variants
     .iter()
     .map(|variant| {
-      let variant_attrs = YaSerdeAttribute::parse(&variant.attrs);
-      let renamed_label = match variant_attrs.rename {
-        Some(value) => Ident::new(&value, Span::call_site()),
-        None => variant.ident.clone(),
-      };
       let label = &variant.ident;
-      let label_name = if let Some(prefix) = variant_attrs.prefix {
-        prefix + ":" + renamed_label.to_string().as_ref()
-      } else {
-        renamed_label.to_string()
+      let label_name = {
+        let variant_attrs = YaSerdeAttribute::parse(&variant.attrs);
+        let prefix = variant_attrs.prefix.map_or(String::new(), |p| p + ":");
+        let renamed_label = variant_attrs
+          .rename
+          .unwrap_or_else(|| variant.ident.to_string());
+
+        prefix + renamed_label.as_str()
       };
 
       match variant.fields {
@@ -124,11 +123,9 @@ pub fn serialize(
                 return None;
               }
 
-              let field_label_name = renamed_label.to_string();
-
               let write_element = |action: &TokenStream| {
                 quote! {
-                  let struct_start_event = XmlEvent::start_element(#field_label_name);
+                  let struct_start_event = XmlEvent::start_element(#label_name);
                   let _ret = writer.write(struct_start_event);
 
                   #action
