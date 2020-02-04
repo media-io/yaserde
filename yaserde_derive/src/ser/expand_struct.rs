@@ -1,8 +1,9 @@
 use attribute::*;
 use field_type::*;
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use std::collections::BTreeMap;
 use std::string::ToString;
+use syn::spanned::Spanned;
 use syn::DataStruct;
 use syn::Ident;
 
@@ -27,7 +28,7 @@ pub fn serialize(
 
       let label_name = build_label_name(&field, &field_attrs);
 
-      get_field_type(field).and_then(|field| match field {
+      get_field_type(field).and_then(|f| match f {
         FieldType::FieldTypeString
         | FieldType::FieldTypeBool
         | FieldType::FieldTypeI8
@@ -41,7 +42,7 @@ pub fn serialize(
         | FieldType::FieldTypeF32
         | FieldType::FieldTypeF64 => {
           if let Some(ref d) = field_attrs.default {
-            let default_function = Ident::new(&d, Span::call_site());
+            let default_function = Ident::new(&d, field.span());
             Some(quote! {
               let struct_start_event =
                 if self.#label != #default_function() {
@@ -75,7 +76,7 @@ pub fn serialize(
         FieldType::FieldTypeOption { data_type } => match *data_type {
           FieldType::FieldTypeString => {
             if let Some(ref d) = field_attrs.default {
-              let default_function = Ident::new(&d, Span::call_site());
+              let default_function = Ident::new(&d, field.span());
               Some(quote! {
                 let struct_start_event =
                   if self.#label != #default_function() {
@@ -111,7 +112,7 @@ pub fn serialize(
           | FieldType::FieldTypeF32
           | FieldType::FieldTypeF64 => {
             if let Some(ref d) = field_attrs.default {
-              let default_function = Ident::new(&d, Span::call_site());
+              let default_function = Ident::new(&d, field.span());
               Some(quote! {
                 let struct_start_event =
                   if self.#label != #default_function() {
@@ -152,11 +153,11 @@ pub fn serialize(
             }
           }
           FieldType::FieldTypeVec { .. } => {
-            let item_ident = Ident::new("yas_item", Span::call_site());
+            let item_ident = Ident::new("yas_item", field.span());
             let inner = enclose_formatted_characters(&item_ident, label_name);
 
             if let Some(ref d) = field_attrs.default {
-              let default_function = Ident::new(&d, Span::call_site());
+              let default_function = Ident::new(&d, field.span());
 
               Some(quote! {
                 if self.#label != #default_function() {
@@ -179,7 +180,7 @@ pub fn serialize(
         },
         FieldType::FieldTypeStruct { .. } => {
           if let Some(ref d) = field_attrs.default {
-            let default_function = Ident::new(&d, Span::call_site());
+            let default_function = Ident::new(&d, field.span());
             Some(quote! {
               let struct_start_event =
                 if self.#label != #default_function() {
@@ -253,7 +254,7 @@ pub fn serialize(
 
       let label_name = build_label_name(&field, &field_attrs);
 
-      get_field_type(field).and_then(|field| match field {
+      get_field_type(field).and_then(|f| match f {
         FieldType::FieldTypeString
         | FieldType::FieldTypeBool
         | FieldType::FieldTypeI8
@@ -279,11 +280,11 @@ pub fn serialize(
           | FieldType::FieldTypeU64
           | FieldType::FieldTypeF32
           | FieldType::FieldTypeF64 => {
-            let item_ident = Ident::new("yas_item", Span::call_site());
+            let item_ident = Ident::new("yas_item", field.span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
             if let Some(ref d) = field_attrs.default {
-              let default_function = Ident::new(&d, Span::call_site());
+              let default_function = Ident::new(&d, field.span());
 
               Some(quote! {
                 if self.#label != #default_function() {
@@ -301,11 +302,11 @@ pub fn serialize(
             }
           }
           FieldType::FieldTypeVec { .. } => {
-            let item_ident = Ident::new("yas_item", Span::call_site());
+            let item_ident = Ident::new("yas_item", field.span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
             if let Some(ref d) = field_attrs.default {
-              let default_function = Ident::new(&d, Span::call_site());
+              let default_function = Ident::new(&d, field.span());
 
               Some(quote! {
                 if self.#label != #default_function() {
@@ -342,7 +343,7 @@ pub fn serialize(
         }),
         FieldType::FieldTypeVec { data_type } => match *data_type {
           FieldType::FieldTypeString => {
-            let item_ident = Ident::new("yas_item", Span::call_site());
+            let item_ident = Ident::new("yas_item", field.span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
             Some(quote! {
@@ -362,7 +363,7 @@ pub fn serialize(
           | FieldType::FieldTypeU64
           | FieldType::FieldTypeF32
           | FieldType::FieldTypeF64 => {
-            let item_ident = Ident::new("yas_item", Span::call_site());
+            let item_ident = Ident::new("yas_item", field.span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
             Some(quote! {

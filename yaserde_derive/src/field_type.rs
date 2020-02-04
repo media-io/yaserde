@@ -92,11 +92,13 @@ pub fn get_simple_type_token(field_type: &FieldType) -> proc_macro2::TokenStream
   }
 }
 
-pub fn get_simple_type_visitor(field_type: &FieldType) -> syn::Ident {
-  format_ident!(
+pub fn get_simple_type_visitor(field_type: &FieldType) -> proc_macro2::TokenStream {
+  let ident = format_ident!(
     "visit_{}",
     get_simple_type_token(field_type)
       .to_string()
       .replace("String", "str")
-  )
+  );
+
+  quote! {#ident}
 }

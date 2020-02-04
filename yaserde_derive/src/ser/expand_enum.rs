@@ -1,7 +1,8 @@
 use attribute::*;
 use field_type::*;
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use std::collections::BTreeMap;
+use syn::spanned::Spanned;
 use syn::DataEnum;
 use syn::Fields;
 use syn::Ident;
@@ -53,7 +54,7 @@ pub fn serialize(
               }
 
               let renamed_field_label = match field_attrs.rename {
-                Some(value) => Some(Ident::new(&value.replace("\"", ""), Span::call_site())),
+                Some(value) => Some(Ident::new(&value.replace("\"", ""), field.span())),
                 None => field.ident.clone(),
               };
               let field_label_name = renamed_field_label.unwrap().to_string();

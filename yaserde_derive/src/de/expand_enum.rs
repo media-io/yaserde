@@ -1,7 +1,8 @@
 use attribute::*;
 use field_type::*;
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use std::collections::BTreeMap;
+use syn::spanned::Spanned;
 use syn::DataEnum;
 use syn::Fields;
 use syn::Ident;
@@ -133,21 +134,22 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
     .iter()
     .enumerate()
     .map(|(idx, field)| {
-      let visitor_label = Ident::new(&format!("__Visitor_{}", idx), Span::call_site());
+      let visitor_label = Ident::new(&format!("__Visitor_{}", idx), field.span());
 
-      let make_visitor = |visitor: &Ident, field_type: &TokenStream, fn_body: &TokenStream| {
-        Some(quote! {
-          #[allow(non_snake_case, non_camel_case_types)]
-          struct #visitor_label;
-          impl<'de> Visitor<'de> for #visitor_label {
-            type Value = #field_type;
+      let make_visitor =
+        |visitor: &TokenStream, field_type: &TokenStream, fn_body: &TokenStream| {
+          Some(quote! {
+            #[allow(non_snake_case, non_camel_case_types)]
+            struct #visitor_label;
+            impl<'de> Visitor<'de> for #visitor_label {
+              type Value = #field_type;
 
-            fn #visitor(self, v: &str) -> Result<Self::Value, String> {
-              #fn_body
+              fn #visitor(self, v: &str) -> Result<Self::Value, String> {
+                #fn_body
+              }
             }
-          }
-        })
-      };
+          })
+        };
 
       let simple_type_visitor = |simple_type| {
         let field_type = get_simple_type_token(&simple_type);
@@ -169,7 +171,7 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
             .collect();
 
           make_visitor(
-            &Ident::new("visit_str", Span::call_site()),
+            &quote! { visit_str },
             &quote! { #struct_name },
             &quote! {
               let content = "<".to_string() + #struct_id + ">" + v + "</" + #struct_id + ">";
@@ -200,7 +202,7 @@ fn build_unnamed_visitor_calls(
     .iter()
     .enumerate()
     .map(|(idx, field)| {
-      let visitor_label = Ident::new(&format!("__Visitor_{}", idx), Span::call_site());
+      let visitor_label = Ident::new(&format!("__Visitor_{}", idx), field.span());
 
       let call_simple_type_visitor = |simple_type, action| {
         let field_type = get_simple_type_token(&simple_type);

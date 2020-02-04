@@ -4,6 +4,7 @@ use field_type::*;
 use proc_macro2::{Span, TokenStream};
 use quote::ToTokens;
 use std::collections::BTreeMap;
+use syn::spanned::Spanned;
 use syn::DataStruct;
 use syn::Ident;
 
@@ -34,7 +35,7 @@ pub fn parse(
       let label = &get_value_label(&field.ident);
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
 
-      get_field_type(field).and_then(|field| match field {
+      get_field_type(field).and_then(|f| match f {
         FieldType::FieldTypeStruct { struct_name } => build_default_value(
           label,
           &quote! {#struct_name},
@@ -43,7 +44,7 @@ pub fn parse(
         ),
         FieldType::FieldTypeOption { .. } => {
           if let Some(d) = &field_attrs.default {
-            let default_function = Ident::new(&d, Span::call_site());
+            let default_function = Ident::new(&d, field.span());
 
             Some(quote! {
               #[allow(unused_mut, non_snake_case, non_camel_case_types)]
@@ -100,16 +101,16 @@ pub fn parse(
         .rename
         .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string());
 
-      let visitor_label = build_visitor_ident(&label_name, None);
+      let visitor_label = build_visitor_ident(&label_name, field.span(), None);
 
-      get_field_type(field).and_then(|field| match field {
+      get_field_type(field).and_then(|f| match f {
         FieldType::FieldTypeStruct { struct_name } => {
           let struct_id: String = struct_name
             .segments
             .iter()
             .map(|s| s.ident.to_string())
             .collect();
-          let struct_ident = build_visitor_ident(&label_name, Some(&struct_id));
+          let struct_ident = build_visitor_ident(&label_name, field.span(), Some(&struct_id));
 
           Some(quote! {
             #[allow(non_snake_case, non_camel_case_types)]
@@ -129,7 +130,7 @@ pub fn parse(
           FieldType::FieldTypeStruct { ref struct_name } => {
             let struct_ident = Ident::new(
               &format!("{}", struct_name.into_token_stream()),
-              Span::call_site(),
+              field.span(),
             );
             Some(quote! {
               #[allow(non_snake_case, non_camel_case_types)]
@@ -150,7 +151,7 @@ pub fn parse(
           FieldType::FieldTypeStruct { ref struct_name } => {
             let struct_ident = Ident::new(
               &format!("{}", struct_name.into_token_stream()),
-              Span::call_site(),
+              field.span(),
             );
             Some(quote! {
               #[allow(non_snake_case, non_camel_case_types)]
@@ -194,7 +195,7 @@ pub fn parse(
         .clone()
         .unwrap_or_else(|| label.as_ref().unwrap().to_string());
 
-      get_field_type(field).and_then(|field| match field {
+      get_field_type(field).and_then(|f| match f {
         FieldType::FieldTypeStruct { struct_name } => Some(quote! {
           #label_name => {
             reader.set_map_value();
@@ -213,7 +214,7 @@ pub fn parse(
           FieldType::FieldTypeStruct { ref struct_name } => {
             let struct_ident = Ident::new(
               &format!("{}", struct_name.into_token_stream()),
-              Span::call_site(),
+              field.span(),
             );
             Some(quote! {
               #label_name => {
@@ -238,13 +239,14 @@ pub fn parse(
             &field_attrs,
             label,
             &namespaces,
+            field.span(),
           ),
         },
         FieldType::FieldTypeVec { data_type } => match *data_type {
           FieldType::FieldTypeStruct { ref struct_name } => {
             let struct_ident = Ident::new(
               &format!("{}", struct_name.into_token_stream()),
-              Span::call_site(),
+              field.span(),
             );
             Some(quote! {
               #label_name => {
@@ -269,6 +271,7 @@ pub fn parse(
             &field_attrs,
             label,
             &namespaces,
+            field.span(),
           ),
         },
         simple_type => build_call_visitor(
@@ -278,6 +281,7 @@ pub fn parse(
           &field_attrs,
           label,
           &namespaces,
+          field.span(),
         ),
       })
     })
@@ -299,9 +303,9 @@ pub fn parse(
         .rename
         .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string());
 
-      let visitor_label = build_visitor_ident(&label_name, None);
+      let visitor_label = build_visitor_ident(&label_name, field.span(), None);
 
-      get_field_type(field).and_then(|field| match field {
+      get_field_type(field).and_then(|f| match f {
         FieldType::FieldTypeString => Some(quote! {
           for attr in attributes {
             if attr.name.local_name == #label_name {
@@ -332,7 +336,7 @@ pub fn parse(
               label_name,
               struct_name.into_token_stream()
             ),
-            Span::call_site(),
+            field.span(),
           );
 
           Some(quote! {
@@ -371,7 +375,7 @@ pub fn parse(
       let label = &get_value_label(&field.ident);
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
 
-      get_field_type(field).and_then(|field| match field {
+      get_field_type(field).and_then(|f| match f {
         FieldType::FieldTypeString => {
           build_set_text_to_value(&field_attrs, label, &quote! {text_content.to_owned()})
         }
@@ -475,7 +479,7 @@ pub fn parse(
 
 fn build_declare_visitor(
   field_type: &TokenStream,
-  visitor: &Ident,
+  visitor: &TokenStream,
   visitor_label: &Ident,
 ) -> Option<TokenStream> {
   Some(quote! {
@@ -493,11 +497,12 @@ fn build_declare_visitor(
 
 fn build_call_visitor(
   field_type: &TokenStream,
-  visitor: &Ident,
+  visitor: &TokenStream,
   action: &TokenStream,
   field_attrs: &YaSerdeAttribute,
   label: &Option<Ident>,
   namespaces: &BTreeMap<String, String>,
+  span: Span,
 ) -> Option<TokenStream> {
   let prefix = field_attrs.prefix.clone();
 
@@ -508,7 +513,7 @@ fn build_call_visitor(
     .clone()
     .unwrap_or_else(|| label.as_ref().unwrap().to_string());
 
-  let visitor_label = build_visitor_ident(&label_name, None);
+  let visitor_label = build_visitor_ident(&label_name, span, None);
 
   let namespaces_matches: TokenStream = namespaces
     .iter()
@@ -562,7 +567,7 @@ fn build_call_visitor_for_attribute(
   label: &Option<Ident>,
   label_name: &str,
   action: &TokenStream,
-  visitor: &Ident,
+  visitor: &TokenStream,
   visitor_label: &Ident,
 ) -> Option<TokenStream> {
   Some(quote! {
@@ -598,13 +603,13 @@ fn get_value_label(ident: &Option<syn::Ident>) -> Option<syn::Ident> {
     .map(|ident| syn::Ident::new(&format!("__{}_value", ident.to_string()), ident.span()))
 }
 
-fn build_visitor_ident(label: &str, struct_id: Option<&str>) -> Ident {
+fn build_visitor_ident(label: &str, span: Span, struct_id: Option<&str>) -> Ident {
   Ident::new(
     &format!(
       "__Visitor_{}_{}",
       label.replace(".", "_"),
       struct_id.unwrap_or("")
     ),
-    Span::call_site(),
+    span,
   )
 }
