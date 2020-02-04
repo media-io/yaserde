@@ -207,7 +207,7 @@ pub fn parse(
         .rename
         .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string());
 
-      let visitor_label = Ident::new(&format!("__Visitor{}", label_name), Span::call_site());
+      let visitor_label = build_visitor_ident(&label_name, None);
 
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
@@ -252,10 +252,7 @@ pub fn parse(
             .iter()
             .map(|s| s.ident.to_string())
             .collect();
-          let struct_ident = Ident::new(
-            &format!("__Visitor_{}_{}", label_name, struct_id),
-            Span::call_site(),
-          );
+          let struct_ident = build_visitor_ident(&label_name, Some(&struct_id));
 
           Some(quote! {
             #[allow(non_snake_case, non_camel_case_types)]
@@ -405,11 +402,10 @@ pub fn parse(
         return None;
       }
 
-      let label_name = if let Some(ref value) = field_attrs.rename {
-        Ident::new(&value.to_string(), Span::call_site()).to_string()
-      } else {
-        field.ident.clone().unwrap().to_string()
-      };
+      let label_name = field_attrs
+        .rename
+        .clone()
+        .unwrap_or_else(|| label.as_ref().unwrap().to_string());
 
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => {
@@ -899,7 +895,7 @@ pub fn parse(
         .rename
         .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string());
 
-      let visitor_label = Ident::new(&format!("__Visitor{}", label_name), Span::call_site());
+      let visitor_label = build_visitor_ident(&label_name, None);
 
       match get_field_type(field) {
         Some(FieldType::FieldTypeString) => Some(quote! {
@@ -1077,13 +1073,9 @@ pub fn parse(
           }
         }
         Some(FieldType::FieldTypeStruct { struct_name }) => {
-          let struct_ident = Ident::new(
-            &format!(
-              "__Visitor_{}_{}",
-              label_name,
-              struct_name.into_token_stream()
-            ),
-            Span::call_site(),
+          let struct_ident = build_visitor_ident(
+            &label_name,
+            Some(&struct_name.into_token_stream().to_string()),
           );
 
           Some(quote! {
@@ -1307,12 +1299,12 @@ fn build_call_visitor(
 
   // let label = &field.ident;
   let value_label = get_value_label(label);
-  let label_name = if let Some(ref value) = field_attrs.rename {
-    Ident::new(&value.to_string(), Span::call_site()).to_string()
-  } else {
-    label.clone().unwrap().to_string()
-  };
-  let visitor_label = Ident::new(&format!("__Visitor{}", label_name), Span::call_site());
+  let label_name = field_attrs
+    .rename
+    .clone()
+    .unwrap_or_else(|| label.as_ref().unwrap().to_string());
+
+  let visitor_label = build_visitor_ident(&label_name, None);
 
   let namespaces_matches: TokenStream = namespaces
     .iter()
@@ -1409,4 +1401,15 @@ fn get_value_label(ident: &Option<syn::Ident>) -> Option<syn::Ident> {
     )),
     None => None,
   }
+}
+
+fn build_visitor_ident(label: &str, struct_id: Option<&str>) -> Ident {
+  Ident::new(
+    &format!(
+      "__Visitor_{}_{}",
+      label.replace(".", "_"),
+      struct_id.unwrap_or("")
+    ),
+    Span::call_site(),
+  )
 }

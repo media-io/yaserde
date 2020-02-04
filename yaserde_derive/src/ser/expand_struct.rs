@@ -24,16 +24,9 @@ pub fn serialize(
         return None;
       }
 
-      let renamed_label = match field_attrs.rename {
-        Some(value) => Ident::new(&value, Span::call_site()),
-        None => field.ident.clone().unwrap(),
-      };
       let label = &field.ident;
-      let label_name = if let Some(prefix) = field_attrs.prefix {
-        prefix + ":" + renamed_label.to_string().as_ref()
-      } else {
-        renamed_label.to_string()
-      };
+
+      let label_name = build_label_name(&field, &field_attrs);
 
       match get_field_type(field) {
         Some(FieldType::FieldTypeString)
@@ -270,16 +263,7 @@ pub fn serialize(
         ));
       }
 
-      let renamed_label = match field_attrs.rename {
-        Some(value) => Ident::new(&value, Span::call_site()),
-        None => field.ident.clone().unwrap(),
-      };
-
-      let label_name = if let Some(prefix) = field_attrs.prefix {
-        format!("{}:{}", prefix, renamed_label)
-      } else {
-        renamed_label.to_string()
-      };
+      let label_name = build_label_name(&field, &field_attrs);
 
       match get_field_type(field) {
         Some(FieldType::FieldTypeString)
@@ -472,4 +456,18 @@ pub fn serialize(
       }
     }
   }
+}
+
+fn build_label_name(field: &syn::Field, field_attrs: &YaSerdeAttribute) -> String {
+  format!(
+    "{}{}",
+    field_attrs
+      .prefix
+      .clone()
+      .map_or("".to_string(), |prefix| prefix + ":"),
+    field_attrs
+      .rename
+      .clone()
+      .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string())
+  )
 }
