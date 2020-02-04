@@ -181,6 +181,8 @@ fn de_rename() {
     item: String,
     #[yaserde(rename = "sub")]
     sub_struct: SubStruct,
+    #[yaserde(rename = "maj.min.bug")]
+    with_dots: String,
   }
 
   #[derive(YaDeserialize, PartialEq, Debug)]
@@ -198,7 +200,7 @@ fn de_rename() {
     }
   }
 
-  let content = "<base Item=\"something\"><sub sub_item=\"sub_something\"></sub></base>";
+  let content = "<base Item=\"something\"><sub sub_item=\"sub_something\"></sub><maj.min.bug>2.0.1</maj.min.bug></base>";
   convert_and_validate!(
     content,
     XmlStruct,
@@ -207,6 +209,7 @@ fn de_rename() {
       sub_struct: SubStruct {
         subitem: "sub_something".to_string(),
       },
+      with_dots: "2.0.1".into()
     }
   );
 }
@@ -378,6 +381,8 @@ fn de_complex_enum() {
     Magenta(Vec<OtherStruct>),
     #[yaserde(rename = "NotSoCyan")]
     Cyan(Vec<OtherStruct>),
+    #[yaserde(rename = "renamed.with.dots")]
+    Dotted(u32),
   }
 
   impl Default for Color {
@@ -549,6 +554,21 @@ fn de_complex_enum() {
         OtherStruct { fi: 12, se: 23 },
         OtherStruct { fi: 63, se: 98 }
       ])
+    }
+  );
+
+  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+    <base xmlns:ns="http://www.sample.com/ns/domain">
+      <background>
+        <renamed.with.dots>54</renamed.with.dots>
+      </background>
+    </base>
+  "#;
+  convert_and_validate!(
+    content,
+    XmlStruct,
+    XmlStruct {
+      background: Color::Dotted(54)
     }
   );
 }

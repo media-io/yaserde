@@ -125,6 +125,8 @@ fn ser_rename() {
     item: String,
     #[yaserde(rename = "sub")]
     sub_struct: SubStruct,
+    #[yaserde(rename = "maj.min.bug")]
+    version: String,
   }
 
   #[derive(YaSerialize, PartialEq, Debug)]
@@ -154,9 +156,10 @@ fn ser_rename() {
     sub_struct: SubStruct {
       subitem: "sub_something".to_string(),
     },
+    version: "2.0.2".into(),
   };
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base Item=\"something\"><sub sub_item=\"sub_something\" /></base>";
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base Item=\"something\"><sub sub_item=\"sub_something\" /><maj.min.bug>2.0.2</maj.min.bug></base>";
   convert_and_validate!(model, content);
 }
 
@@ -326,6 +329,8 @@ fn ser_unnamed_enum() {
     Structs(Vec<OtherStruct>),
     #[yaserde(rename = "renamed")]
     ToRename(u32),
+    #[yaserde(rename = "renamed.with.dots")]
+    ToRenameDots(u32),
   }
 
   impl Default for Enum {
@@ -421,6 +426,14 @@ fn ser_unnamed_enum() {
 
   let content =
     "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><renamed>87</renamed></color></base>";
+  convert_and_validate!(model, content);
+
+  let model = XmlStruct {
+    color: Enum::ToRenameDots(84),
+  };
+
+  let content =
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><color><renamed.with.dots>84</renamed.with.dots></color></base>";
   convert_and_validate!(model, content);
 }
 
