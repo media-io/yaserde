@@ -1,9 +1,9 @@
 use attribute::*;
 use field_type::*;
-use proc_macro2::{Span, TokenStream};
-use quote::TokenStreamExt;
+use proc_macro2::TokenStream;
 use std::collections::BTreeMap;
 use std::string::ToString;
+use syn::spanned::Spanned;
 use syn::DataStruct;
 use syn::Ident;
 
@@ -28,21 +28,21 @@ pub fn serialize(
 
       let label_name = build_label_name(&field, &field_attrs);
 
-      match get_field_type(field) {
-        Some(FieldType::FieldTypeString)
-        | Some(FieldType::FieldTypeBool)
-        | Some(FieldType::FieldTypeI8)
-        | Some(FieldType::FieldTypeU8)
-        | Some(FieldType::FieldTypeI16)
-        | Some(FieldType::FieldTypeU16)
-        | Some(FieldType::FieldTypeI32)
-        | Some(FieldType::FieldTypeU32)
-        | Some(FieldType::FieldTypeI64)
-        | Some(FieldType::FieldTypeU64)
-        | Some(FieldType::FieldTypeF32)
-        | Some(FieldType::FieldTypeF64) => {
+      get_field_type(field).and_then(|f| match f {
+        FieldType::FieldTypeString
+        | FieldType::FieldTypeBool
+        | FieldType::FieldTypeI8
+        | FieldType::FieldTypeU8
+        | FieldType::FieldTypeI16
+        | FieldType::FieldTypeU16
+        | FieldType::FieldTypeI32
+        | FieldType::FieldTypeU32
+        | FieldType::FieldTypeI64
+        | FieldType::FieldTypeU64
+        | FieldType::FieldTypeF32
+        | FieldType::FieldTypeF64 => {
           if let Some(ref d) = field_attrs.default {
-            let default_function = Ident::new(&d, Span::call_site());
+            let default_function = Ident::new(&d, field.span());
             Some(quote! {
               let struct_start_event =
                 if self.#label != #default_function() {
@@ -73,71 +73,49 @@ pub fn serialize(
             })
           }
         }
-        Some(FieldType::FieldTypeOption { data_type }) => {
-          let dt = Box::into_raw(data_type);
-          match unsafe { dt.as_ref() } {
-            Some(&FieldType::FieldTypeString) => {
-              if let Some(ref d) = field_attrs.default {
-                let default_function = Ident::new(&d, Span::call_site());
-                Some(quote! {
-                  let struct_start_event =
-                    if self.#label != #default_function() {
-                      if let Some(ref value) = self.#label {
-                        struct_start_event.attr(#label_name, &value)
-                      } else {
-                        struct_start_event
-                      }
-                    } else {
-                      struct_start_event
-                    };
-                })
-              } else {
-                Some(quote! {
-                  let struct_start_event =
+        FieldType::FieldTypeOption { data_type } => match *data_type {
+          FieldType::FieldTypeString => {
+            if let Some(ref d) = field_attrs.default {
+              let default_function = Ident::new(&d, field.span());
+              Some(quote! {
+                let struct_start_event =
+                  if self.#label != #default_function() {
                     if let Some(ref value) = self.#label {
                       struct_start_event.attr(#label_name, &value)
                     } else {
                       struct_start_event
-                    };
-                })
-              }
+                    }
+                  } else {
+                    struct_start_event
+                  };
+              })
+            } else {
+              Some(quote! {
+                let struct_start_event =
+                  if let Some(ref value) = self.#label {
+                    struct_start_event.attr(#label_name, &value)
+                  } else {
+                    struct_start_event
+                  };
+              })
             }
-            Some(&FieldType::FieldTypeBool)
-            | Some(&FieldType::FieldTypeI8)
-            | Some(&FieldType::FieldTypeU8)
-            | Some(&FieldType::FieldTypeI16)
-            | Some(&FieldType::FieldTypeU16)
-            | Some(&FieldType::FieldTypeI32)
-            | Some(&FieldType::FieldTypeU32)
-            | Some(&FieldType::FieldTypeI64)
-            | Some(&FieldType::FieldTypeU64)
-            | Some(&FieldType::FieldTypeF32)
-            | Some(&FieldType::FieldTypeF64) => {
-              if let Some(ref d) = field_attrs.default {
-                let default_function = Ident::new(&d, Span::call_site());
-                Some(quote! {
-                  let struct_start_event =
-                    if self.#label != #default_function() {
-                      if let Some(ref value) = self.#label {
-                        struct_start_event.attr(#label_name, &*{
-                          use std::mem;
-                          unsafe {
-                            let content = format!("{}", value);
-                            let ret : &'static str = mem::transmute(&content as &str);
-                            mem::forget(content);
-                            ret
-                          }
-                        })
-                      } else {
-                        struct_start_event
-                      }
-                    } else {
-                      struct_start_event
-                    };
-                })
-              } else {
-                Some(quote! {
-                  let struct_start_event =
+          }
+          FieldType::FieldTypeBool
+          | FieldType::FieldTypeI8
+          | FieldType::FieldTypeU8
+          | FieldType::FieldTypeI16
+          | FieldType::FieldTypeU16
+          | FieldType::FieldTypeI32
+          | FieldType::FieldTypeU32
+          | FieldType::FieldTypeI64
+          | FieldType::FieldTypeU64
+          | FieldType::FieldTypeF32
+          | FieldType::FieldTypeF64 => {
+            if let Some(ref d) = field_attrs.default {
+              let default_function = Ident::new(&d, field.span());
+              Some(quote! {
+                let struct_start_event =
+                  if self.#label != #default_function() {
                     if let Some(ref value) = self.#label {
                       struct_start_event.attr(#label_name, &*{
                         use std::mem;
@@ -150,40 +128,59 @@ pub fn serialize(
                       })
                     } else {
                       struct_start_event
-                    };
-                })
-              }
-            }
-            Some(&FieldType::FieldTypeVec { .. }) => {
-              let item_ident = Ident::new("yas_item", Span::call_site());
-              let inner = enclose_formatted_characters(&item_ident, label_name);
-
-              if let Some(ref d) = field_attrs.default {
-                let default_function = Ident::new(&d, Span::call_site());
-
-                Some(quote! {
-                  if self.#label != #default_function() {
-                    if let Some(ref yas_list) = self.#label {
-                      for yas_item in yas_list.iter() {
-                        #inner
+                    }
+                  } else {
+                    struct_start_event
+                  };
+              })
+            } else {
+              Some(quote! {
+                let struct_start_event =
+                  if let Some(ref value) = self.#label {
+                    struct_start_event.attr(#label_name, &*{
+                      use std::mem;
+                      unsafe {
+                        let content = format!("{}", value);
+                        let ret : &'static str = mem::transmute(&content as &str);
+                        mem::forget(content);
+                        ret
                       }
+                    })
+                  } else {
+                    struct_start_event
+                  };
+              })
+            }
+          }
+          FieldType::FieldTypeVec { .. } => {
+            let item_ident = Ident::new("yas_item", field.span());
+            let inner = enclose_formatted_characters(&item_ident, label_name);
+
+            if let Some(ref d) = field_attrs.default {
+              let default_function = Ident::new(&d, field.span());
+
+              Some(quote! {
+                if self.#label != #default_function() {
+                  if let Some(ref yas_list) = self.#label {
+                    for yas_item in yas_list.iter() {
+                      #inner
                     }
                   }
-                })
-              } else {
-                Some(quote! {
-                  for yas_item in &self.#label {
-                    #inner
-                  }
-                })
-              }
+                }
+              })
+            } else {
+              Some(quote! {
+                for yas_item in &self.#label {
+                  #inner
+                }
+              })
             }
-            _ => unimplemented!(),
           }
-        }
-        Some(FieldType::FieldTypeStruct { .. }) => {
+          _ => unimplemented!(),
+        },
+        FieldType::FieldTypeStruct { .. } => {
           if let Some(ref d) = field_attrs.default {
-            let default_function = Ident::new(&d, Span::call_site());
+            let default_function = Ident::new(&d, field.span());
             Some(quote! {
               let struct_start_event =
                 if self.#label != #default_function() {
@@ -223,14 +220,10 @@ pub fn serialize(
           }
         }
         _ => None,
-      }
+      })
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut tokens, token| {
-      tokens.append_all(token);
-      tokens
-    });
+    .filter_map(|x| x)
+    .collect();
 
   let add_namespaces: TokenStream = namespaces
     .iter()
@@ -239,12 +232,8 @@ pub fn serialize(
         .ns(#prefix, #namespace)
       ))
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut tokens, token| {
-      tokens.append_all(token);
-      tokens
-    });
+    .filter_map(|x| x)
+    .collect();
 
   let struct_inspector: TokenStream = data_struct
     .fields
@@ -265,164 +254,148 @@ pub fn serialize(
 
       let label_name = build_label_name(&field, &field_attrs);
 
-      match get_field_type(field) {
-        Some(FieldType::FieldTypeString)
-        | Some(FieldType::FieldTypeBool)
-        | Some(FieldType::FieldTypeI8)
-        | Some(FieldType::FieldTypeU8)
-        | Some(FieldType::FieldTypeI16)
-        | Some(FieldType::FieldTypeU16)
-        | Some(FieldType::FieldTypeI32)
-        | Some(FieldType::FieldTypeU32)
-        | Some(FieldType::FieldTypeI64)
-        | Some(FieldType::FieldTypeU64)
-        | Some(FieldType::FieldTypeF32)
-        | Some(FieldType::FieldTypeF64) => {
-          serialize_element(label, label_name, &field_attrs.default)
-        }
-        Some(FieldType::FieldTypeOption { data_type }) => {
-          let dt = Box::into_raw(data_type);
-          match unsafe { dt.as_ref() } {
-            Some(&FieldType::FieldTypeString)
-            | Some(&FieldType::FieldTypeBool)
-            | Some(&FieldType::FieldTypeI8)
-            | Some(&FieldType::FieldTypeU8)
-            | Some(&FieldType::FieldTypeI16)
-            | Some(&FieldType::FieldTypeU16)
-            | Some(&FieldType::FieldTypeI32)
-            | Some(&FieldType::FieldTypeU32)
-            | Some(&FieldType::FieldTypeI64)
-            | Some(&FieldType::FieldTypeU64)
-            | Some(&FieldType::FieldTypeF32)
-            | Some(&FieldType::FieldTypeF64) => {
-              let item_ident = Ident::new("yas_item", Span::call_site());
-              let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
+      get_field_type(field).and_then(|f| match f {
+        FieldType::FieldTypeString
+        | FieldType::FieldTypeBool
+        | FieldType::FieldTypeI8
+        | FieldType::FieldTypeU8
+        | FieldType::FieldTypeI16
+        | FieldType::FieldTypeU16
+        | FieldType::FieldTypeI32
+        | FieldType::FieldTypeU32
+        | FieldType::FieldTypeI64
+        | FieldType::FieldTypeU64
+        | FieldType::FieldTypeF32
+        | FieldType::FieldTypeF64 => serialize_element(label, label_name, &field_attrs.default),
+        FieldType::FieldTypeOption { data_type } => match *data_type {
+          FieldType::FieldTypeString
+          | FieldType::FieldTypeBool
+          | FieldType::FieldTypeI8
+          | FieldType::FieldTypeU8
+          | FieldType::FieldTypeI16
+          | FieldType::FieldTypeU16
+          | FieldType::FieldTypeI32
+          | FieldType::FieldTypeU32
+          | FieldType::FieldTypeI64
+          | FieldType::FieldTypeU64
+          | FieldType::FieldTypeF32
+          | FieldType::FieldTypeF64 => {
+            let item_ident = Ident::new("yas_item", field.span());
+            let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
-              if let Some(ref d) = field_attrs.default {
-                let default_function = Ident::new(&d, Span::call_site());
+            if let Some(ref d) = field_attrs.default {
+              let default_function = Ident::new(&d, field.span());
 
-                Some(quote! {
-                  if self.#label != #default_function() {
-                    if let Some(ref yas_item) = self.#label {
-                      #inner
-                    }
-                  }
-                })
-              } else {
-                Some(quote! {
+              Some(quote! {
+                if self.#label != #default_function() {
                   if let Some(ref yas_item) = self.#label {
                     #inner
                   }
-                })
-              }
+                }
+              })
+            } else {
+              Some(quote! {
+                if let Some(ref yas_item) = self.#label {
+                  #inner
+                }
+              })
             }
-            Some(&FieldType::FieldTypeVec { .. }) => {
-              let item_ident = Ident::new("yas_item", Span::call_site());
-              let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
+          }
+          FieldType::FieldTypeVec { .. } => {
+            let item_ident = Ident::new("yas_item", field.span());
+            let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
-              if let Some(ref d) = field_attrs.default {
-                let default_function = Ident::new(&d, Span::call_site());
+            if let Some(ref d) = field_attrs.default {
+              let default_function = Ident::new(&d, field.span());
 
-                Some(quote! {
-                  if self.#label != #default_function() {
-                    if let Some(ref yas_items) = &self.#label {
-                      for yas_item in yas_items.iter() {
-                        #inner
-                      }
-                    }
-                  }
-                })
-              } else {
-                Some(quote! {
+              Some(quote! {
+                if self.#label != #default_function() {
                   if let Some(ref yas_items) = &self.#label {
                     for yas_item in yas_items.iter() {
                       #inner
                     }
                   }
-                })
-              }
+                }
+              })
+            } else {
+              Some(quote! {
+                if let Some(ref yas_items) = &self.#label {
+                  for yas_item in yas_items.iter() {
+                    #inner
+                  }
+                }
+              })
             }
-            Some(&FieldType::FieldTypeStruct { .. }) => Some(quote! {
-              if let Some(ref item) = &self.#label {
-                writer.set_start_event_name(Some(#label_name.to_string()));
-                writer.set_skip_start_end(false);
-                item.serialize(writer)?;
-              }
-            }),
-            _ => unimplemented!(),
           }
-        }
-        Some(FieldType::FieldTypeStruct { .. }) => Some(quote! {
+          FieldType::FieldTypeStruct { .. } => Some(quote! {
+            if let Some(ref item) = &self.#label {
+              writer.set_start_event_name(Some(#label_name.to_string()));
+              writer.set_skip_start_end(false);
+              item.serialize(writer)?;
+            }
+          }),
+          _ => unimplemented!(),
+        },
+        FieldType::FieldTypeStruct { .. } => Some(quote! {
           writer.set_start_event_name(Some(#label_name.to_string()));
           writer.set_skip_start_end(false);
           self.#label.serialize(writer)?;
         }),
-        Some(FieldType::FieldTypeVec { data_type }) => {
-          let dt = Box::into_raw(data_type);
-          match unsafe { dt.as_ref() } {
-            Some(&FieldType::FieldTypeString) => {
-              let item_ident = Ident::new("yas_item", Span::call_site());
-              let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
+        FieldType::FieldTypeVec { data_type } => match *data_type {
+          FieldType::FieldTypeString => {
+            let item_ident = Ident::new("yas_item", field.span());
+            let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
-              Some(quote! {
-                for yas_item in &self.#label {
-                  #inner
-                }
-              })
-            }
-            Some(&FieldType::FieldTypeBool)
-            | Some(&FieldType::FieldTypeI8)
-            | Some(&FieldType::FieldTypeU8)
-            | Some(&FieldType::FieldTypeI16)
-            | Some(&FieldType::FieldTypeU16)
-            | Some(&FieldType::FieldTypeI32)
-            | Some(&FieldType::FieldTypeU32)
-            | Some(&FieldType::FieldTypeI64)
-            | Some(&FieldType::FieldTypeU64)
-            | Some(&FieldType::FieldTypeF32)
-            | Some(&FieldType::FieldTypeF64) => {
-              let item_ident = Ident::new("yas_item", Span::call_site());
-              let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
-
-              Some(quote! {
-                for yas_item in &self.#label {
-                  #inner
-                }
-              })
-            }
-            Some(&FieldType::FieldTypeOption { .. }) => Some(quote! {
-              for item in &self.#label {
-                if let Some(value) = item {
-                  writer.set_start_event_name(None);
-                  writer.set_skip_start_end(false);
-                  value.serialize(writer)?;
-                }
+            Some(quote! {
+              for yas_item in &self.#label {
+                #inner
               }
-            }),
-            Some(&FieldType::FieldTypeStruct { .. }) => Some(quote! {
-              for item in &self.#label {
+            })
+          }
+          FieldType::FieldTypeBool
+          | FieldType::FieldTypeI8
+          | FieldType::FieldTypeU8
+          | FieldType::FieldTypeI16
+          | FieldType::FieldTypeU16
+          | FieldType::FieldTypeI32
+          | FieldType::FieldTypeU32
+          | FieldType::FieldTypeI64
+          | FieldType::FieldTypeU64
+          | FieldType::FieldTypeF32
+          | FieldType::FieldTypeF64 => {
+            let item_ident = Ident::new("yas_item", field.span());
+            let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
+
+            Some(quote! {
+              for yas_item in &self.#label {
+                #inner
+              }
+            })
+          }
+          FieldType::FieldTypeOption { .. } => Some(quote! {
+            for item in &self.#label {
+              if let Some(value) = item {
                 writer.set_start_event_name(None);
                 writer.set_skip_start_end(false);
-                item.serialize(writer)?;
+                value.serialize(writer)?;
               }
-            }),
-            Some(&FieldType::FieldTypeVec { .. }) => {
-              unimplemented!();
             }
-            None => {
-              unimplemented!();
+          }),
+          FieldType::FieldTypeStruct { .. } => Some(quote! {
+            for item in &self.#label {
+              writer.set_start_event_name(None);
+              writer.set_skip_start_end(false);
+              item.serialize(writer)?;
             }
+          }),
+          FieldType::FieldTypeVec { .. } => {
+            unimplemented!();
           }
-        }
-        None => None,
-      }
+        },
+      })
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut tokens, token| {
-      tokens.append_all(token);
-      tokens
-    });
+    .filter_map(|x| x)
+    .collect();
 
   quote! {
     use xml::writer::XmlEvent;

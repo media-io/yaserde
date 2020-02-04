@@ -1,7 +1,8 @@
 use attribute::*;
 use field_type::*;
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use std::collections::BTreeMap;
+use syn::spanned::Spanned;
 use syn::DataEnum;
 use syn::Fields;
 use syn::Ident;
@@ -133,7 +134,7 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
     .iter()
     .enumerate()
     .map(|(idx, field)| {
-      let visitor_label = Ident::new(&format!("__Visitor_{}", idx), Span::call_site());
+      let visitor_label = Ident::new(&format!("__Visitor_{}", idx), field.span());
 
       let make_visitor =
         |visitor: &TokenStream, field_type: &TokenStream, fn_body: &TokenStream| {
@@ -151,7 +152,8 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
         };
 
       let simple_type_visitor = |simple_type| {
-        let (field_type, visitor) = convert_simple_type(simple_type);
+        let field_type = get_simple_type_token(&simple_type);
+        let visitor = get_simple_type_visitor(&simple_type);
 
         make_visitor(
           &visitor,
@@ -200,10 +202,11 @@ fn build_unnamed_visitor_calls(
     .iter()
     .enumerate()
     .map(|(idx, field)| {
-      let visitor_label = Ident::new(&format!("__Visitor_{}", idx), Span::call_site());
+      let visitor_label = Ident::new(&format!("__Visitor_{}", idx), field.span());
 
       let call_simple_type_visitor = |simple_type, action| {
-        let (field_type, visitor) = convert_simple_type(simple_type);
+        let field_type = get_simple_type_token(&simple_type);
+        let visitor = get_simple_type_visitor(&simple_type);
 
         let label_name = format!("field_{}", idx);
 
@@ -287,22 +290,4 @@ fn build_unnamed_visitor_calls(
     })
     .filter_map(|f| f)
     .collect()
-}
-
-fn convert_simple_type(simple_type: FieldType) -> (TokenStream, TokenStream) {
-  match simple_type {
-    FieldType::FieldTypeString => (quote! {String}, quote! {visit_str}),
-    FieldType::FieldTypeBool => (quote! {bool}, quote! {visit_bool}),
-    FieldType::FieldTypeU8 => (quote! {u8}, quote! {visit_u8}),
-    FieldType::FieldTypeI8 => (quote! {i8}, quote! {visit_i8}),
-    FieldType::FieldTypeU16 => (quote! {u16}, quote! {visit_u16}),
-    FieldType::FieldTypeI16 => (quote! {i16}, quote! {visit_i16}),
-    FieldType::FieldTypeU32 => (quote! {u32}, quote! {visit_u32}),
-    FieldType::FieldTypeI32 => (quote! {i32}, quote! {visit_i32}),
-    FieldType::FieldTypeU64 => (quote! {u64}, quote! {visit_u64}),
-    FieldType::FieldTypeI64 => (quote! {i64}, quote! {visit_i64}),
-    FieldType::FieldTypeF32 => (quote! {f32}, quote! {visit_f32}),
-    FieldType::FieldTypeF64 => (quote! {f64}, quote! {visit_f64}),
-    _ => panic!("Not a simple type: {:?}", simple_type),
-  }
 }

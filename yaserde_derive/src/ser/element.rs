@@ -50,7 +50,13 @@ pub fn serialize_element(
   let inner = enclose_characters(label, label_name);
 
   if let Some(ref d) = default {
-    let default_function = Ident::new(&d, Span::call_site());
+    let default_function = Ident::new(
+      &d,
+      label
+        .as_ref()
+        .map_or(Span::call_site(), |ident| ident.span()),
+    );
+
     Some(quote! {
       if self.#label != #default_function() {
         #inner

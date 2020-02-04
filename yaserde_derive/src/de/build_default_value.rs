@@ -8,7 +8,12 @@ pub fn build_default_value(
   default: &Option<String>,
 ) -> Option<TokenStream> {
   if let Some(d) = default {
-    let default_function = Ident::new(&d, Span::call_site());
+    let default_function = Ident::new(
+      &d,
+      label
+        .as_ref()
+        .map_or(Span::call_site(), |ident| ident.span()),
+    );
 
     Some(quote! {
       #[allow(unused_mut)]

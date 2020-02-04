@@ -73,3 +73,32 @@ fn get_sub_type(t: &syn::PathSegment) -> Option<syn::PathSegment> {
 
   None
 }
+
+pub fn get_simple_type_token(field_type: &FieldType) -> proc_macro2::TokenStream {
+  match field_type {
+    FieldType::FieldTypeString => quote! {String},
+    FieldType::FieldTypeBool => quote! {bool},
+    FieldType::FieldTypeI8 => quote! {i8},
+    FieldType::FieldTypeU8 => quote! {u8},
+    FieldType::FieldTypeI16 => quote! {i16},
+    FieldType::FieldTypeU16 => quote! {u16},
+    FieldType::FieldTypeI32 => quote! {i32},
+    FieldType::FieldTypeU32 => quote! {u32},
+    FieldType::FieldTypeI64 => quote! {i64},
+    FieldType::FieldTypeU64 => quote! {u64},
+    FieldType::FieldTypeF32 => quote! {f32},
+    FieldType::FieldTypeF64 => quote! {f64},
+    _ => panic!("Not a simple type: {:?}", field_type),
+  }
+}
+
+pub fn get_simple_type_visitor(field_type: &FieldType) -> proc_macro2::TokenStream {
+  let ident = format_ident!(
+    "visit_{}",
+    get_simple_type_token(field_type)
+      .to_string()
+      .replace("String", "str")
+  );
+
+  quote! {#ident}
+}
