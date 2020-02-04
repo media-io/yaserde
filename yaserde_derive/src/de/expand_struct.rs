@@ -2,7 +2,7 @@ use attribute::*;
 use de::build_default_value::build_default_value;
 use field_type::*;
 use proc_macro2::{Span, TokenStream};
-use quote::{ToTokens, TokenStreamExt};
+use quote::ToTokens;
 use std::collections::BTreeMap;
 use syn::DataStruct;
 use syn::Ident;
@@ -24,12 +24,8 @@ pub fn parse(
         None
       }
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut tokens, token| {
-      tokens.append_all(token);
-      tokens
-    });
+    .filter_map(|x| x)
+    .collect();
 
   let variables: TokenStream = data_struct
     .fields
@@ -191,12 +187,8 @@ pub fn parse(
         None => None,
       }
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut sum, val| {
-      sum.append_all(val);
-      sum
-    });
+    .filter_map(|x| x)
+    .collect();
 
   let field_visitors: TokenStream = data_struct
     .fields
@@ -383,12 +375,8 @@ pub fn parse(
         None => None,
       }
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut sum, val| {
-      sum.append_all(val);
-      sum
-    });
+    .filter_map(|x| x)
+    .collect();
 
   let call_visitors: TokenStream = data_struct
     .fields
@@ -873,12 +861,8 @@ pub fn parse(
         None => None,
       }
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut sum, val| {
-      sum.append_all(val);
-      sum
-    });
+    .filter_map(|x| x)
+    .collect();
 
   let attributes_loading: TokenStream = data_struct
     .fields
@@ -1093,12 +1077,8 @@ pub fn parse(
         _ => None,
       }
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut sum, val| {
-      sum.append_all(val);
-      sum
-    });
+    .filter_map(|x| x)
+    .collect();
 
   let set_text: TokenStream = data_struct
     .fields
@@ -1173,12 +1153,8 @@ pub fn parse(
         | None => None,
       }
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut tokens, token| {
-      tokens.append_all(token);
-      tokens
-    });
+    .filter_map(|x| x)
+    .collect();
 
   let struct_builder: TokenStream = data_struct
     .fields
@@ -1195,12 +1171,8 @@ pub fn parse(
         None
       }
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut tokens, token| {
-      tokens.append_all(token);
-      tokens
-    });
+    .filter_map(|x| x)
+    .collect();
 
   quote! {
     use xml::reader::XmlEvent;
@@ -1316,12 +1288,8 @@ fn build_call_visitor(
         None
       }
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut tokens, token| {
-      tokens.append_all(token);
-      tokens
-    });
+    .filter_map(|x| x)
+    .collect();
 
   Some(quote! {
     #label_name => {

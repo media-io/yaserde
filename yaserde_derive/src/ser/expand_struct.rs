@@ -1,7 +1,6 @@
 use attribute::*;
 use field_type::*;
 use proc_macro2::{Span, TokenStream};
-use quote::TokenStreamExt;
 use std::collections::BTreeMap;
 use std::string::ToString;
 use syn::DataStruct;
@@ -225,12 +224,8 @@ pub fn serialize(
         _ => None,
       }
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut tokens, token| {
-      tokens.append_all(token);
-      tokens
-    });
+    .filter_map(|x| x)
+    .collect();
 
   let add_namespaces: TokenStream = namespaces
     .iter()
@@ -239,12 +234,8 @@ pub fn serialize(
         .ns(#prefix, #namespace)
       ))
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut tokens, token| {
-      tokens.append_all(token);
-      tokens
-    });
+    .filter_map(|x| x)
+    .collect();
 
   let struct_inspector: TokenStream = data_struct
     .fields
@@ -417,12 +408,8 @@ pub fn serialize(
         None => None,
       }
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut tokens, token| {
-      tokens.append_all(token);
-      tokens
-    });
+    .filter_map(|x| x)
+    .collect();
 
   quote! {
     use xml::writer::XmlEvent;

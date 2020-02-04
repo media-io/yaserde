@@ -1,7 +1,6 @@
 use attribute::*;
 use field_type::*;
 use proc_macro2::{Span, TokenStream};
-use quote::TokenStreamExt;
 use std::collections::BTreeMap;
 use syn::DataEnum;
 use syn::Fields;
@@ -36,7 +35,7 @@ pub fn serialize(
           }
         }),
         Fields::Named(ref fields) => {
-          let enum_fields = fields
+          let enum_fields: TokenStream = fields
             .named
             .iter()
             .map(|field| {
@@ -100,12 +99,8 @@ pub fn serialize(
                 _ => None,
               }
             })
-            .filter(|x| x.is_some())
-            .map(|x| x.unwrap())
-            .fold(TokenStream::new(), |mut tokens, token| {
-              tokens.append_all(token);
-              tokens
-            });
+            .filter_map(|x| x)
+            .collect();
 
           Some(quote! {
             &#name::#label{..} => {
@@ -210,12 +205,8 @@ pub fn serialize(
         }
       }
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut tokens, token| {
-      tokens.append_all(token);
-      tokens
-    });
+    .filter_map(|x| x)
+    .collect();
 
   let add_namespaces: TokenStream = namespaces
     .iter()
@@ -224,12 +215,8 @@ pub fn serialize(
         .ns(#prefix, #namespace)
       ))
     })
-    .filter(|x| x.is_some())
-    .map(|x| x.unwrap())
-    .fold(TokenStream::new(), |mut tokens, token| {
-      tokens.append_all(token);
-      tokens
-    });
+    .filter_map(|x| x)
+    .collect();
 
   quote! {
     use xml::writer::XmlEvent;
