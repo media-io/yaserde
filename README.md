@@ -28,7 +28,7 @@ This library will support XML de/ser-ializing with all specific features.
 
 - [x] **attribute**: this field is defined as an attribute
 - [x] **default**: defines the default function to init the field
-- [ ] **flatten**: Flatten the contents of the field
+- [x] **flatten**: Flatten the contents of the field
 - [x] **namespace**: defines the namespace of the field
 - [x] **rename**: be able to rename a field
 - [x] **root**: rename the based element. Used only at the XML root.
