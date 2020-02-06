@@ -327,19 +327,37 @@ pub fn serialize(
               })
             }
           }
-          FieldType::FieldTypeStruct { .. } => Some(quote! {
-            if let Some(ref item) = &self.#label {
-              writer.set_start_event_name(Some(#label_name.to_string()));
-              writer.set_skip_start_end(false);
-              item.serialize(writer)?;
+          FieldType::FieldTypeStruct { .. } => Some(if field_attrs.flatten {
+            quote! {
+              if let Some(ref item) = &self.#label {
+                writer.set_start_event_name(None);
+                writer.set_skip_start_end(true);
+                item.serialize(writer)?;
+              }
+            }
+          } else {
+            quote! {
+              if let Some(ref item) = &self.#label {
+                writer.set_start_event_name(Some(#label_name.to_string()));
+                writer.set_skip_start_end(false);
+                item.serialize(writer)?;
+              }
             }
           }),
           _ => unimplemented!(),
         },
-        FieldType::FieldTypeStruct { .. } => Some(quote! {
-          writer.set_start_event_name(Some(#label_name.to_string()));
-          writer.set_skip_start_end(false);
-          self.#label.serialize(writer)?;
+        FieldType::FieldTypeStruct { .. } => Some(if field_attrs.flatten {
+          quote! {
+            writer.set_start_event_name(None);
+            writer.set_skip_start_end(true);
+            self.#label.serialize(writer)?;
+          }
+        } else {
+          quote! {
+            writer.set_start_event_name(Some(#label_name.to_string()));
+            writer.set_skip_start_end(false);
+            self.#label.serialize(writer)?;
+          }
         }),
         FieldType::FieldTypeVec { data_type } => match *data_type {
           FieldType::FieldTypeString => {

@@ -13,6 +13,7 @@ pub struct YaSerdeAttribute {
   pub namespaces: BTreeMap<String, String>,
   pub attribute: bool,
   pub text: bool,
+  pub flatten: bool,
 }
 
 fn get_value(iter: &mut IntoIter) -> Option<String> {
@@ -38,6 +39,7 @@ impl YaSerdeAttribute {
     let mut root = None;
     let mut default = None;
     let mut text = false;
+    let mut flatten = false;
 
     for attr in attrs.iter() {
       let mut attr_iter = attr.clone().tokens.into_iter();
@@ -78,6 +80,9 @@ impl YaSerdeAttribute {
                   "text" => {
                     text = true;
                   }
+                  "flatten" => {
+                    flatten = true;
+                  }
                   _ => {}
                 }
               }
@@ -95,6 +100,7 @@ impl YaSerdeAttribute {
       root,
       default,
       text,
+      flatten,
     }
   }
 }
@@ -113,6 +119,7 @@ fn parse_empty_attributes() {
       namespaces: BTreeMap::new(),
       attribute: false,
       text: false,
+      flatten: false,
     },
     attrs
   );
@@ -160,6 +167,7 @@ fn parse_attributes() {
       namespaces: BTreeMap::new(),
       attribute: true,
       text: false,
+      flatten: false,
     },
     attrs
   );

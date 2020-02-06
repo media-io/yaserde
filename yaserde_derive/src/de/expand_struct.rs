@@ -186,7 +186,7 @@ pub fn parse(
       let label = &field.ident;
       let value_label = &get_value_label(&field.ident);
 
-      if field_attrs.attribute {
+      if field_attrs.attribute || field_attrs.flatten {
         return None;
       }
 
@@ -283,6 +283,33 @@ pub fn parse(
           &namespaces,
           field.span(),
         ),
+      })
+    })
+    .filter_map(|x| x)
+    .collect();
+
+  let call_flatten_visitors: TokenStream = data_struct
+    .fields
+    .iter()
+    .map(|field| {
+      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
+      let value_label = &get_value_label(&field.ident);
+
+      if field_attrs.attribute || !field_attrs.flatten {
+        return None;
+      }
+
+      get_field_type(field).and_then(|f| match f {
+        FieldType::FieldTypeStruct { .. } => Some(quote! {
+          #value_label = yaserde::de::from_str(&unused_xml_elements)?;
+        }),
+        FieldType::FieldTypeOption { data_type } => match *data_type {
+          FieldType::FieldTypeStruct { .. } => Some(quote! {
+            #value_label = yaserde::de::from_str(&unused_xml_elements).ok();
+          }),
+          field_type => unimplemented!("\"flatten\" is not implemented for {:?}", field_type),
+        },
+        field_type => unimplemented!("\"flatten\" is not implemented for {:?}", field_type),
       })
     })
     .filter_map(|x| x)
@@ -410,8 +437,15 @@ pub fn parse(
     .filter_map(|x| x)
     .collect();
 
+  let (init_unused, write_unused, visit_unused) = if call_flatten_visitors.is_empty() {
+    (None, None, None)
+  } else {
+    build_code_for_unused_xml_events(&call_flatten_visitors)
+  };
+
   quote! {
-    use xml::reader::XmlEvent;
+    use xml::reader::{XmlEvent, EventReader};
+    use xml::writer::EventWriter;
     use yaserde::Visitor;
     #[allow(unknown_lints, unused_imports)]
     use std::str::FromStr;
@@ -439,15 +473,19 @@ pub fn parse(
 
         #variables
         #field_visitors
+        #init_unused
 
         loop {
-          match reader.peek()?.to_owned() {
+          let event = reader.peek()?.to_owned();
+
+          match event {
             XmlEvent::StartElement{ref name, ref attributes, ..} => {
 
               match name.local_name.as_str() {
                 #call_visitors
                 named_element => {
-                  let _root = reader.next_event();
+                  let event = reader.next_event()?;
+                  #write_unused
                 }
                 // name => {
                 //   return Err(format!("unknown key {}", name))
@@ -457,19 +495,24 @@ pub fn parse(
             }
             XmlEvent::EndElement{ref name} => {
               if name.local_name == named_element {
+                #write_unused
                 break;
               }
-              let _root = reader.next_event();
+              let event = reader.next_event()?;
+              #write_unused
             }
             XmlEvent::Characters(ref text_content) => {
               #set_text
-              let _root = reader.next_event();
+              let event = reader.next_event()?;
+              #write_unused
             }
             event => {
               return Err(format!("unknown event {:?}", event))
             }
           }
         }
+
+        #visit_unused
 
         Ok(#name{#struct_builder})
       }
@@ -611,5 +654,33 @@ fn build_visitor_ident(label: &str, span: Span, struct_id: Option<&str>) -> Iden
       struct_id.unwrap_or("")
     ),
     span,
+  )
+}
+
+fn build_code_for_unused_xml_events(
+  call_flatten_visitors: &TokenStream,
+) -> (
+  Option<TokenStream>,
+  Option<TokenStream>,
+  Option<TokenStream>,
+) {
+  (
+    Some(quote! {
+      let mut buf = Vec::new();
+      let mut writer = Some(EventWriter::new(&mut buf));
+    }),
+    Some(quote! {
+      if let Some(ref mut w) = writer {
+        if w.write(event.as_writer_event().unwrap()).is_err() {
+          writer = None;
+        }
+      }
+    }),
+    Some(quote! {
+      if writer.is_some() {
+        let unused_xml_elements = String::from_utf8(buf).unwrap();
+        #call_flatten_visitors
+      }
+    }),
   )
 }
