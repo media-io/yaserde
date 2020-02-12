@@ -173,6 +173,53 @@ fn de_attributes() {
 }
 
 #[test]
+fn de_attributes_complex() {
+  mod other_mod {
+    use super::*;
+
+    #[derive(YaDeserialize, PartialEq, Debug)]
+    pub enum AttrEnum {
+      #[yaserde(rename = "variant 1")]
+      Variant1,
+      #[yaserde(rename = "variant 2")]
+      Variant2,
+    }
+
+    impl Default for AttrEnum {
+      fn default() -> AttrEnum {
+        AttrEnum::Variant1
+      }
+    }
+  }
+
+  #[derive(Default, YaDeserialize, PartialEq, Debug)]
+  pub struct Struct {
+    #[yaserde(attribute)]
+    attr_option_string: Option<std::string::String>,
+    #[yaserde(attribute)]
+    attr_option_enum: Option<other_mod::AttrEnum>,
+  }
+
+  convert_and_validate!(
+    r#"<Struct />"#,
+    Struct,
+    Struct {
+      attr_option_string: None,
+      attr_option_enum: None
+    }
+  );
+
+  convert_and_validate!(
+    r#"<Struct attr_option_string="some value" attr_option_enum="variant 2" />"#,
+    Struct,
+    Struct {
+      attr_option_string: Some("some value".to_string()),
+      attr_option_enum: Some(other_mod::AttrEnum::Variant2)
+    }
+  );
+}
+
+#[test]
 fn de_rename() {
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "base")]
