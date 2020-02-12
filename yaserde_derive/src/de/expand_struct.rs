@@ -2,7 +2,6 @@ use attribute::*;
 use de::build_default_value::build_default_value;
 use field_type::*;
 use proc_macro2::{Span, TokenStream};
-use quote::ToTokens;
 use std::collections::BTreeMap;
 use syn::spanned::Spanned;
 use syn::DataStruct;
@@ -170,94 +169,40 @@ pub fn parse(
         .clone()
         .unwrap_or_else(|| label.as_ref().unwrap().to_string());
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeStruct { struct_name } => Some(quote! {
+      let visit_struct = |struct_name: syn::Path, action: TokenStream| {
+        Some(quote! {
           #label_name => {
             reader.set_map_value();
-            match #struct_name::deserialize(reader) {
-              Ok(parsed_item) => {
-                #value_label = parsed_item;
-                let _root = reader.next_event();
-              },
-              Err(msg) => {
-                return Err(msg);
-              },
-            }
+            let value = #struct_name::deserialize(reader)?;
+            #value_label #action;
+            let _root = reader.next_event();
           }
-        }),
-        FieldType::FieldTypeOption { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { ref struct_name } => {
-            let struct_ident = Ident::new(
-              &format!("{}", struct_name.into_token_stream()),
-              field.span(),
-            );
-            Some(quote! {
-              #label_name => {
-                reader.set_map_value();
-                match #struct_ident::deserialize(reader) {
-                  Ok(parsed_item) => {
-                    #value_label = Some(parsed_item);
-                    let _root = reader.next_event();
-                  },
-                  Err(msg) => {
-                    return Err(msg);
-                  },
-                }
-              }
-            })
-          }
-          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => unimplemented!(),
-          simple_type => build_call_visitor(
-            &get_simple_type_token(&simple_type),
-            &get_simple_type_visitor(&simple_type),
-            &quote! {= Some(value)},
-            &field_attrs,
-            label,
-            &namespaces,
-            field.span(),
-          ),
-        },
-        FieldType::FieldTypeVec { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { ref struct_name } => {
-            let struct_ident = Ident::new(
-              &format!("{}", struct_name.into_token_stream()),
-              field.span(),
-            );
-            Some(quote! {
-              #label_name => {
-                reader.set_map_value();
-                match #struct_ident::deserialize(reader) {
-                  Ok(parsed_item) => {
-                    #value_label.push(parsed_item);
-                    let _root = reader.next_event();
-                  },
-                  Err(msg) => {
-                    return Err(msg);
-                  },
-                }
-              }
-            })
-          }
-          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => unimplemented!(),
-          simple_type => build_call_visitor(
-            &get_simple_type_token(&simple_type),
-            &get_simple_type_visitor(&simple_type),
-            &quote! {.push(value)},
-            &field_attrs,
-            label,
-            &namespaces,
-            field.span(),
-          ),
-        },
-        simple_type => build_call_visitor(
+        })
+      };
+
+      let visit_simple = |simple_type: FieldType, action: TokenStream| {
+        build_call_visitor(
           &get_simple_type_token(&simple_type),
           &get_simple_type_visitor(&simple_type),
-          &quote! {= value},
+          &action,
           &field_attrs,
           label,
           &namespaces,
           field.span(),
-        ),
+        )
+      };
+
+      let visit_sub = |sub_type: Box<FieldType>, action: TokenStream| match *sub_type {
+        FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => unimplemented!(),
+        FieldType::FieldTypeStruct { struct_name } => visit_struct(struct_name, action),
+        simple_type => visit_simple(simple_type, action),
+      };
+
+      get_field_type(field).and_then(|f| match f {
+        FieldType::FieldTypeStruct { struct_name } => visit_struct(struct_name, quote! {= value}),
+        FieldType::FieldTypeOption { data_type } => visit_sub(data_type, quote! {= Some(value)}),
+        FieldType::FieldTypeVec { data_type } => visit_sub(data_type, quote! {.push(value)}),
+        simple_type => visit_simple(simple_type, quote! {= value}),
       })
     })
     .filter_map(|x| x)
@@ -307,54 +252,56 @@ pub fn parse(
 
       let visitor_label = build_visitor_ident(&label_name, field.span(), None);
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeString => Some(quote! {
+      let visit = |action: &TokenStream, visitor: &TokenStream, visitor_label: &Ident| {
+        Some(quote! {
+          for attr in attributes {
+            if attr.name.local_name == #label_name {
+              let visitor = #visitor_label{};
+              let value = visitor.#visitor(&attr.value)?;
+              #label #action;
+            }
+          }
+        })
+      };
+
+      let visit_string = || {
+        Some(quote! {
           for attr in attributes {
             if attr.name.local_name == #label_name {
               #label = attr.value.to_owned();
             }
           }
-        }),
-        FieldType::FieldTypeOption { data_type } => match *data_type {
-          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => unimplemented!(),
-          FieldType::FieldTypeStruct { struct_name } => build_call_visitor_for_attribute(
-            label,
-            &label_name,
-            &quote! {= Some(value) },
-            &quote! {visit_str},
-            &build_visitor_ident(&label_name, field.span(), Some(&struct_name)),
-          ),
-          simple_type => {
-            let visitor = get_simple_type_visitor(&simple_type);
+        })
+      };
 
-            build_call_visitor_for_attribute(
-              label,
-              &label_name,
-              &quote! {= Some(value)},
-              &visitor,
-              &visitor_label,
-            )
-          }
-        },
-        FieldType::FieldTypeStruct { struct_name } => build_call_visitor_for_attribute(
-          label,
-          &label_name,
-          &quote! {= value },
+      let visit_struct = |struct_name: syn::Path, action: TokenStream| {
+        visit(
+          &action,
           &quote! {visit_str},
           &build_visitor_ident(&label_name, field.span(), Some(&struct_name)),
-        ),
-        FieldType::FieldTypeVec { .. } => None,
-        simple_type => {
-          let visitor = get_simple_type_visitor(&simple_type);
+        )
+      };
 
-          build_call_visitor_for_attribute(
-            label,
-            &label_name,
-            &quote! {= value},
-            &visitor,
-            &visitor_label,
-          )
-        }
+      let visit_simple = |simple_type: FieldType, action: TokenStream| {
+        visit(
+          &action,
+          &get_simple_type_visitor(&simple_type),
+          &visitor_label,
+        )
+      };
+
+      let visit_sub = |sub_type: Box<FieldType>, action: TokenStream| match *sub_type {
+        FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => unimplemented!(),
+        FieldType::FieldTypeStruct { struct_name } => visit_struct(struct_name, action),
+        simple_type => visit_simple(simple_type, action),
+      };
+
+      get_field_type(field).and_then(|f| match f {
+        FieldType::FieldTypeString => visit_string(),
+        FieldType::FieldTypeOption { data_type } => visit_sub(data_type, quote! {= Some(value)}),
+        FieldType::FieldTypeVec { .. } => unimplemented!(),
+        FieldType::FieldTypeStruct { struct_name } => visit_struct(struct_name, quote! {= value}),
+        simple_type => visit_simple(simple_type, quote! {= value}),
       })
     })
     .filter_map(|x| x)
@@ -367,21 +314,22 @@ pub fn parse(
       let label = &get_value_label(&field.ident);
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeString => {
-          build_set_text_to_value(&field_attrs, label, &quote! {text_content.to_owned()})
+      let set_text = |action: &TokenStream| {
+        if field_attrs.text {
+          Some(quote! {#label = #action;})
+        } else {
+          None
         }
+      };
+
+      get_field_type(field).and_then(|f| match f {
+        FieldType::FieldTypeString => set_text(&quote! {text_content.to_owned()}),
         FieldType::FieldTypeStruct { .. }
         | FieldType::FieldTypeOption { .. }
         | FieldType::FieldTypeVec { .. } => None,
         simple_type => {
           let type_token = get_simple_type_token(&simple_type);
-
-          build_set_text_to_value(
-            &field_attrs,
-            label,
-            &quote! {#type_token::from_str(text_content).unwrap()},
-          )
+          set_text(&quote! {#type_token::from_str(text_content).unwrap()})
         }
       })
     })
@@ -569,40 +517,6 @@ fn build_call_visitor(
       }
     }
   })
-}
-
-fn build_call_visitor_for_attribute(
-  label: &Option<Ident>,
-  label_name: &str,
-  action: &TokenStream,
-  visitor: &TokenStream,
-  visitor_label: &Ident,
-) -> Option<TokenStream> {
-  Some(quote! {
-    for attr in attributes {
-      if attr.name.local_name == #label_name {
-        let visitor = #visitor_label{};
-        match visitor.#visitor(&attr.value) {
-          Ok(value) => {#label #action;}
-          Err(msg) => {return Err(msg);}
-        }
-      }
-    }
-  })
-}
-
-fn build_set_text_to_value(
-  field_attrs: &YaSerdeAttribute,
-  label: &Option<Ident>,
-  action: &TokenStream,
-) -> Option<TokenStream> {
-  if field_attrs.text {
-    Some(quote! {
-      #label = #action;
-    })
-  } else {
-    None
-  }
 }
 
 fn get_value_label(ident: &Option<syn::Ident>) -> Option<syn::Ident> {
