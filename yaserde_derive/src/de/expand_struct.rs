@@ -100,8 +100,6 @@ pub fn parse(
         .rename
         .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string());
 
-      let visitor_label = build_visitor_ident(&label_name, field.span(), None);
-
       let struct_visitor = |struct_name: syn::Path| {
         let struct_id: String = struct_name
           .segments
@@ -109,12 +107,12 @@ pub fn parse(
           .map(|s| s.ident.to_string())
           .collect();
 
-        let struct_ident = build_visitor_ident(&label_name, field.span(), Some(&struct_name));
+        let visitor_label = build_visitor_ident(&label_name, field.span(), Some(&struct_name));
 
         Some(quote! {
           #[allow(non_snake_case, non_camel_case_types)]
-          struct #struct_ident;
-          impl<'de> Visitor<'de> for #struct_ident {
+          struct #visitor_label;
+          impl<'de> Visitor<'de> for #visitor_label {
             type Value = #struct_name;
 
             fn visit_str(self, v: &str) -> Result<Self::Value, String> {
@@ -127,11 +125,21 @@ pub fn parse(
       };
 
       let simple_type_visitor = |simple_type: FieldType| {
-        build_declare_visitor(
-          &get_simple_type_token(&simple_type),
-          &get_simple_type_visitor(&simple_type),
-          &visitor_label,
-        )
+        let field_type = get_simple_type_token(&simple_type);
+        let visitor = get_simple_type_visitor(&simple_type);
+        let visitor_label = build_visitor_ident(&label_name, field.span(), None);
+
+        Some(quote! {
+          #[allow(non_snake_case, non_camel_case_types)]
+          struct #visitor_label;
+          impl<'de> Visitor<'de> for #visitor_label {
+            type Value = #field_type;
+
+            fn #visitor(self, v: &str) -> Result<Self::Value, String> {
+              Ok(#field_type::from_str(v).unwrap())
+            }
+          }
+        })
       };
 
       get_field_type(field).and_then(|f| match f {
@@ -431,24 +439,6 @@ pub fn parse(
       }
     }
   }
-}
-
-fn build_declare_visitor(
-  field_type: &TokenStream,
-  visitor: &TokenStream,
-  visitor_label: &Ident,
-) -> Option<TokenStream> {
-  Some(quote! {
-    #[allow(non_snake_case, non_camel_case_types)]
-    struct #visitor_label;
-    impl<'de> Visitor<'de> for #visitor_label {
-      type Value = #field_type;
-
-      fn #visitor(self, v: &str) -> Result<Self::Value, String> {
-        Ok(#field_type::from_str(v).unwrap())
-      }
-    }
-  })
 }
 
 fn build_call_visitor(
