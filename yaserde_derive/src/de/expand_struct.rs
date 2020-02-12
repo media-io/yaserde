@@ -103,76 +103,51 @@ pub fn parse(
 
       let visitor_label = build_visitor_ident(&label_name, field.span(), None);
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeStruct { struct_name } => {
-          let struct_id: String = struct_name
-            .segments
-            .iter()
-            .map(|s| s.ident.to_string())
-            .collect();
-          let struct_ident = build_visitor_ident(&label_name, field.span(), Some(&struct_id));
+      let struct_visitor = |struct_name: syn::Path| {
+        let struct_id: String = struct_name
+          .segments
+          .iter()
+          .map(|s| s.ident.to_string())
+          .collect();
 
-          Some(quote! {
-            #[allow(non_snake_case, non_camel_case_types)]
-            struct #struct_ident;
-            impl<'de> Visitor<'de> for #struct_ident {
-              type Value = #struct_name;
+        let struct_ident = build_visitor_ident(&label_name, field.span(), Some(&struct_name));
 
-              fn visit_str(self, v: &str) -> Result<Self::Value, String> {
-                let content = "<".to_string() + #struct_id + ">" + v + "</" + #struct_id + ">";
-                let value : Result<#struct_name, String> = yaserde::de::from_str(&content);
-                value
-              }
+        Some(quote! {
+          #[allow(non_snake_case, non_camel_case_types)]
+          struct #struct_ident;
+          impl<'de> Visitor<'de> for #struct_ident {
+            type Value = #struct_name;
+
+            fn visit_str(self, v: &str) -> Result<Self::Value, String> {
+              let content = "<".to_string() + #struct_id + ">" + v + "</" + #struct_id + ">";
+              let value : Result<#struct_name, String> = yaserde::de::from_str(&content);
+              value
             }
-          })
-        }
-        FieldType::FieldTypeOption { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { ref struct_name } => {
-            let struct_ident = Ident::new(
-              &format!("{}", struct_name.into_token_stream()),
-              field.span(),
-            );
-            Some(quote! {
-              #[allow(non_snake_case, non_camel_case_types)]
-              struct #visitor_label;
-              impl<'de> Visitor<'de> for #visitor_label {
-                type Value = #struct_ident;
-              }
-            })
           }
-          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => None,
-          simple_type => build_declare_visitor(
-            &get_simple_type_token(&simple_type),
-            &get_simple_type_visitor(&simple_type),
-            &visitor_label,
-          ),
-        },
-        FieldType::FieldTypeVec { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { ref struct_name } => {
-            let struct_ident = Ident::new(
-              &format!("{}", struct_name.into_token_stream()),
-              field.span(),
-            );
-            Some(quote! {
-              #[allow(non_snake_case, non_camel_case_types)]
-              struct #visitor_label;
-              impl<'de> Visitor<'de> for #visitor_label {
-                type Value = #struct_ident;
-              }
-            })
-          }
-          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => None,
-          simple_type => build_declare_visitor(
-            &get_simple_type_token(&simple_type),
-            &get_simple_type_visitor(&simple_type),
-            &visitor_label,
-          ),
-        },
-        simple_type => build_declare_visitor(
+        })
+      };
+
+      let simple_type_visitor = |simple_type: FieldType| {
+        build_declare_visitor(
           &get_simple_type_token(&simple_type),
           &get_simple_type_visitor(&simple_type),
           &visitor_label,
-        ),
+        )
+      };
+
+      get_field_type(field).and_then(|f| match f {
+        FieldType::FieldTypeStruct { struct_name } => struct_visitor(struct_name),
+        FieldType::FieldTypeOption { data_type } => match *data_type {
+          FieldType::FieldTypeStruct { struct_name } => struct_visitor(struct_name),
+          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => None,
+          simple_type => simple_type_visitor(simple_type),
+        },
+        FieldType::FieldTypeVec { data_type } => match *data_type {
+          FieldType::FieldTypeStruct { struct_name } => struct_visitor(struct_name),
+          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => None,
+          simple_type => simple_type_visitor(simple_type),
+        },
+        simple_type => simple_type_visitor(simple_type),
       })
     })
     .filter_map(|x| x)
@@ -341,9 +316,14 @@ pub fn parse(
           }
         }),
         FieldType::FieldTypeOption { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { .. }
-          | FieldType::FieldTypeOption { .. }
-          | FieldType::FieldTypeVec { .. } => None,
+          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => unimplemented!(),
+          FieldType::FieldTypeStruct { struct_name } => build_call_visitor_for_attribute(
+            label,
+            &label_name,
+            &quote! {= Some(value) },
+            &quote! {visit_str},
+            &build_visitor_ident(&label_name, field.span(), Some(&struct_name)),
+          ),
           simple_type => {
             let visitor = get_simple_type_visitor(&simple_type);
 
@@ -356,28 +336,13 @@ pub fn parse(
             )
           }
         },
-        FieldType::FieldTypeStruct { struct_name } => {
-          let struct_ident = Ident::new(
-            &format!(
-              "__Visitor_{}_{}",
-              label_name,
-              struct_name.into_token_stream()
-            ),
-            field.span(),
-          );
-
-          Some(quote! {
-            for attr in attributes {
-              if attr.name.local_name == #label_name {
-                let visitor = #struct_ident{};
-                match visitor.visit_str(&attr.value) {
-                  Ok(value) => {#label = value;}
-                  Err(msg) => {return Err(msg);}
-                }
-              }
-            }
-          })
-        }
+        FieldType::FieldTypeStruct { struct_name } => build_call_visitor_for_attribute(
+          label,
+          &label_name,
+          &quote! {= value },
+          &quote! {visit_str},
+          &build_visitor_ident(&label_name, field.span(), Some(&struct_name)),
+        ),
         FieldType::FieldTypeVec { .. } => None,
         simple_type => {
           let visitor = get_simple_type_visitor(&simple_type);
@@ -646,13 +611,20 @@ fn get_value_label(ident: &Option<syn::Ident>) -> Option<syn::Ident> {
     .map(|ident| syn::Ident::new(&format!("__{}_value", ident.to_string()), ident.span()))
 }
 
-fn build_visitor_ident(label: &str, span: Span, struct_id: Option<&str>) -> Ident {
+fn build_visitor_ident(label: &str, span: Span, struct_name: Option<&syn::Path>) -> Ident {
+  let struct_id = struct_name.map_or_else(
+    || "".to_string(),
+    |struct_name| {
+      struct_name
+        .segments
+        .iter()
+        .map(|s| s.ident.to_string())
+        .collect()
+    },
+  );
+
   Ident::new(
-    &format!(
-      "__Visitor_{}_{}",
-      label.replace(".", "_"),
-      struct_id.unwrap_or("")
-    ),
+    &format!("__Visitor_{}_{}", label.replace(".", "_"), struct_id),
     span,
   )
 }

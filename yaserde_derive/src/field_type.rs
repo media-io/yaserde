@@ -37,10 +37,10 @@ impl FieldType {
         "f32" => Some(FieldType::FieldTypeF32),
         "f64" => Some(FieldType::FieldTypeF64),
         "Option" => get_sub_type(t).map(|data_type| FieldType::FieldTypeOption {
-          data_type: Box::new(FieldType::from_ident(&syn::Path::from(data_type)).unwrap()),
+          data_type: Box::new(FieldType::from_ident(&data_type).unwrap()),
         }),
         "Vec" => get_sub_type(t).map(|data_type| FieldType::FieldTypeVec {
-          data_type: Box::new(FieldType::from_ident(&syn::Path::from(data_type)).unwrap()),
+          data_type: Box::new(FieldType::from_ident(&data_type).unwrap()),
         }),
         _ => Some(FieldType::FieldTypeStruct {
           struct_name: path.clone(),
@@ -58,14 +58,12 @@ pub fn get_field_type(field: &syn::Field) -> Option<FieldType> {
   }
 }
 
-fn get_sub_type(t: &syn::PathSegment) -> Option<syn::PathSegment> {
+fn get_sub_type(t: &syn::PathSegment) -> Option<syn::Path> {
   if let syn::PathArguments::AngleBracketed(ref args) = t.arguments {
     if let Some(tt) = args.args.first() {
       if let syn::GenericArgument::Type(ref argument) = *tt {
-        if let Path(ref path2) = *argument {
-          if let Some(ttt) = path2.path.segments.first() {
-            return Some(ttt.clone());
-          }
+        if let Path(ref path) = *argument {
+          return Some(path.path.clone());
         }
       }
     }

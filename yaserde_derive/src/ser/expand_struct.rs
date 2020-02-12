@@ -176,6 +176,54 @@ pub fn serialize(
               })
             }
           }
+          FieldType::FieldTypeStruct { .. } => {
+            if let Some(ref d) = field_attrs.default {
+              let default_function = Ident::new(&d, field.span());
+              Some(quote! {
+                let struct_start_event = if let Some(ref value) = self.#label {
+                  if *value != #default_function() {
+                    struct_start_event.attr(#label_name, &*{
+                      use std::mem;
+                      match yaserde::ser::to_string_content(value) {
+                        Ok(value) => {
+                          unsafe {
+                            let ret : &'static str = mem::transmute(&value as &str);
+                            mem::forget(value);
+                            ret
+                          }
+                        },
+                        Err(msg) => return Err("Unable to serialize content".to_owned()),
+                      }
+                    })
+                  } else {
+                    struct_start_event
+                  }
+                } else {
+                  struct_start_event
+                };
+              })
+            } else {
+              Some(quote! {
+                let struct_start_event = if let Some(ref value) = self.#label {
+                  struct_start_event.attr(#label_name, &*{
+                    use std::mem;
+                    match yaserde::ser::to_string_content(value) {
+                      Ok(value) => {
+                        unsafe {
+                          let ret : &'static str = mem::transmute(&value as &str);
+                          mem::forget(value);
+                          ret
+                        }
+                      },
+                      Err(msg) => return Err("Unable to serialize content".to_owned()),
+                    }
+                  })
+                } else {
+                  struct_start_event
+                };
+              })
+            }
+          }
           _ => unimplemented!(),
         },
         FieldType::FieldTypeStruct { .. } => {

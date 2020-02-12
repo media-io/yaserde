@@ -125,6 +125,66 @@ fn se_attributes() {
 }
 
 #[test]
+fn se_attributes_complex() {
+  mod other_mod {
+    use super::*;
+
+    #[derive(YaSerialize, PartialEq, Debug)]
+    pub enum AttrEnum {
+      #[yaserde(rename = "variant 1")]
+      Variant1,
+      #[yaserde(rename = "variant 2")]
+      Variant2,
+    }
+
+    impl Default for AttrEnum {
+      fn default() -> AttrEnum {
+        AttrEnum::Variant1
+      }
+    }
+  }
+
+  #[derive(YaSerialize, PartialEq, Debug)]
+  pub struct Struct {
+    #[yaserde(attribute)]
+    attr_option_string: Option<std::string::String>,
+    #[yaserde(attribute)]
+    attr_option_enum: Option<other_mod::AttrEnum>,
+  }
+
+  impl Default for Struct {
+    fn default() -> Struct {
+      Struct {
+        attr_option_string: None,
+        attr_option_enum: None,
+      }
+    }
+  }
+
+  convert_and_validate!(
+    Struct {
+      attr_option_string: None,
+      attr_option_enum: None,
+    },
+    r#"
+    <?xml version="1.0" encoding="utf-8"?>
+    <Struct />
+    "#
+  );
+
+  convert_and_validate!(
+    Struct {
+      attr_option_string: Some("some value".to_string()),
+      attr_option_enum: Some(other_mod::AttrEnum::Variant2),
+    },
+    r#"
+    <?xml version="1.0" encoding="utf-8"?>
+    <Struct attr_option_string="some value" attr_option_enum="variant 2" />
+    "#
+  );
+}
+
+#[test]
 fn ser_rename() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(root = "base")]
