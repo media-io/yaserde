@@ -44,32 +44,18 @@ pub fn serialize(
           if let Some(ref d) = field_attrs.default {
             let default_function = Ident::new(&d, field.span());
             Some(quote! {
+              let content = self.#label.to_string();
               let struct_start_event =
                 if self.#label != #default_function() {
-                  struct_start_event.attr(#label_name, &*{
-                    use std::mem;
-                    unsafe {
-                      let content = format!("{}", self.#label);
-                      let ret : &'static str = mem::transmute(&content as &str);
-                      mem::forget(content);
-                      ret
-                    }
-                  })
+                  struct_start_event.attr(#label_name, &content)
                 } else {
                   struct_start_event
                 };
             })
           } else {
             Some(quote! {
-              let struct_start_event = struct_start_event.attr(#label_name, &*{
-                use std::mem;
-                unsafe {
-                  let content = format!("{}", self.#label);
-                  let ret : &'static str = mem::transmute(&content as &str);
-                  mem::forget(content);
-                  ret
-                }
-              });
+              let content = self.#label.to_string();
+              let struct_start_event = struct_start_event.attr(#label_name, &content);
             })
           }
         }
@@ -114,18 +100,11 @@ pub fn serialize(
             if let Some(ref d) = field_attrs.default {
               let default_function = Ident::new(&d, field.span());
               Some(quote! {
+                let content = self.#label.map_or_else(|| String::new(), |v| v.to_string());
                 let struct_start_event =
                   if self.#label != #default_function() {
                     if let Some(ref value) = self.#label {
-                      struct_start_event.attr(#label_name, &*{
-                        use std::mem;
-                        unsafe {
-                          let content = format!("{}", value);
-                          let ret : &'static str = mem::transmute(&content as &str);
-                          mem::forget(content);
-                          ret
-                        }
-                      })
+                      struct_start_event.attr(#label_name, &content)
                     } else {
                       struct_start_event
                     }
@@ -135,17 +114,10 @@ pub fn serialize(
               })
             } else {
               Some(quote! {
+                let content = self.#label.map_or_else(|| String::new(), |v| v.to_string());
                 let struct_start_event =
                   if let Some(ref value) = self.#label {
-                    struct_start_event.attr(#label_name, &*{
-                      use std::mem;
-                      unsafe {
-                        let content = format!("{}", value);
-                        let ret : &'static str = mem::transmute(&content as &str);
-                        mem::forget(content);
-                        ret
-                      }
-                    })
+                    struct_start_event.attr(#label_name, &content)
                   } else {
                     struct_start_event
                   };
@@ -180,21 +152,12 @@ pub fn serialize(
             if let Some(ref d) = field_attrs.default {
               let default_function = Ident::new(&d, field.span());
               Some(quote! {
+                let content = self.#label
+                  .as_ref()
+                  .map_or_else(|| Ok(String::new()), |v| yaserde::ser::to_string_content(v))?;
                 let struct_start_event = if let Some(ref value) = self.#label {
                   if *value != #default_function() {
-                    struct_start_event.attr(#label_name, &*{
-                      use std::mem;
-                      match yaserde::ser::to_string_content(value) {
-                        Ok(value) => {
-                          unsafe {
-                            let ret : &'static str = mem::transmute(&value as &str);
-                            mem::forget(value);
-                            ret
-                          }
-                        },
-                        Err(msg) => return Err("Unable to serialize content".to_owned()),
-                      }
-                    })
+                    struct_start_event.attr(#label_name, &content)
                   } else {
                     struct_start_event
                   }
@@ -204,20 +167,11 @@ pub fn serialize(
               })
             } else {
               Some(quote! {
+                let content = self.#label
+                  .as_ref()
+                  .map_or_else(|| Ok(String::new()), |v| yaserde::ser::to_string_content(v))?;
                 let struct_start_event = if let Some(ref value) = self.#label {
-                  struct_start_event.attr(#label_name, &*{
-                    use std::mem;
-                    match yaserde::ser::to_string_content(value) {
-                      Ok(value) => {
-                        unsafe {
-                          let ret : &'static str = mem::transmute(&value as &str);
-                          mem::forget(value);
-                          ret
-                        }
-                      },
-                      Err(msg) => return Err("Unable to serialize content".to_owned()),
-                    }
-                  })
+                  struct_start_event.attr(#label_name, &content)
                 } else {
                   struct_start_event
                 };
@@ -230,40 +184,18 @@ pub fn serialize(
           if let Some(ref d) = field_attrs.default {
             let default_function = Ident::new(&d, field.span());
             Some(quote! {
+              let content = yaserde::ser::to_string_content(&self.#label)?;
               let struct_start_event =
                 if self.#label != #default_function() {
-                  struct_start_event.attr(#label_name, &*{
-                    use std::mem;
-                    match yaserde::ser::to_string_content(&self.#label) {
-                      Ok(value) => {
-                        unsafe {
-                          let ret : &'static str = mem::transmute(&value as &str);
-                          mem::forget(value);
-                          ret
-                        }
-                      },
-                      Err(msg) => return Err("Unable to serialize content".to_owned()),
-                    }
-                  })
+                  struct_start_event.attr(#label_name, &content)
                 } else {
                   struct_start_event
                 };
             })
           } else {
             Some(quote! {
-              let struct_start_event = struct_start_event.attr(#label_name, &*{
-                use std::mem;
-                match yaserde::ser::to_string_content(&self.#label) {
-                  Ok(value) => {
-                    unsafe {
-                      let ret : &'static str = mem::transmute(&value as &str);
-                      mem::forget(value);
-                      ret
-                    }
-                  },
-                  Err(msg) => return Err("Unable to serialize content".to_owned()),
-                }
-              });
+              let content = yaserde::ser::to_string_content(&self.#label)?;
+              let struct_start_event = struct_start_event.attr(#label_name, &content);
             })
           }
         }
