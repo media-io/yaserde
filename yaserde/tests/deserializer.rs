@@ -780,3 +780,45 @@ fn de_flatten() {
     }
   );
 }
+
+#[test]
+fn de_subitem_issue_12() {
+  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  pub struct Struct {
+    id: i32,
+  }
+
+  convert_and_validate!(
+    r#"
+    <?xml version="1.0" encoding="utf-8"?>
+    <Struct>
+      <id>54</id>
+      <SubStruct>
+        <id>86</id>
+      </SubStruct>
+    </Struct>
+    "#,
+    Struct,
+    Struct { id: 54 }
+  );
+}
+
+#[test]
+fn de_subitem_issue_12_attributes() {
+  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  pub struct Struct {
+    #[yaserde(attribute)]
+    id: i32,
+  }
+
+  convert_and_validate!(
+    r#"
+    <?xml version="1.0" encoding="utf-8"?>
+    <Struct id="54">
+      <SubStruct id="86" />
+    </Struct>
+    "#,
+    Struct,
+    Struct { id: 54 }
+  );
+}

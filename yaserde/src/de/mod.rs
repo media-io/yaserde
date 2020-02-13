@@ -88,6 +88,16 @@ impl<'de, R: Read> Deserializer<R> {
     Ok(next_event)
   }
 
+  pub fn skip_element(&mut self, mut cb: impl FnMut(&XmlEvent)) -> Result<(), String> {
+    let depth = self.depth;
+
+    while self.depth >= depth {
+      cb(&self.next_event()?);
+    }
+
+    Ok(())
+  }
+
   pub fn set_map_value(&mut self) {
     self.is_map_value = true;
   }
