@@ -440,23 +440,36 @@ pub fn parse(
         #field_visitors
         #init_unused
 
+        let mut depth = 0;
+
         loop {
           let event = reader.peek()?.to_owned();
 
           match event {
             XmlEvent::StartElement{ref name, ref attributes, ..} => {
+              let mut skipped = false;
 
               match name.local_name.as_str() {
                 #call_visitors
                 named_element => {
                   let event = reader.next_event()?;
                   #write_unused
+
+                  if depth > 0 { // Don't skip root element
+                    skipped = true;
+                    reader.skip_element(|event| {
+                      #write_unused
+                    })?;
+                  }
                 }
                 // name => {
                 //   return Err(format!("unknown key {}", name))
                 // }
               }
-              #attributes_loading
+              if !skipped {
+                #attributes_loading
+              }
+              depth += 1;
             }
             XmlEvent::EndElement{ref name} => {
               if name.local_name == named_element {
@@ -465,6 +478,7 @@ pub fn parse(
               }
               let event = reader.next_event()?;
               #write_unused
+              depth -= 1;
             }
             XmlEvent::Characters(ref text_content) => {
               #set_text
