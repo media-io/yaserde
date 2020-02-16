@@ -813,8 +813,8 @@ fn de_subitem_issue_12_with_sub() {
   #[derive(Default, PartialEq, Debug, YaDeserialize)]
   pub struct Struct {
     id: i32,
-    #[yaserde(rename="SubStruct")]
-    sub: SubStruct
+    #[yaserde(rename = "SubStruct")]
+    sub: SubStruct,
   }
 
   convert_and_validate!(
@@ -828,7 +828,10 @@ fn de_subitem_issue_12_with_sub() {
     </Struct>
     "#,
     Struct,
-    Struct { id: 54, sub: SubStruct { id: 86 } }
+    Struct {
+      id: 54,
+      sub: SubStruct { id: 86 }
+    }
   );
 }
 
