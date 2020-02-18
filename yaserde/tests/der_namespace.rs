@@ -90,6 +90,41 @@ fn de_struct_namespace() {
 }
 
 #[test]
+fn de_struct_namespace_nested() {
+  #[derive(YaDeserialize, Default, PartialEq, Debug)]
+  #[yaserde(prefix = "nsa", namespace = "nsa: http://www.sample.com/ns/a")]
+  struct A {
+    #[yaserde(prefix = "nsa")]
+    alpha: i32,
+  }
+
+  #[derive(YaDeserialize, Default, PartialEq, Debug)]
+  #[yaserde(prefix = "nsb", namespace = "nsb: http://www.sample.com/ns/b")]
+  struct B {
+    // Note that name `nested` resides in `nsb` though it has a type from `nsa`
+    #[yaserde(prefix = "nsb")]
+    nested: A,
+  }
+
+  convert_and_validate!(
+    r#"
+    <?xml version="1.0" encoding="utf-8"?>
+    <nsb:B 
+        xmlns:nsa="http://www.sample.com/ns/a" 
+        xmlns:nsb="http://www.sample.com/ns/b">
+      <nsb:nested>
+        <nsa:alpha>32</nsa:alpha>
+      </nsb:nested>
+    </nsb:B>
+    "#,
+    B,
+    B {
+      nested: A { alpha: 32 }
+    }
+  );
+}
+
+#[test]
 fn de_enum_namespace() {
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(

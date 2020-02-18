@@ -405,15 +405,10 @@ pub fn serialize(
         let skip = writer.skip_start_end();
 
         if !skip {
-          if let Some(label) = writer.get_start_event_name() {
-            let struct_start_event = XmlEvent::start_element(label.as_ref());
-            #build_attributes
-            let _ret = writer.write(struct_start_event);
-          } else {
-            let struct_start_event = XmlEvent::start_element(#root)#add_namespaces;
-            #build_attributes
-            let _ret = writer.write(struct_start_event);
-          }
+          let label = writer.get_start_event_name().unwrap_or_else(|| #root.to_string());
+          let struct_start_event = XmlEvent::start_element(label.as_ref())#add_namespaces;
+          #build_attributes
+          let _ret = writer.write(struct_start_event);
         }
 
         #struct_inspector
