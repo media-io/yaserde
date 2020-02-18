@@ -9,9 +9,17 @@ use yaserde::ser::to_string;
 use yaserde::YaSerialize;
 
 macro_rules! convert_and_validate {
-  ($model:expr, $content:expr) => {
+  ($model: expr, $content: expr) => {
     let data: Result<String, String> = to_string(&$model);
-    assert_eq!(data, Ok(String::from($content)));
+    assert_eq!(
+      data,
+      Ok(
+        String::from($content)
+          .split("\n")
+          .map(|s| s.trim())
+          .collect::<String>()
+      )
+    );
   };
 }
 
@@ -151,4 +159,36 @@ fn ser_struct_default_namespace() {
 
   let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><tt xmlns=\"http://www.w3.org/ns/ttml\" xmlns:ttm=\"http://www.w3.org/ns/ttml#metadata\"><item>something</item></tt>";
   convert_and_validate!(model, content);
+}
+
+#[test]
+fn de_struct_namespace_nested() {
+  #[derive(YaSerialize, Default, PartialEq, Debug)]
+  #[yaserde(prefix = "nsa", namespace = "nsa: http://www.sample.com/ns/a")]
+  struct A {
+    #[yaserde(prefix = "nsa")]
+    alpha: i32,
+  }
+
+  #[derive(YaSerialize, Default, PartialEq, Debug)]
+  #[yaserde(prefix = "nsb", namespace = "nsb: http://www.sample.com/ns/b")]
+  struct B {
+    // Note that name `nested` resides in `nsb` though it has a type from `nsa`
+    #[yaserde(prefix = "nsb")]
+    nested: A,
+  }
+
+  convert_and_validate!(
+    B {
+      nested: A { alpha: 32 }
+    },
+    r#"
+    <?xml version="1.0" encoding="utf-8"?>
+    <nsb:B xmlns:nsb="http://www.sample.com/ns/b">
+      <nsb:nested xmlns:nsa="http://www.sample.com/ns/a">
+        <nsa:alpha>32</nsa:alpha>
+      </nsb:nested>
+    </nsb:B>
+    "#
+  );
 }

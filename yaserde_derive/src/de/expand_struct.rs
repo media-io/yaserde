@@ -17,9 +17,8 @@ pub fn parse(
   let namespaces_matches: TokenStream = namespaces
     .iter()
     .map(|(p, ns)| {
-      let str_ns = ns.as_str();
-      if *prefix == Some(p.to_string()) {
-        Some(quote!(#str_ns => {}))
+      if prefix.as_ref() == Some(p) {
+        Some(quote!(#ns => {}))
       } else {
         None
       }
@@ -382,15 +381,17 @@ pub fn parse(
           };
         debug!("Struct: start to parse {:?}", named_element);
 
-        if let Some(ref namespace) = struct_namespace {
-          match namespace.as_str() {
-            #namespaces_matches
-            bad_ns => {
-              let msg = format!("bad namespace for {}, found {}", named_element, bad_ns);
-              return Err(msg);
+        if reader.depth() == 0 {
+          if let Some(ref namespace) = struct_namespace {
+            match namespace.as_str() {
+              #namespaces_matches
+              bad_ns => {
+                let msg = format!("bad namespace for {}, found {}", named_element, bad_ns);
+                return Err(msg);
+              }
             }
           }
-        };
+        }
 
         #variables
         #field_visitors

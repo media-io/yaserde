@@ -98,6 +98,10 @@ impl<'de, R: Read> Deserializer<R> {
     Ok(())
   }
 
+  pub fn depth(&self) -> usize {
+    self.depth
+  }
+
   pub fn set_map_value(&mut self) {
     self.is_map_value = true;
   }
