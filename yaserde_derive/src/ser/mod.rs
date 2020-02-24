@@ -22,12 +22,20 @@ pub fn expand_derive_serialize(ast: &syn::DeriveInput) -> Result<TokenStream, St
   };
 
   let impl_block = match *data {
-    syn::Data::Struct(ref data_struct) => {
-      expand_struct::serialize(data_struct, name, &root, &root_attrs.namespaces)
-    }
-    syn::Data::Enum(ref data_enum) => {
-      expand_enum::serialize(data_enum, name, &root, &root_attrs.namespaces)
-    }
+    syn::Data::Struct(ref data_struct) => expand_struct::serialize(
+      data_struct,
+      name,
+      &root,
+      &root_attrs.namespaces,
+      &root_attrs.default_namespace,
+    ),
+    syn::Data::Enum(ref data_enum) => expand_enum::serialize(
+      data_enum,
+      name,
+      &root,
+      &root_attrs.namespaces,
+      &root_attrs.default_namespace,
+    ),
     syn::Data::Union(ref _data_union) => unimplemented!(),
   };
 
