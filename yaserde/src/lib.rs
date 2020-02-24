@@ -27,7 +27,6 @@ pub trait YaSerialize: Sized {
   fn serialize<W: Write>(&self, writer: &mut ser::Serializer<W>) -> Result<(), String>;
 }
 
-
 /// A **visitor** that can be implemented to retrieve information from source file.
 pub trait Visitor<'de>: Sized {
   /// The value produced by this visitor.
