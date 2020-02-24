@@ -1,3 +1,6 @@
+//! Generic data structure serialization framework.
+//!
+
 use std::io::{Cursor, Write};
 use std::str;
 use xml;
