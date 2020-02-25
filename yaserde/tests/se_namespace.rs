@@ -183,7 +183,7 @@ fn ser_struct_default_namespace_via_attribute() {
 }
 
 #[test]
-fn de_struct_namespace_nested() {
+fn ser_struct_namespace_nested() {
   #[derive(YaSerialize, Default, PartialEq, Debug)]
   #[yaserde(prefix = "nsa", namespace = "nsa: http://www.sample.com/ns/a")]
   struct A {
