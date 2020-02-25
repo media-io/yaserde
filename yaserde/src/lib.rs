@@ -1,3 +1,8 @@
+//! # YaSerDe
+//!
+//! YaSerDe is a framework for ***ser***ializing and ***de***serializing Rust data
+//! structures efficiently and generically from and into XML.
+
 #[macro_use]
 extern crate log;
 extern crate xml;
@@ -12,14 +17,17 @@ use xml::writer::XmlEvent;
 pub mod de;
 pub mod ser;
 
+/// A **data structure** that can be deserialized from any data format supported by YaSerDe.
 pub trait YaDeserialize: Sized {
   fn deserialize<R: Read>(reader: &mut de::Deserializer<R>) -> Result<Self, String>;
 }
 
+/// A **data structure** that can be serialized into any data format supported by YaSerDe.
 pub trait YaSerialize: Sized {
   fn serialize<W: Write>(&self, writer: &mut ser::Serializer<W>) -> Result<(), String>;
 }
 
+/// A **visitor** that can be implemented to retrieve information from source file.
 pub trait Visitor<'de>: Sized {
   /// The value produced by this visitor.
   type Value;

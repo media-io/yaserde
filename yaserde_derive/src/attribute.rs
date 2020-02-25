@@ -6,14 +6,15 @@ use syn::Attribute;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct YaSerdeAttribute {
+  pub attribute: bool,
+  pub default: Option<String>,
+  pub default_namespace: Option<String>,
+  pub flatten: bool,
+  pub namespaces: BTreeMap<String, String>,
+  pub prefix: Option<String>,
   pub root: Option<String>,
   pub rename: Option<String>,
-  pub prefix: Option<String>,
-  pub default: Option<String>,
-  pub namespaces: BTreeMap<String, String>,
-  pub attribute: bool,
   pub text: bool,
-  pub flatten: bool,
 }
 
 fn get_value(iter: &mut IntoIter) -> Option<String> {
@@ -33,13 +34,14 @@ fn get_value(iter: &mut IntoIter) -> Option<String> {
 impl YaSerdeAttribute {
   pub fn parse(attrs: &[Attribute]) -> YaSerdeAttribute {
     let mut attribute = false;
+    let mut flatten = false;
+    let mut default = None;
+    let mut default_namespace = None;
     let mut namespaces = BTreeMap::new();
     let mut prefix = None;
     let mut rename = None;
     let mut root = None;
-    let mut default = None;
     let mut text = false;
-    let mut flatten = false;
 
     for attr in attrs.iter() {
       let mut attr_iter = attr.clone().tokens.into_iter();
@@ -53,6 +55,15 @@ impl YaSerdeAttribute {
                 match ident.to_string().as_str() {
                   "attribute" => {
                     attribute = true;
+                  }
+                  "default" => {
+                    default = get_value(&mut attr_iter);
+                  }
+                  "default_namespace" => {
+                    default_namespace = get_value(&mut attr_iter);
+                  }
+                  "flatten" => {
+                    flatten = true;
                   }
                   "namespace" => {
                     if let Some(namespace) = get_value(&mut attr_iter) {
@@ -74,14 +85,8 @@ impl YaSerdeAttribute {
                   "root" => {
                     root = get_value(&mut attr_iter);
                   }
-                  "default" => {
-                    default = get_value(&mut attr_iter);
-                  }
                   "text" => {
                     text = true;
-                  }
-                  "flatten" => {
-                    flatten = true;
                   }
                   _ => {}
                 }
@@ -94,13 +99,14 @@ impl YaSerdeAttribute {
 
     YaSerdeAttribute {
       attribute,
+      default,
+      default_namespace,
+      flatten,
       namespaces,
       prefix,
       rename,
       root,
-      default,
       text,
-      flatten,
     }
   }
 }
@@ -112,14 +118,15 @@ fn parse_empty_attributes() {
 
   assert_eq!(
     YaSerdeAttribute {
+      attribute: false,
+      default: None,
+      default_namespace: None,
+      flatten: false,
+      namespaces: BTreeMap::new(),
+      prefix: None,
       root: None,
       rename: None,
-      prefix: None,
-      default: None,
-      namespaces: BTreeMap::new(),
-      attribute: false,
       text: false,
-      flatten: false,
     },
     attrs
   );
@@ -160,14 +167,68 @@ fn parse_attributes() {
 
   assert_eq!(
     YaSerdeAttribute {
+      attribute: true,
+      default: None,
+      default_namespace: None,
+      flatten: false,
+      namespaces: BTreeMap::new(),
+      prefix: None,
       root: None,
       rename: None,
-      prefix: None,
-      default: None,
-      namespaces: BTreeMap::new(),
-      attribute: true,
       text: false,
-      flatten: false,
+    },
+    attrs
+  );
+}
+
+#[test]
+fn parse_attributes_with_values() {
+  use proc_macro2::{Span, TokenStream};
+  use std::str::FromStr;
+  use syn::punctuated::Punctuated;
+  use syn::token::Bracket;
+  use syn::token::Pound;
+  use syn::AttrStyle::Outer;
+  use syn::{Ident, Path, PathArguments, PathSegment};
+
+  let mut punctuated = Punctuated::new();
+  punctuated.push(PathSegment {
+    ident: Ident::new("yaserde", Span::call_site()),
+    arguments: PathArguments::None,
+  });
+
+  // #[()]
+  let attributes = vec![Attribute {
+    pound_token: Pound {
+      spans: [Span::call_site()],
+    },
+    style: Outer,
+    bracket_token: Bracket {
+      span: Span::call_site(),
+    },
+    path: Path {
+      leading_colon: None,
+      segments: punctuated,
+    },
+    tokens: TokenStream::from_str("(attribute, flatten, default_namespace=\"example\", namespace=\"example: http://example.org\")").unwrap(),
+  }];
+
+  let attrs = YaSerdeAttribute::parse(&attributes);
+
+  let mut namespaces = BTreeMap::new();
+  namespaces.insert("example".to_string(), "http://example.org".to_string());
+
+  assert_eq!(
+    YaSerdeAttribute {
+      attribute: true,
+      default: None,
+      default_namespace: Some("example".to_string()),
+      flatten: true,
+      namespaces,
+      prefix: None,
+      root: None,
+      rename: None,
+      text: false,
     },
     attrs
   );

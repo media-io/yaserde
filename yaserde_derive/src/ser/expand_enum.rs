@@ -12,6 +12,7 @@ pub fn serialize(
   name: &Ident,
   root: &str,
   namespaces: &BTreeMap<String, String>,
+  default_namespace: &Option<String>,
 ) -> TokenStream {
   let write_enum_content: TokenStream = data_enum
     .variants
@@ -212,6 +213,13 @@ pub fn serialize(
   let add_namespaces: TokenStream = namespaces
     .iter()
     .map(|(prefix, namespace)| {
+      if let Some(dn) = default_namespace {
+        if dn == prefix {
+          return Some(quote!(
+            .default_ns(#namespace)
+          ));
+        }
+      }
       Some(quote!(
         .ns(#prefix, #namespace)
       ))

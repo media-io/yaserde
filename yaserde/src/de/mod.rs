@@ -1,3 +1,6 @@
+//! Generic data structure deserialization framework.
+//!
+
 use std::io::Read;
 use xml::name::OwnedName;
 use xml::reader::{EventReader, ParserConfig, XmlEvent};
