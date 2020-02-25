@@ -33,7 +33,7 @@ pub fn serialize(
         Fields::Unit => Some(quote! {
           &#name::#label => {
             let data_event = XmlEvent::characters(#label_name);
-            let _ret = writer.write(data_event);
+            writer.write(data_event).map_err(|e| e.to_string())?;
           }
         }),
         Fields::Named(ref fields) => {
@@ -50,7 +50,7 @@ pub fn serialize(
               if field_attrs.text {
                 return Some(quote!(
                   let data_event = XmlEvent::characters(&self.#field_label);
-                  let _ret = writer.write(data_event);
+                  writer.write(data_event).map_err(|e| e.to_string())?;
                 ));
               }
 
@@ -61,19 +61,21 @@ pub fn serialize(
               let field_label_name = renamed_field_label.unwrap().to_string();
 
               match get_field_type(field) {
-                Some(FieldType::FieldTypeString) => Some(quote! {
-                  match self {
-                    &#name::#label{ref #field_label, ..} => {
-                      let struct_start_event = XmlEvent::start_element(#field_label_name);
-                      let _ret = writer.write(struct_start_event);
+                Some(FieldType::FieldTypeString) => Some({
+                  quote! {
+                    match self {
+                      &#name::#label{ref #field_label, ..} => {
+                        let struct_start_event = XmlEvent::start_element(#field_label_name);
+                        writer.write(struct_start_event).map_err(|e| e.to_string())?;
 
-                      let data_event = XmlEvent::characters(#field_label);
-                      let _ret = writer.write(data_event);
+                        let data_event = XmlEvent::characters(#field_label);
+                        writer.write(data_event).map_err(|e| e.to_string())?;
 
-                      let struct_end_event = XmlEvent::end_element();
-                      let _ret = writer.write(struct_end_event);
-                    },
-                    _ => {},
+                        let struct_end_event = XmlEvent::end_element();
+                        writer.write(struct_end_event).map_err(|e| e.to_string())?;
+                      },
+                      _ => {},
+                    }
                   }
                 }),
                 Some(FieldType::FieldTypeStruct { .. }) => Some(quote! {
@@ -123,24 +125,24 @@ pub fn serialize(
               let write_element = |action: &TokenStream| {
                 quote! {
                   let struct_start_event = XmlEvent::start_element(#label_name);
-                  let _ret = writer.write(struct_start_event);
+                  writer.write(struct_start_event).map_err(|e| e.to_string())?;
 
                   #action
 
                   let struct_end_event = XmlEvent::end_element();
-                  let _ret = writer.write(struct_end_event);
+                  writer.write(struct_end_event).map_err(|e| e.to_string())?;
                 }
               };
 
               let write_string_chars = quote! {
                 let data_event = XmlEvent::characters(item);
-                let _ret = writer.write(data_event);
+                writer.write(data_event).map_err(|e| e.to_string())?;
               };
 
               let write_simple_type = write_element(&quote! {
                 let s = item.to_string();
                 let data_event = XmlEvent::characters(&s);
-                let _ret = writer.write(data_event);
+                writer.write(data_event).map_err(|e| e.to_string())?;
               });
 
               let serialize = quote! {
@@ -239,10 +241,10 @@ pub fn serialize(
         if !skip {
           if let Some(label) = writer.get_start_event_name() {
             let struct_start_event = XmlEvent::start_element(label.as_ref());
-            let _ret = writer.write(struct_start_event);
+            writer.write(struct_start_event).map_err(|e| e.to_string())?;
           } else {
             let struct_start_event = XmlEvent::start_element(#root)#add_namespaces;
-            let _ret = writer.write(struct_start_event);
+            writer.write(struct_start_event).map_err(|e| e.to_string())?;
           }
         }
 
@@ -252,7 +254,7 @@ pub fn serialize(
 
         if !skip {
           let struct_end_event = XmlEvent::end_element();
-          let _ret = writer.write(struct_end_event);
+          writer.write(struct_end_event).map_err(|e| e.to_string())?;
         }
 
         Ok(())

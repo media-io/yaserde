@@ -14,6 +14,7 @@ pub struct YaSerdeAttribute {
   pub prefix: Option<String>,
   pub root: Option<String>,
   pub rename: Option<String>,
+  pub skip_serializing_if: Option<String>,
   pub text: bool,
 }
 
@@ -41,6 +42,7 @@ impl YaSerdeAttribute {
     let mut prefix = None;
     let mut rename = None;
     let mut root = None;
+    let mut skip_serializing_if = None;
     let mut text = false;
 
     for attr in attrs.iter() {
@@ -85,6 +87,9 @@ impl YaSerdeAttribute {
                   "root" => {
                     root = get_value(&mut attr_iter);
                   }
+                  "skip_serializing_if" => {
+                    skip_serializing_if = get_value(&mut attr_iter);
+                  }
                   "text" => {
                     text = true;
                   }
@@ -106,6 +111,7 @@ impl YaSerdeAttribute {
       prefix,
       rename,
       root,
+      skip_serializing_if,
       text,
     }
   }
@@ -126,6 +132,7 @@ fn parse_empty_attributes() {
       prefix: None,
       root: None,
       rename: None,
+      skip_serializing_if: None,
       text: false,
     },
     attrs
@@ -175,6 +182,7 @@ fn parse_attributes() {
       prefix: None,
       root: None,
       rename: None,
+      skip_serializing_if: None,
       text: false,
     },
     attrs
@@ -228,6 +236,7 @@ fn parse_attributes_with_values() {
       prefix: None,
       root: None,
       rename: None,
+      skip_serializing_if: None,
       text: false,
     },
     attrs
