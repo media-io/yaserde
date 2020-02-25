@@ -16,7 +16,7 @@ macro_rules! convert_and_validate {
 }
 
 #[test]
-fn se_default_field_string() {
+fn ser_default_field_string() {
   fn default_string() -> String {
     "my_default_value".to_string()
   }
@@ -46,7 +46,7 @@ fn se_default_field_string() {
 }
 
 #[test]
-fn se_default_field_boolean() {
+fn ser_default_field_boolean() {
   fn default_boolean() -> bool {
     true
   }
@@ -67,7 +67,7 @@ fn se_default_field_boolean() {
 }
 
 #[test]
-fn se_default_field_number() {
+fn ser_default_field_number() {
   fn default_number() -> u8 {
     6
   }
@@ -84,7 +84,7 @@ fn se_default_field_number() {
 }
 
 #[test]
-fn se_default_attribute_string() {
+fn ser_default_attribute_string() {
   fn default_string() -> String {
     "my_default_value".to_string()
   }

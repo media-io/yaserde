@@ -82,7 +82,7 @@ fn ser_list_of_items() {
 }
 
 #[test]
-fn se_attributes() {
+fn ser_attributes() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(root = "base")]
   pub struct XmlStruct {
@@ -125,7 +125,7 @@ fn se_attributes() {
 }
 
 #[test]
-fn se_attributes_complex() {
+fn ser_attributes_complex() {
   mod other_mod {
     use super::*;
 
