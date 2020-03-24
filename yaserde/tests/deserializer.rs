@@ -854,3 +854,36 @@ fn de_subitem_issue_12_attributes() {
     Struct { id: 54 }
   );
 }
+
+#[test]
+fn de_subitem_issue_12_attributes_with_sub() {
+  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  pub struct SubStruct {
+    #[yaserde(attribute)]
+    id: i32,
+  }
+
+  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  pub struct Struct {
+    #[yaserde(attribute)]
+    id: i32,
+    sub1: SubStruct,
+    sub2: SubStruct,
+  }
+
+  convert_and_validate!(
+    r#"
+    <?xml version="1.0" encoding="utf-8"?>
+    <Struct id="54">
+      <sub1 id="63" />
+      <sub2 id="72" />
+    </Struct>
+    "#,
+    Struct,
+    Struct {
+      id: 54,
+      sub1: SubStruct { id: 63 },
+      sub2: SubStruct { id: 72 }
+    }
+  );
+}
