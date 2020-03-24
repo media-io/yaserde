@@ -423,7 +423,7 @@ pub fn parse(
                 //   return Err(format!("unknown key {}", name))
                 // }
               }
-              if !skipped {
+              if depth == 0 && !skipped { // Look for attributes only at element start
                 #attributes_loading
               }
               depth += 1;
