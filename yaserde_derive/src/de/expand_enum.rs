@@ -25,6 +25,7 @@ pub fn parse(
     use yaserde::Visitor;
     #[allow(unknown_lints, unused_imports)]
     use std::str::FromStr;
+    use log::debug;
 
     impl YaDeserialize for #name {
       #[allow(unused_variables)]
