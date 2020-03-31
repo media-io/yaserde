@@ -368,7 +368,7 @@ pub fn serialize(
           }),
           FieldType::FieldTypeStruct { .. } => Some(quote! {
             for item in &self.#label {
-              writer.set_start_event_name(None);
+              writer.set_start_event_name(Some(#label_name.to_string()));
               writer.set_skip_start_end(false);
               item.serialize(writer)?;
             }
