@@ -214,18 +214,15 @@ fn build_unnamed_visitor_calls(
         Some(quote! {
           let visitor = #visitor_label{};
 
-          if let XmlEvent::StartElement {name, ..} = reader.peek()?.clone() {
-            if let Some(namespace) = name.namespace {
-              match namespace.as_str() {
-                bad_ns => {
-                  let msg = format!("bad field namespace for {}, found {}",
-                    name.local_name.as_str(),
-                    bad_ns);
-                  return Err(msg);
-                }
+          if let Some(namespace) = name.namespace.as_ref() {
+            match namespace.as_str() {
+              bad_ns => {
+                let msg = format!("bad field namespace for {}, found {}",
+                  name.local_name.as_str(),
+                  bad_ns);
+                return Err(msg);
               }
             }
-            reader.set_map_value()
           }
 
           let result = reader.read_inner_value::<#field_type, _>(|reader| {
@@ -248,7 +245,6 @@ fn build_unnamed_visitor_calls(
 
       let call_struct_visitor = |struct_name, action| {
         Some(quote! {
-          reader.set_map_value();
           match #struct_name::deserialize(reader) {
             Ok(value) => {
               #action;

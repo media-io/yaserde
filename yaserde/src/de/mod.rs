@@ -18,7 +18,6 @@ pub struct Deserializer<R: Read> {
   depth: usize,
   reader: EventReader<R>,
   peeked: Option<XmlEvent>,
-  is_map_value: bool,
 }
 
 impl<'de, R: Read> Deserializer<R> {
@@ -27,7 +26,6 @@ impl<'de, R: Read> Deserializer<R> {
       depth: 0,
       reader,
       peeked: None,
-      is_map_value: false,
     }
   }
 
@@ -105,28 +103,16 @@ impl<'de, R: Read> Deserializer<R> {
     self.depth
   }
 
-  pub fn set_map_value(&mut self) {
-    self.is_map_value = true;
-  }
-
-  pub fn unset_map_value(&mut self) -> bool {
-    ::std::mem::replace(&mut self.is_map_value, false)
-  }
-
   pub fn read_inner_value<T, F: FnOnce(&mut Self) -> Result<T, String>>(
     &mut self,
     f: F,
   ) -> Result<T, String> {
-    if self.unset_map_value() {
-      if let Ok(XmlEvent::StartElement { name, .. }) = self.next_event() {
-        let result = f(self)?;
-        self.expect_end_element(&name)?;
-        Ok(result)
-      } else {
-        Err("Internal error: Bad Event".to_string())
-      }
+    if let Ok(XmlEvent::StartElement { name, .. }) = self.next_event() {
+      let result = f(self)?;
+      self.expect_end_element(&name)?;
+      Ok(result)
     } else {
-      f(self)
+      Err("Internal error: Bad Event".to_string())
     }
   }
 

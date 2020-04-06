@@ -883,3 +883,56 @@ fn de_subitem_issue_12_attributes_with_sub() {
     }
   );
 }
+
+#[test]
+fn de_same_field_name_sub() {
+  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  pub struct SubStruct {
+    sub: Option<i32>,
+  }
+
+  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  pub struct Struct {
+    sub: SubStruct,
+  }
+
+  convert_and_validate!("<Struct><sub /></Struct>", Struct, Struct::default());
+
+  convert_and_validate!(
+    "<Struct><sub><sub>42</sub></sub></Struct>",
+    Struct,
+    Struct {
+      sub: SubStruct { sub: Some(42) }
+    }
+  );
+}
+
+#[test]
+fn de_same_field_name_sub_sub() {
+  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  pub struct SubSubStruct {
+    sub: i32,
+  }
+
+  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  pub struct SubStruct {
+    sub: Option<SubSubStruct>,
+  }
+
+  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  pub struct Struct {
+    sub: SubStruct,
+  }
+
+  convert_and_validate!("<Struct><sub /></Struct>", Struct, Struct::default());
+
+  convert_and_validate!(
+    "<Struct><sub><sub><sub>42</sub></sub></sub></Struct>",
+    Struct,
+    Struct {
+      sub: SubStruct {
+        sub: Some(SubSubStruct { sub: 42 })
+      }
+    }
+  );
+}
