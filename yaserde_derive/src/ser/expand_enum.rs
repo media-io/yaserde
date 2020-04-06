@@ -61,14 +61,26 @@ pub fn serialize(
               let field_label_name = renamed_field_label.unwrap().to_string();
 
               match get_field_type(field) {
-                Some(FieldType::FieldTypeString) => Some({
+                Some(FieldType::FieldTypeString)
+                | Some(FieldType::FieldTypeBool)
+                | Some(FieldType::FieldTypeU8)
+                | Some(FieldType::FieldTypeI8)
+                | Some(FieldType::FieldTypeU16)
+                | Some(FieldType::FieldTypeI16)
+                | Some(FieldType::FieldTypeU32)
+                | Some(FieldType::FieldTypeI32)
+                | Some(FieldType::FieldTypeF32)
+                | Some(FieldType::FieldTypeU64)
+                | Some(FieldType::FieldTypeI64)
+                | Some(FieldType::FieldTypeF64) => Some({
                   quote! {
                     match self {
                       &#name::#label{ref #field_label, ..} => {
                         let struct_start_event = XmlEvent::start_element(#field_label_name);
                         writer.write(struct_start_event).map_err(|e| e.to_string())?;
 
-                        let data_event = XmlEvent::characters(#field_label);
+                        let string_value = #field_label.to_string();
+                        let data_event = XmlEvent::characters(&string_value);
                         writer.write(data_event).map_err(|e| e.to_string())?;
 
                         let struct_end_event = XmlEvent::end_element();
