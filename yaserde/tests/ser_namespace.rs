@@ -1,6 +1,3 @@
-extern crate log;
-extern crate xml;
-extern crate yaserde;
 #[macro_use]
 extern crate yaserde_derive;
 
@@ -171,6 +168,29 @@ fn ser_struct_default_namespace_via_attribute() {
     namespace = "ttm: http://www.w3.org/ns/ttml#metadata"
   )]
   pub struct XmlStruct {
+    item: String,
+  }
+
+  let model = XmlStruct {
+    item: "something".to_string(),
+  };
+
+  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><tt xmlns=\"http://www.w3.org/ns/ttml\" xmlns:ttm=\"http://www.w3.org/ns/ttml#metadata\"><item>something</item></tt>";
+  convert_and_validate!(model, content);
+}
+
+#[test]
+fn ser_struct_default_namespace_via_attribute_with_prefix() {
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(
+    root = "tt",
+    prefix = "TTML",
+    default_namespace = "TTML",
+    namespace = "TTML: http://www.w3.org/ns/ttml",
+    namespace = "ttm: http://www.w3.org/ns/ttml#metadata"
+  )]
+  pub struct XmlStruct {
+    #[yaserde(prefix = "TTML")]
     item: String,
   }
 

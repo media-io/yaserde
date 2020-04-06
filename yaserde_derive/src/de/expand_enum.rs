@@ -1,5 +1,5 @@
-use attribute::*;
-use field_type::*;
+use crate::attribute::*;
+use crate::field_type::*;
 use proc_macro2::TokenStream;
 use std::collections::BTreeMap;
 use syn::spanned::Spanned;
