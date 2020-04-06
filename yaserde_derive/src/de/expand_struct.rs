@@ -179,7 +179,6 @@ pub fn parse(
       let visit_struct = |struct_name: syn::Path, action: TokenStream| {
         Some(quote! {
           #label_name => {
-            reader.set_map_value();
             let value = #struct_name::deserialize(reader)?;
             #value_label #action;
             let _root = reader.next_event();
@@ -493,24 +492,17 @@ fn build_call_visitor(
     #label_name => {
       let visitor = #visitor_label{};
 
-      if let XmlEvent::StartElement {name, ..} = reader.peek()?.clone() {
-        if let Some(namespace) = name.namespace {
-          match namespace.as_str() {
-            #namespaces_matches
-            bad_ns => {
-              let msg = format!("bad field namespace for {}, found {}", name.local_name.as_str(), bad_ns);
-              return Err(msg);
-            }
+      if let Some(namespace) = name.namespace.as_ref() {
+        match namespace.as_str() {
+          #namespaces_matches
+          bad_ns => {
+            let msg = format!("bad field namespace for {}, found {}", name.local_name.as_str(), bad_ns);
+            return Err(msg);
           }
         }
-        reader.set_map_value()
       }
 
       let result = reader.read_inner_value::<#field_type, _>(|reader| {
-        if let XmlEvent::EndElement { .. } = *reader.peek()? {
-          return visitor.#visitor("");
-        }
-
         if let Ok(XmlEvent::Characters(s)) = reader.next_event() {
           visitor.#visitor(&s)
         } else {
