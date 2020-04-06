@@ -5,7 +5,7 @@
 
 #[macro_use]
 extern crate log;
-extern crate xml;
+
 #[cfg(feature = "yaserde_derive")]
 #[allow(unused_imports)]
 #[macro_use]

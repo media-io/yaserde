@@ -1,6 +1,3 @@
-extern crate log;
-extern crate xml;
-extern crate yaserde;
 #[macro_use]
 extern crate yaserde_derive;
 
@@ -193,7 +190,7 @@ fn ser_struct_default_namespace_via_attribute_with_prefix() {
     namespace = "ttm: http://www.w3.org/ns/ttml#metadata"
   )]
   pub struct XmlStruct {
-    #[yaserde(prefix="TTML")]
+    #[yaserde(prefix = "TTML")]
     item: String,
   }
 

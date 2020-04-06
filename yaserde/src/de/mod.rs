@@ -1,10 +1,10 @@
 //! Generic data structure deserialization framework.
 //!
 
+use crate::YaDeserialize;
 use std::io::Read;
 use xml::name::OwnedName;
 use xml::reader::{EventReader, ParserConfig, XmlEvent};
-use YaDeserialize;
 
 pub fn from_str<T: YaDeserialize>(s: &str) -> Result<T, String> {
   from_reader(s.as_bytes())

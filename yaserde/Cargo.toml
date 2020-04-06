@@ -9,6 +9,7 @@ repository = "https://github.com/media-io/yaserde"
 homepage = "https://github.com/media-io/yaserde"
 documentation = "https://docs.rs/yaserde"
 readme = "../README.md"
+edition = "2018"
 
 [dependencies]
 yaserde_derive = { version = "0.3.11", path = "../yaserde_derive", optional = true }

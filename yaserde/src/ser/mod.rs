@@ -1,12 +1,12 @@
 //! Generic data structure serialization framework.
 //!
 
+use crate::YaSerialize;
 use std::io::{Cursor, Write};
 use std::str;
 use xml;
 use xml::writer::XmlEvent;
 use xml::{EmitterConfig, EventWriter};
-use YaSerialize;
 
 pub fn to_string<T: YaSerialize>(model: &T) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());

@@ -9,6 +9,7 @@ repository = "https://github.com/media-io/yaserde"
 homepage = "https://github.com/media-io/yaserde"
 documentation = "https://docs.rs/yaserde"
 readme = "../README.md"
+edition = "2018"
 
 [dependencies]
 syn = { version = "~1.0", features = ["visit", "extra-traits"] }

@@ -2,7 +2,7 @@ pub mod build_default_value;
 pub mod expand_enum;
 pub mod expand_struct;
 
-use attribute;
+use crate::attribute;
 use proc_macro2::TokenStream;
 use syn;
 use syn::Ident;

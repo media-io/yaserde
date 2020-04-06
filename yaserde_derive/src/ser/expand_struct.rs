@@ -1,13 +1,12 @@
-use attribute::*;
-use field_type::*;
+use crate::attribute::*;
+use crate::field_type::*;
+use crate::ser::element::*;
 use proc_macro2::TokenStream;
 use std::collections::BTreeMap;
 use std::string::ToString;
 use syn::spanned::Spanned;
 use syn::DataStruct;
 use syn::Ident;
-
-use ser::element::*;
 
 pub fn serialize(
   data_struct: &DataStruct,
