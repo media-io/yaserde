@@ -179,9 +179,15 @@ pub fn parse(
       let visit_struct = |struct_name: syn::Path, action: TokenStream| {
         Some(quote! {
           #label_name => {
-            let value = #struct_name::deserialize(reader)?;
-            #value_label #action;
-            let _root = reader.next_event();
+            if depth == 0 {
+              // Don't count current struct's StartElement as substruct's StartElement
+              let _root = reader.next_event();
+            }
+            if let Ok(XmlEvent::StartElement { .. }) = reader.peek() {
+              // If substruct's start element found then deserialize substruct
+              let value = #struct_name::deserialize(reader)?;
+              #value_label #action;
+            }
           }
         })
       };
@@ -503,8 +509,10 @@ fn build_call_visitor(
       }
 
       let result = reader.read_inner_value::<#field_type, _>(|reader| {
-        if let Ok(XmlEvent::Characters(s)) = reader.next_event() {
-          visitor.#visitor(&s)
+        if let Ok(XmlEvent::Characters(s)) = reader.peek() {
+          let val = visitor.#visitor(&s);
+          let _event = reader.next_event()?;
+          val
         } else {
           Err(format!("unable to parse content for {}", #label_name))
         }
