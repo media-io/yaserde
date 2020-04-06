@@ -27,7 +27,7 @@ pub fn serialize(
 
       let label = &field.ident;
 
-      let label_name = build_label_name(&field, &field_attrs);
+      let label_name = build_label_name(&field, &field_attrs, default_namespace);
 
       get_field_type(field).and_then(|f| match f {
         FieldType::FieldTypeString
@@ -240,7 +240,7 @@ pub fn serialize(
         ));
       }
 
-      let label_name = build_label_name(&field, &field_attrs);
+      let label_name = build_label_name(&field, &field_attrs, default_namespace);
       let conditions = condition_generator(label, &field_attrs);
 
       get_field_type(field).and_then(|f| match f {
@@ -411,16 +411,22 @@ pub fn serialize(
   }
 }
 
-fn build_label_name(field: &syn::Field, field_attrs: &YaSerdeAttribute) -> String {
-  format!(
-    "{}{}",
-    field_attrs
-      .prefix
-      .clone()
-      .map_or("".to_string(), |prefix| prefix + ":"),
+fn build_label_name(field: &syn::Field, field_attrs: &YaSerdeAttribute, default_namespace: &Option<String>) -> String {
+  let prefix =
+    if default_namespace == &field_attrs.prefix {
+      "".to_string()
+    } else {
+      field_attrs
+        .prefix
+        .clone()
+        .map_or("".to_string(), |prefix| prefix + ":")
+    };
+
+  let label =
     field_attrs
       .rename
       .clone()
-      .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string())
-  )
+      .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string());
+
+  format!("{}{}", prefix, label)
 }
