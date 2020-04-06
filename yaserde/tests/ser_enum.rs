@@ -190,7 +190,8 @@ fn ser_unnamed_enum() {
     color: Enum::Field(String::from("some_text")),
   };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><base><color><Field>some_text</Field></color></base>"#;
+  let content =
+    r#"<?xml version="1.0" encoding="utf-8"?><base><color><Field>some_text</Field></color></base>"#;
   convert_and_validate!(model, content);
 
   let model = XmlStruct {
@@ -279,7 +280,6 @@ fn ser_unnamed_enum() {
     color: Enum::ToRenameDots(84),
   };
 
-  let content =
-    r#"<?xml version="1.0" encoding="utf-8"?><base><color><renamed.with.dots>84</renamed.with.dots></color></base>"#;
+  let content = r#"<?xml version="1.0" encoding="utf-8"?><base><color><renamed.with.dots>84</renamed.with.dots></color></base>"#;
   convert_and_validate!(model, content);
 }
