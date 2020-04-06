@@ -411,22 +411,24 @@ pub fn serialize(
   }
 }
 
-fn build_label_name(field: &syn::Field, field_attrs: &YaSerdeAttribute, default_namespace: &Option<String>) -> String {
-  let prefix =
-    if default_namespace == &field_attrs.prefix {
-      "".to_string()
-    } else {
-      field_attrs
-        .prefix
-        .clone()
-        .map_or("".to_string(), |prefix| prefix + ":")
-    };
-
-  let label =
+fn build_label_name(
+  field: &syn::Field,
+  field_attrs: &YaSerdeAttribute,
+  default_namespace: &Option<String>,
+) -> String {
+  let prefix = if default_namespace == &field_attrs.prefix {
+    "".to_string()
+  } else {
     field_attrs
-      .rename
+      .prefix
       .clone()
-      .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string());
+      .map_or("".to_string(), |prefix| prefix + ":")
+  };
+
+  let label = field_attrs
+    .rename
+    .clone()
+    .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string());
 
   format!("{}{}", prefix, label)
 }
