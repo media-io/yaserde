@@ -1,7 +1,6 @@
 use crate::attribute::*;
 use crate::field_type::*;
 use proc_macro2::TokenStream;
-use std::collections::BTreeMap;
 use syn::spanned::Spanned;
 use syn::DataEnum;
 use syn::Fields;
@@ -11,7 +10,7 @@ pub fn parse(
   data_enum: &DataEnum,
   name: &Ident,
   root: &str,
-  _namespaces: &BTreeMap<String, String>,
+  root_attributes: &YaSerdeAttribute,
 ) -> TokenStream {
   let match_to_enum: TokenStream = data_enum
     .variants
@@ -19,6 +18,8 @@ pub fn parse(
     .map(|variant| parse_variant(variant, name))
     .filter_map(|f| f)
     .collect();
+
+  let flatten = root_attributes.flatten;
 
   quote! {
     use xml::reader::XmlEvent;
@@ -47,7 +48,7 @@ pub fn parse(
 
               match name.local_name.as_str() {
                 #match_to_enum
-                named_element => {
+                _named_element => {
                   let _root = reader.next_event();
                 }
               }
@@ -67,6 +68,13 @@ pub fn parse(
             }
             XmlEvent::Characters(ref text_content) => {
               let _root = reader.next_event();
+            }
+            XmlEvent::EndDocument => {
+              if #flatten {
+                break;
+              }
+
+              return Err(format!("End of document, missing some content ?"))
             }
             event => {
               return Err(format!("unknown event {:?}", event))

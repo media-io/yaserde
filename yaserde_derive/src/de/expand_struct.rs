@@ -11,13 +11,13 @@ pub fn parse(
   data_struct: &DataStruct,
   name: &Ident,
   root: &str,
-  prefix: &Option<String>,
-  namespaces: &BTreeMap<String, String>,
+  root_attributes: &YaSerdeAttribute,
 ) -> TokenStream {
-  let namespaces_matches: TokenStream = namespaces
+  let namespaces_matches: TokenStream = root_attributes
+    .namespaces
     .iter()
     .map(|(p, ns)| {
-      if prefix.as_ref() == Some(p) {
+      if root_attributes.prefix.as_ref() == Some(p) {
         Some(quote!(#ns => {}))
       } else {
         None
@@ -199,7 +199,7 @@ pub fn parse(
           &action,
           &field_attrs,
           label,
-          &namespaces,
+          &root_attributes.namespaces,
           field.span(),
         )
       };
@@ -368,6 +368,8 @@ pub fn parse(
     build_code_for_unused_xml_events(&call_flatten_visitors)
   };
 
+  let flatten = root_attributes.flatten;
+
   quote! {
     use xml::reader::{XmlEvent, EventReader};
     use xml::writer::EventWriter;
@@ -407,7 +409,6 @@ pub fn parse(
 
         loop {
           let event = reader.peek()?.to_owned();
-
           match event {
             XmlEvent::StartElement{ref name, ref attributes, ..} => {
               let mut skipped = false;
@@ -442,6 +443,11 @@ pub fn parse(
               let event = reader.next_event()?;
               #write_unused
               depth -= 1;
+            }
+            XmlEvent::EndDocument => {
+              if #flatten {
+                break;
+              }
             }
             XmlEvent::Characters(ref text_content) => {
               #set_text
