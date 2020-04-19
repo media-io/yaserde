@@ -2,7 +2,7 @@ pub mod element;
 pub mod expand_enum;
 pub mod expand_struct;
 
-use crate::attribute;
+use crate::attribute::YaSerdeAttribute;
 use proc_macro2::TokenStream;
 use syn;
 use syn::Ident;
@@ -12,13 +12,13 @@ pub fn expand_derive_serialize(ast: &syn::DeriveInput) -> Result<TokenStream, St
   let attrs = &ast.attrs;
   let data = &ast.data;
 
-  let root_attrs = attribute::YaSerdeAttribute::parse(attrs);
+  let root_attrs = YaSerdeAttribute::parse(attrs);
   let root = root_attrs.clone().root.unwrap_or_else(|| name.to_string());
 
   let prefix = if root_attrs.default_namespace == root_attrs.prefix {
     "".to_string()
   } else {
-    root_attrs
+    root_attrs.clone()
       .prefix
       .map_or("".to_string(), |prefix| prefix + ":")
   };
@@ -30,15 +30,13 @@ pub fn expand_derive_serialize(ast: &syn::DeriveInput) -> Result<TokenStream, St
       data_struct,
       name,
       &root,
-      &root_attrs.namespaces,
-      &root_attrs.default_namespace,
+      &root_attrs,
     ),
     syn::Data::Enum(ref data_enum) => expand_enum::serialize(
       data_enum,
       name,
       &root,
-      &root_attrs.namespaces,
-      &root_attrs.default_namespace,
+      &root_attrs,
     ),
     syn::Data::Union(ref _data_union) => unimplemented!(),
   };

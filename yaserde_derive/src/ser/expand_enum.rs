@@ -1,7 +1,6 @@
 use crate::attribute::*;
 use crate::field_type::*;
 use proc_macro2::TokenStream;
-use std::collections::BTreeMap;
 use syn::spanned::Spanned;
 use syn::DataEnum;
 use syn::Fields;
@@ -11,8 +10,7 @@ pub fn serialize(
   data_enum: &DataEnum,
   name: &Ident,
   root: &str,
-  namespaces: &BTreeMap<String, String>,
-  default_namespace: &Option<String>,
+  root_attributes: &YaSerdeAttribute,
 ) -> TokenStream {
   let write_enum_content: TokenStream = data_enum
     .variants
@@ -224,10 +222,10 @@ pub fn serialize(
     .filter_map(|x| x)
     .collect();
 
-  let add_namespaces: TokenStream = namespaces
+  let add_namespaces: TokenStream = root_attributes.namespaces
     .iter()
     .map(|(prefix, namespace)| {
-      if let Some(dn) = default_namespace {
+      if let Some(dn) = &root_attributes.default_namespace {
         if dn == prefix {
           return Some(quote!(
             .default_ns(#namespace)
@@ -241,6 +239,8 @@ pub fn serialize(
     .filter_map(|x| x)
     .collect();
 
+  let flatten = root_attributes.flatten;
+
   quote! {
     use xml::writer::XmlEvent;
 
@@ -250,7 +250,7 @@ pub fn serialize(
         -> Result<(), String> {
         let skip = writer.skip_start_end();
 
-        if !skip {
+        if !#flatten && !skip {
           if let Some(label) = writer.get_start_event_name() {
             let struct_start_event = XmlEvent::start_element(label.as_ref());
             writer.write(struct_start_event).map_err(|e| e.to_string())?;
@@ -264,7 +264,7 @@ pub fn serialize(
           #write_enum_content
         }
 
-        if !skip {
+        if !#flatten && !skip {
           let struct_end_event = XmlEvent::end_element();
           writer.write(struct_end_event).map_err(|e| e.to_string())?;
         }
