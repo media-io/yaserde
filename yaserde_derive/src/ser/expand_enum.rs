@@ -1,5 +1,9 @@
 use crate::attribute::*;
 use crate::field_type::*;
+use crate::ser::{
+  implement_deserializer::implement_deserializer,
+  label::build_label_name,
+};
 use proc_macro2::TokenStream;
 use syn::spanned::Spanned;
 use syn::DataEnum;
@@ -12,20 +16,32 @@ pub fn serialize(
   root: &str,
   root_attributes: &YaSerdeAttribute,
 ) -> TokenStream {
-  let write_enum_content: TokenStream = data_enum
+  let inner_enum_inspector = inner_enum_inspector(data_enum, name, root_attributes);
+
+  implement_deserializer(
+    name,
+    root,
+    root_attributes,
+    quote!(),
+    quote!(match self {
+      #inner_enum_inspector
+    }),
+  )
+}
+
+fn inner_enum_inspector(
+  data_enum: &DataEnum,
+  name: &Ident,
+  root_attributes: &YaSerdeAttribute,
+  ) -> TokenStream {
+  data_enum
     .variants
     .iter()
     .map(|variant| {
-      let label = &variant.ident;
-      let label_name = {
-        let variant_attrs = YaSerdeAttribute::parse(&variant.attrs);
-        let prefix = variant_attrs.prefix.map_or(String::new(), |p| p + ":");
-        let renamed_label = variant_attrs
-          .rename
-          .unwrap_or_else(|| variant.ident.to_string());
+      let variant_attrs = YaSerdeAttribute::parse(&variant.attrs);
 
-        prefix + renamed_label.as_str()
-      };
+      let label = &variant.ident;
+      let label_name = build_label_name(&label, &variant_attrs, &root_attributes.default_namespace);
 
       match variant.fields {
         Fields::Unit => Some(quote! {
@@ -220,58 +236,5 @@ pub fn serialize(
       }
     })
     .filter_map(|x| x)
-    .collect();
-
-  let add_namespaces: TokenStream = root_attributes
-    .namespaces
-    .iter()
-    .map(|(prefix, namespace)| {
-      if let Some(dn) = &root_attributes.default_namespace {
-        if dn == prefix {
-          return Some(quote!(
-            .default_ns(#namespace)
-          ));
-        }
-      }
-      Some(quote!(
-        .ns(#prefix, #namespace)
-      ))
-    })
-    .filter_map(|x| x)
-    .collect();
-
-  let flatten = root_attributes.flatten;
-
-  quote! {
-    use xml::writer::XmlEvent;
-
-    impl YaSerialize for #name {
-      #[allow(unused_variables)]
-      fn serialize<W: Write>(&self, writer: &mut yaserde::ser::Serializer<W>)
-        -> Result<(), String> {
-        let skip = writer.skip_start_end();
-
-        if !#flatten && !skip {
-          if let Some(label) = writer.get_start_event_name() {
-            let struct_start_event = XmlEvent::start_element(label.as_ref());
-            writer.write(struct_start_event).map_err(|e| e.to_string())?;
-          } else {
-            let struct_start_event = XmlEvent::start_element(#root)#add_namespaces;
-            writer.write(struct_start_event).map_err(|e| e.to_string())?;
-          }
-        }
-
-        match self {
-          #write_enum_content
-        }
-
-        if !#flatten && !skip {
-          let struct_end_event = XmlEvent::end_element();
-          writer.write(struct_end_event).map_err(|e| e.to_string())?;
-        }
-
-        Ok(())
-      }
-    }
-  }
+    .collect()
 }
