@@ -222,7 +222,8 @@ pub fn serialize(
     .filter_map(|x| x)
     .collect();
 
-  let add_namespaces: TokenStream = root_attributes.namespaces
+  let add_namespaces: TokenStream = root_attributes
+    .namespaces
     .iter()
     .map(|(prefix, namespace)| {
       if let Some(dn) = &root_attributes.default_namespace {

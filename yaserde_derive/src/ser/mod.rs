@@ -18,7 +18,8 @@ pub fn expand_derive_serialize(ast: &syn::DeriveInput) -> Result<TokenStream, St
   let prefix = if root_attrs.default_namespace == root_attrs.prefix {
     "".to_string()
   } else {
-    root_attrs.clone()
+    root_attrs
+      .clone()
       .prefix
       .map_or("".to_string(), |prefix| prefix + ":")
   };
@@ -26,18 +27,10 @@ pub fn expand_derive_serialize(ast: &syn::DeriveInput) -> Result<TokenStream, St
   let root = format!("{}{}", prefix, root);
 
   let impl_block = match *data {
-    syn::Data::Struct(ref data_struct) => expand_struct::serialize(
-      data_struct,
-      name,
-      &root,
-      &root_attrs,
-    ),
-    syn::Data::Enum(ref data_enum) => expand_enum::serialize(
-      data_enum,
-      name,
-      &root,
-      &root_attrs,
-    ),
+    syn::Data::Struct(ref data_struct) => {
+      expand_struct::serialize(data_struct, name, &root, &root_attrs)
+    }
+    syn::Data::Enum(ref data_enum) => expand_enum::serialize(data_enum, name, &root, &root_attrs),
     syn::Data::Union(ref _data_union) => unimplemented!(),
   };
 
