@@ -1,8 +1,8 @@
 pub mod element;
 pub mod expand_enum;
 pub mod expand_struct;
-pub mod label;
 pub mod implement_deserializer;
+pub mod label;
 pub mod namespace;
 
 use crate::attribute::YaSerdeAttribute;

@@ -1,4 +1,3 @@
-
 use crate::attribute::YaSerdeAttribute;
 use proc_macro2::Ident;
 

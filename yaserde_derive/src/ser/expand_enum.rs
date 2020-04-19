@@ -1,9 +1,6 @@
 use crate::attribute::*;
 use crate::field_type::*;
-use crate::ser::{
-  implement_deserializer::implement_deserializer,
-  label::build_label_name,
-};
+use crate::ser::{implement_deserializer::implement_deserializer, label::build_label_name};
 use proc_macro2::TokenStream;
 use syn::spanned::Spanned;
 use syn::DataEnum;
@@ -33,7 +30,7 @@ fn inner_enum_inspector(
   data_enum: &DataEnum,
   name: &Ident,
   root_attributes: &YaSerdeAttribute,
-  ) -> TokenStream {
+) -> TokenStream {
   data_enum
     .variants
     .iter()

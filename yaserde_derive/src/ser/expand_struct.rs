@@ -1,9 +1,7 @@
 use crate::attribute::*;
 use crate::field_type::*;
 use crate::ser::{
-  element::*,
-  implement_deserializer::implement_deserializer,
-  label::build_label_name,
+  element::*, implement_deserializer::implement_deserializer, label::build_label_name,
 };
 use proc_macro2::TokenStream;
 use syn::spanned::Spanned;
@@ -27,7 +25,11 @@ pub fn serialize(
 
       let label = &field.ident;
 
-      let label_name = build_label_name(&label.as_ref().unwrap(), &field_attrs, &root_attributes.default_namespace);
+      let label_name = build_label_name(
+        &label.as_ref().unwrap(),
+        &field_attrs,
+        &root_attributes.default_namespace,
+      );
 
       get_field_type(field).and_then(|f| match f {
         FieldType::FieldTypeString
@@ -223,7 +225,11 @@ pub fn serialize(
         ));
       }
 
-      let label_name = build_label_name(&label.as_ref().unwrap(), &field_attrs, &root_attributes.default_namespace);
+      let label_name = build_label_name(
+        &label.as_ref().unwrap(),
+        &field_attrs,
+        &root_attributes.default_namespace,
+      );
       let conditions = condition_generator(label, &field_attrs);
 
       get_field_type(field).and_then(|f| match f {
