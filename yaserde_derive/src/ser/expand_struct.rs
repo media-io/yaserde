@@ -1,8 +1,9 @@
 use crate::attribute::*;
 use crate::field_type::*;
-use crate::ser::element::*;
+use crate::ser::{
+  element::*, implement_deserializer::implement_deserializer, label::build_label_name,
+};
 use proc_macro2::TokenStream;
-use std::string::ToString;
 use syn::spanned::Spanned;
 use syn::DataStruct;
 use syn::Ident;
@@ -24,7 +25,11 @@ pub fn serialize(
 
       let label = &field.ident;
 
-      let label_name = build_label_name(&field, &field_attrs, &root_attributes.default_namespace);
+      let label_name = build_label_name(
+        &label.as_ref().unwrap(),
+        &field_attrs,
+        &root_attributes.default_namespace,
+      );
 
       get_field_type(field).and_then(|f| match f {
         FieldType::FieldTypeString
@@ -203,24 +208,6 @@ pub fn serialize(
     .filter_map(|x| x)
     .collect();
 
-  let add_namespaces: TokenStream = root_attributes
-    .namespaces
-    .iter()
-    .map(|(prefix, namespace)| {
-      if let Some(dn) = &root_attributes.default_namespace {
-        if dn == prefix {
-          return Some(quote!(
-            .default_ns(#namespace)
-          ));
-        }
-      }
-      Some(quote!(
-        .ns(#prefix, #namespace)
-      ))
-    })
-    .filter_map(|x| x)
-    .collect();
-
   let struct_inspector: TokenStream = data_struct
     .fields
     .iter()
@@ -238,7 +225,11 @@ pub fn serialize(
         ));
       }
 
-      let label_name = build_label_name(&field, &field_attrs, &root_attributes.default_namespace);
+      let label_name = build_label_name(
+        &label.as_ref().unwrap(),
+        &field_attrs,
+        &root_attributes.default_namespace,
+      );
       let conditions = condition_generator(label, &field_attrs);
 
       get_field_type(field).and_then(|f| match f {
@@ -380,55 +371,11 @@ pub fn serialize(
     .filter_map(|x| x)
     .collect();
 
-  let flatten = root_attributes.flatten;
-
-  quote! {
-    use xml::writer::XmlEvent;
-
-    impl YaSerialize for #name {
-      #[allow(unused_variables)]
-      fn serialize<W: Write>(&self, writer: &mut yaserde::ser::Serializer<W>)
-        -> Result<(), String> {
-        let skip = writer.skip_start_end();
-
-        if !#flatten && !skip {
-          let yaserde_label = writer.get_start_event_name().unwrap_or_else(|| #root.to_string());
-          let struct_start_event = XmlEvent::start_element(yaserde_label.as_ref())#add_namespaces;
-          #build_attributes
-          writer.write(struct_start_event).map_err(|e| e.to_string())?;
-        }
-
-        #struct_inspector
-
-        if !#flatten && !skip {
-          let struct_end_event = XmlEvent::end_element();
-          writer.write(struct_end_event).map_err(|e| e.to_string())?;
-        }
-
-        Ok(())
-      }
-    }
-  }
-}
-
-fn build_label_name(
-  field: &syn::Field,
-  field_attrs: &YaSerdeAttribute,
-  default_namespace: &Option<String>,
-) -> String {
-  let prefix = if default_namespace == &field_attrs.prefix {
-    "".to_string()
-  } else {
-    field_attrs
-      .prefix
-      .clone()
-      .map_or("".to_string(), |prefix| prefix + ":")
-  };
-
-  let label = field_attrs
-    .rename
-    .clone()
-    .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string());
-
-  format!("{}{}", prefix, label)
+  implement_deserializer(
+    name,
+    root,
+    root_attributes,
+    build_attributes,
+    struct_inspector,
+  )
 }

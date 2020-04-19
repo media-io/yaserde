@@ -1,6 +1,9 @@
 pub mod element;
 pub mod expand_enum;
 pub mod expand_struct;
+pub mod implement_deserializer;
+pub mod label;
+pub mod namespace;
 
 use crate::attribute::YaSerdeAttribute;
 use proc_macro2::TokenStream;
