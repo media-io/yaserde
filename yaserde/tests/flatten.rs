@@ -3,11 +3,12 @@ extern crate yaserde;
 #[macro_use]
 extern crate yaserde_derive;
 
-use std::io::Write;
-use yaserde::YaSerialize;
+use std::io::{Read, Write};
+
+use yaserde::{YaDeserialize, YaSerialize};
 
 #[test]
-fn ser_flatten() {
+fn basic_flatten() {
   #[derive(Default, PartialEq, Debug, YaSerialize)]
   struct DateTime {
     #[yaserde(flatten)]
@@ -90,8 +91,8 @@ fn ser_flatten() {
 }
 
 #[test]
-fn ser_root_flatten_struct() {
-  #[derive(YaSerialize, PartialEq, Debug)]
+fn root_flatten_struct() {
+  #[derive(YaDeserialize, YaSerialize, PartialEq, Debug)]
   #[yaserde(flatten)]
   pub struct Content {
     binary_data: String,
@@ -102,12 +103,15 @@ fn ser_root_flatten_struct() {
     binary_data: "binary".to_string(),
     string_data: "string".to_string(),
   };
+
   let content = "<binary_data>binary</binary_data><string_data>string</string_data>";
+
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, Content);
 }
 
 #[test]
-fn ser_root_flatten_enum() {
+fn root_flatten_enum() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(flatten)]
   pub enum Content {
@@ -128,12 +132,14 @@ fn ser_root_flatten_enum() {
   let model = Content::Binary(Binary {
     binary_data: "binary".to_string(),
   });
+
   let content = "<Binary><binary_data>binary</binary_data></Binary>";
   serialize_and_validate!(model, content);
 
   let model = Content::Data(Data {
     string_data: "string".to_string(),
   });
+
   let content = "<Data><string_data>string</string_data></Data>";
   serialize_and_validate!(model, content);
 }

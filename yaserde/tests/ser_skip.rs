@@ -1,24 +1,10 @@
 #[macro_use]
+extern crate yaserde;
+#[macro_use]
 extern crate yaserde_derive;
 
 use std::io::Write;
-use yaserde::ser::to_string;
 use yaserde::YaSerialize;
-
-macro_rules! convert_and_validate {
-  ($model: expr, $content: expr) => {
-    let data: Result<String, String> = to_string(&$model);
-    assert_eq!(
-      data,
-      Ok(
-        String::from($content)
-          .split("\n")
-          .map(|s| s.trim())
-          .collect::<String>()
-      )
-    );
-  };
-}
 
 #[test]
 fn ser_skip_serializing_if_for_struct() {
@@ -60,6 +46,6 @@ fn ser_skip_serializing_if_for_struct() {
     option_string_item: Some("something".to_string()),
   };
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><base />";
-  convert_and_validate!(model, content);
+  let content = "<base />";
+  serialize_and_validate!(model, content);
 }

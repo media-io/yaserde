@@ -1,24 +1,10 @@
 #[macro_use]
+extern crate yaserde;
+#[macro_use]
 extern crate yaserde_derive;
 
 use std::io::Write;
-use yaserde::ser::to_string;
 use yaserde::YaSerialize;
-
-macro_rules! convert_and_validate {
-  ($model: expr, $content: expr) => {
-    let data: Result<String, String> = to_string(&$model);
-    assert_eq!(
-      data,
-      Ok(
-        String::from($content)
-          .split("\n")
-          .map(|s| s.trim())
-          .collect::<String>()
-      )
-    );
-  };
-}
 
 #[test]
 fn ser_struct_namespace() {
@@ -37,8 +23,9 @@ fn ser_struct_namespace() {
     item: "something".to_string(),
   };
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><ns:root xmlns:ns=\"http://www.sample.com/ns/domain\"><ns:item>something</ns:item></ns:root>";
-  convert_and_validate!(model, content);
+  let content =
+    r#"<ns:root xmlns:ns="http://www.sample.com/ns/domain"><ns:item>something</ns:item></ns:root>"#;
+  serialize_and_validate!(model, content);
 }
 
 #[test]
@@ -58,13 +45,13 @@ fn ser_enum_namespace() {
 
   let model = XmlStruct::Item;
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><ns:root xmlns:ns=\"http://www.sample.com/ns/domain\">ns:Item</ns:root>";
-  convert_and_validate!(model, content);
+  let content = r#"<ns:root xmlns:ns="http://www.sample.com/ns/domain">ns:Item</ns:root>"#;
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct::ItemWithField("Value".to_string());
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><ns:root xmlns:ns=\"http://www.sample.com/ns/domain\"><ns:ItemWithField>Value</ns:ItemWithField></ns:root>";
-  convert_and_validate!(model, content);
+  let content = r#"<ns:root xmlns:ns="http://www.sample.com/ns/domain"><ns:ItemWithField>Value</ns:ItemWithField></ns:root>"#;
+  serialize_and_validate!(model, content);
 }
 
 #[test]
@@ -87,8 +74,8 @@ fn ser_struct_multi_namespace() {
     item_2: "something 2".to_string(),
   };
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><root xmlns:ns1=\"http://www.sample.com/ns/domain1\" xmlns:ns2=\"http://www.sample.com/ns/domain2\"><ns1:item_1>something 1</ns1:item_1><ns2:item_2>something 2</ns2:item_2></root>";
-  convert_and_validate!(model, content);
+  let content = r#"<root xmlns:ns1="http://www.sample.com/ns/domain1" xmlns:ns2="http://www.sample.com/ns/domain2"><ns1:item_1>something 1</ns1:item_1><ns2:item_2>something 2</ns2:item_2></root>"#;
+  serialize_and_validate!(model, content);
 }
 
 #[test]
@@ -107,11 +94,11 @@ fn ser_enum_multi_namespace() {
   }
 
   let model1 = XmlStruct::Item1;
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><root xmlns:ns1=\"http://www.sample.com/ns/domain1\" xmlns:ns2=\"http://www.sample.com/ns/domain2\">ns1:Item1</root>";
-  convert_and_validate!(model1, content);
+  let content = r#"<root xmlns:ns1="http://www.sample.com/ns/domain1" xmlns:ns2="http://www.sample.com/ns/domain2">ns1:Item1</root>"#;
+  serialize_and_validate!(model1, content);
   let model2 = XmlStruct::Item2;
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><root xmlns:ns1=\"http://www.sample.com/ns/domain1\" xmlns:ns2=\"http://www.sample.com/ns/domain2\">ns2:Item2</root>";
-  convert_and_validate!(model2, content);
+  let content = r#"<root xmlns:ns1="http://www.sample.com/ns/domain1" xmlns:ns2="http://www.sample.com/ns/domain2">ns2:Item2</root>"#;
+  serialize_and_validate!(model2, content);
 }
 
 #[test]
@@ -134,8 +121,8 @@ fn ser_struct_attribute_namespace() {
     item_2: "something 2".to_string(),
   };
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><root xmlns:ns1=\"http://www.sample.com/ns/domain1\" xmlns:ns2=\"http://www.sample.com/ns/domain2\" ns2:item_2=\"something 2\"><ns1:item_1>something 1</ns1:item_1></root>";
-  convert_and_validate!(model, content);
+  let content = r#"<root xmlns:ns1="http://www.sample.com/ns/domain1" xmlns:ns2="http://www.sample.com/ns/domain2" ns2:item_2="something 2"><ns1:item_1>something 1</ns1:item_1></root>"#;
+  serialize_and_validate!(model, content);
 }
 
 #[test]
@@ -154,8 +141,8 @@ fn ser_struct_default_namespace() {
     item: "something".to_string(),
   };
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><tt xmlns=\"http://www.w3.org/ns/ttml\" xmlns:ttm=\"http://www.w3.org/ns/ttml#metadata\"><item>something</item></tt>";
-  convert_and_validate!(model, content);
+  let content = r#"<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttm="http://www.w3.org/ns/ttml#metadata"><item>something</item></tt>"#;
+  serialize_and_validate!(model, content);
 }
 
 #[test]
@@ -175,8 +162,8 @@ fn ser_struct_default_namespace_via_attribute() {
     item: "something".to_string(),
   };
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><tt xmlns=\"http://www.w3.org/ns/ttml\" xmlns:ttm=\"http://www.w3.org/ns/ttml#metadata\"><item>something</item></tt>";
-  convert_and_validate!(model, content);
+  let content = r#"<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttm="http://www.w3.org/ns/ttml#metadata"><item>something</item></tt>"#;
+  serialize_and_validate!(model, content);
 }
 
 #[test]
@@ -198,8 +185,8 @@ fn ser_struct_default_namespace_via_attribute_with_prefix() {
     item: "something".to_string(),
   };
 
-  let content = "<?xml version=\"1.0\" encoding=\"utf-8\"?><tt xmlns=\"http://www.w3.org/ns/ttml\" xmlns:ttm=\"http://www.w3.org/ns/ttml#metadata\"><item>something</item></tt>";
-  convert_and_validate!(model, content);
+  let content = r#"<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttm="http://www.w3.org/ns/ttml#metadata"><item>something</item></tt>"#;
+  serialize_and_validate!(model, content);
 }
 
 #[test]
@@ -219,12 +206,11 @@ fn ser_struct_namespace_nested() {
     nested: A,
   }
 
-  convert_and_validate!(
+  serialize_and_validate!(
     B {
       nested: A { alpha: 32 }
     },
     r#"
-    <?xml version="1.0" encoding="utf-8"?>
     <nsb:B xmlns:nsb="http://www.sample.com/ns/b">
       <nsb:nested xmlns:nsa="http://www.sample.com/ns/a">
         <nsa:alpha>32</nsa:alpha>

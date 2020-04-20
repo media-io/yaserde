@@ -1,24 +1,10 @@
 #[macro_use]
+extern crate yaserde;
+#[macro_use]
 extern crate yaserde_derive;
 
 use std::io::Write;
-use yaserde::ser::to_string;
 use yaserde::YaSerialize;
-
-macro_rules! convert_and_validate {
-  ($model: expr, $content: expr) => {
-    let data: Result<String, String> = to_string(&$model);
-    assert_eq!(
-      data,
-      Ok(
-        String::from($content)
-          .split("\n")
-          .map(|s| s.trim())
-          .collect::<String>()
-      )
-    );
-  };
-}
 
 #[test]
 fn ser_enum() {
@@ -77,8 +63,8 @@ fn ser_enum() {
     color: Color::Black,
   };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><base><color>Black</color></base>"#;
-  convert_and_validate!(model, content);
+  let content = "<base><color>Black</color></base>";
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct {
     color: Color::Custom {
@@ -103,7 +89,7 @@ fn ser_enum() {
     },
   };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?>
+  let content = r#"
 <base>
 <color><enabled>true</enabled>
 <u8_value>8</u8_value>
@@ -123,7 +109,7 @@ fn ser_enum() {
 </color>
 </base>"#;
 
-  convert_and_validate!(model, content);
+  serialize_and_validate!(model, content);
 }
 
 #[test]
@@ -144,8 +130,8 @@ fn ser_attribute_enum() {
 
   let model = XmlStruct { color: Color::Pink };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><base color="pink" />"#;
-  convert_and_validate!(model, content);
+  let content = r#"<base color="pink" />"#;
+  serialize_and_validate!(model, content);
 }
 
 #[test]
@@ -190,73 +176,72 @@ fn ser_unnamed_enum() {
     color: Enum::Field(String::from("some_text")),
   };
 
-  let content =
-    r#"<?xml version="1.0" encoding="utf-8"?><base><color><Field>some_text</Field></color></base>"#;
-  convert_and_validate!(model, content);
+  let content = "<base><color><Field>some_text</Field></color></base>";
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct {
     color: Enum::FullPath(String::from("some_text")),
   };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><base><color><FullPath>some_text</FullPath></color></base>"#;
-  convert_and_validate!(model, content);
+  let content = "<base><color><FullPath>some_text</FullPath></color></base>";
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct {
     color: Enum::Integer(56),
   };
 
-  let content =
-    r#"<?xml version="1.0" encoding="utf-8"?><base><color><Integer>56</Integer></color></base>"#;
-  convert_and_validate!(model, content);
+  let content = "<base><color><Integer>56</Integer></color></base>";
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct {
     color: Enum::UserStruct(OtherStruct { fi: 24, se: 42 }),
   };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><base><color><UserStruct><fi>24</fi><se>42</se></UserStruct></color></base>"#;
-  convert_and_validate!(model, content);
+  let content = "<base><color><UserStruct><fi>24</fi><se>42</se></UserStruct></color></base>";
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct {
     color: Enum::OptionString(Some(String::from("some_text"))),
   };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><base><color><OptionString>some_text</OptionString></color></base>"#;
-  convert_and_validate!(model, content);
+  let content = "<base><color><OptionString>some_text</OptionString></color></base>";
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct {
     color: Enum::OptionString(None),
   };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><base><color /></base>"#;
-  convert_and_validate!(model, content);
+  let content = "<base><color /></base>";
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct {
     color: Enum::OptionUserStruct(Some(OtherStruct { fi: 12, se: 23 })),
   };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><base><color><OptionUserStruct><fi>12</fi><se>23</se></OptionUserStruct></color></base>"#;
-  convert_and_validate!(model, content);
+  let content =
+    "<base><color><OptionUserStruct><fi>12</fi><se>23</se></OptionUserStruct></color></base>";
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct {
     color: Enum::OptionUserStruct(None),
   };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><base><color /></base>"#;
-  convert_and_validate!(model, content);
+  let content = "<base><color /></base>";
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct {
     color: Enum::Strings(vec![String::from("abc"), String::from("def")]),
   };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><base><color><Strings>abc</Strings><Strings>def</Strings></color></base>"#;
-  convert_and_validate!(model, content);
+  let content = "<base><color><Strings>abc</Strings><Strings>def</Strings></color></base>";
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct {
     color: Enum::Ints(vec![23, 45]),
   };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><base><color><Ints>23</Ints><Ints>45</Ints></color></base>"#;
-  convert_and_validate!(model, content);
+  let content = "<base><color><Ints>23</Ints><Ints>45</Ints></color></base>";
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct {
     color: Enum::Structs(vec![
@@ -265,21 +250,20 @@ fn ser_unnamed_enum() {
     ]),
   };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><base><color><Structs><fi>12</fi><se>23</se></Structs><Structs><fi>34</fi><se>45</se></Structs></color></base>"#;
-  convert_and_validate!(model, content);
+  let content = "<base><color><Structs><fi>12</fi><se>23</se></Structs><Structs><fi>34</fi><se>45</se></Structs></color></base>";
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct {
     color: Enum::ToRename(87),
   };
 
-  let content =
-    r#"<?xml version="1.0" encoding="utf-8"?><base><color><renamed>87</renamed></color></base>"#;
-  convert_and_validate!(model, content);
+  let content = "<base><color><renamed>87</renamed></color></base>";
+  serialize_and_validate!(model, content);
 
   let model = XmlStruct {
     color: Enum::ToRenameDots(84),
   };
 
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><base><color><renamed.with.dots>84</renamed.with.dots></color></base>"#;
-  convert_and_validate!(model, content);
+  let content = "<base><color><renamed.with.dots>84</renamed.with.dots></color></base>";
+  serialize_and_validate!(model, content);
 }

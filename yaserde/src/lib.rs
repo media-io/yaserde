@@ -137,3 +137,76 @@ fn default_visitor() {
   test_type!(visit_u64, "Unexpected u64 \"\"");
   test_type!(visit_str, "Unexpected str \"\"");
 }
+
+#[doc(hidden)]
+mod testing {
+  #[macro_export]
+  macro_rules! test_for_type {
+    ($type:ty, $value:expr, $content:expr) => {{
+      #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+      #[yaserde(root = "data")]
+      pub struct Data {
+        item: $type,
+      }
+
+      let model = Data { item: $value };
+
+      let content = if let Some(str_value) = $content {
+        String::from("<data><item>") + str_value + "</item></data>"
+      } else {
+        String::from("<data />")
+      };
+
+      serialize_and_validate!(model, content);
+      deserialize_and_validate!(&content, model, Data);
+    }};
+  }
+
+  #[macro_export]
+  macro_rules! test_for_attribute_type {
+    ($type: ty, $value: expr, $content: expr) => {{
+      #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+      #[yaserde(root = "data")]
+      pub struct Data {
+        #[yaserde(attribute)]
+        item: $type,
+      }
+      let model = Data { item: $value };
+
+      let content = if let Some(str_value) = $content {
+        "<data item=\"".to_string() + str_value + "\" />"
+      } else {
+        "<data />".to_string()
+      };
+
+      serialize_and_validate!(model, content);
+      deserialize_and_validate!(&content, model, Data);
+    }};
+  }
+
+  #[macro_export]
+  macro_rules! deserialize_and_validate {
+    ($content: expr, $model: expr, $struct: tt) => {
+      let loaded: Result<$struct, String> = yaserde::de::from_str($content);
+      assert_eq!(loaded, Ok($model));
+    };
+  }
+
+  #[macro_export]
+  macro_rules! serialize_and_validate {
+    ($model: expr, $content: expr) => {
+      let data: Result<String, String> = yaserde::ser::to_string(&$model);
+
+      let content = String::from(r#"<?xml version="1.0" encoding="utf-8"?>"#) + &$content;
+      assert_eq!(
+        data,
+        Ok(
+          String::from(content)
+            .split("\n")
+            .map(|s| s.trim())
+            .collect::<String>()
+        )
+      );
+    };
+  }
+}
