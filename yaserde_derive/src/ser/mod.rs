@@ -5,7 +5,7 @@ pub mod implement_deserializer;
 pub mod label;
 pub mod namespace;
 
-use crate::attribute::YaSerdeAttribute;
+use crate::common::YaSerdeAttribute;
 use proc_macro2::TokenStream;
 use syn;
 use syn::Ident;

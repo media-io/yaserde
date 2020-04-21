@@ -1,10 +1,11 @@
-use crate::attribute::*;
-use crate::field_type::*;
+use crate::common::{Field, YaSerdeAttribute};
 use proc_macro2::TokenStream;
-use syn::spanned::Spanned;
-use syn::DataEnum;
-use syn::Fields;
-use syn::Ident;
+use syn::{
+  spanned::Spanned,
+  DataEnum,
+  Fields,
+  Ident,
+};
 
 pub fn parse(
   data_enum: &DataEnum,
@@ -160,9 +161,9 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
           })
         };
 
-      let simple_type_visitor = |simple_type| {
-        let field_type = get_simple_type_token(&simple_type);
-        let visitor = get_simple_type_visitor(&simple_type);
+      let simple_type_visitor = |simple_type: Field| {
+        let visitor = simple_type.get_simple_type_visitor();
+        let field_type = simple_type.into();
 
         make_visitor(
           &visitor,
@@ -171,8 +172,8 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
         )
       };
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeStruct { struct_name } => {
+      match Field::from(field) {
+        Field::FieldStruct { struct_name } => {
           let struct_id: String = struct_name
             .segments
             .iter()
@@ -189,14 +190,12 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
             },
           )
         }
-        FieldType::FieldTypeOption { data_type } | FieldType::FieldTypeVec { data_type } => {
-          match *data_type {
-            FieldType::FieldTypeStruct { .. } => None,
-            simple_type => simple_type_visitor(simple_type),
-          }
-        }
+        Field::FieldOption { data_type } | Field::FieldVec { data_type } => match *data_type {
+          Field::FieldStruct { .. } => None,
+          simple_type => simple_type_visitor(simple_type),
+        },
         simple_type => simple_type_visitor(simple_type),
-      })
+      }
     })
     .filter_map(|f| f)
     .collect()
@@ -213,9 +212,9 @@ fn build_unnamed_visitor_calls(
     .map(|(idx, field)| {
       let visitor_label = Ident::new(&format!("__Visitor_{}", idx), field.span());
 
-      let call_simple_type_visitor = |simple_type, action| {
-        let field_type = get_simple_type_token(&simple_type);
-        let visitor = get_simple_type_visitor(&simple_type);
+      let call_simple_type_visitor = |simple_type: Field, action| {
+        let visitor = simple_type.get_simple_type_visitor();
+        let field_type: TokenStream = simple_type.into();
 
         let label_name = format!("field_{}", idx);
 
@@ -279,19 +278,19 @@ fn build_unnamed_visitor_calls(
         }
       };
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeStruct { struct_name } => call_struct_visitor(struct_name, set_val),
-        FieldType::FieldTypeOption { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { struct_name } => call_struct_visitor(struct_name, set_opt),
+      match Field::from(field) {
+        Field::FieldStruct { struct_name } => call_struct_visitor(struct_name, set_val),
+        Field::FieldOption { data_type } => match *data_type {
+          Field::FieldStruct { struct_name } => call_struct_visitor(struct_name, set_opt),
           simple_type => call_simple_type_visitor(simple_type, set_opt),
         },
-        FieldType::FieldTypeVec { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { struct_name } => call_struct_visitor(struct_name, set_vec),
+        Field::FieldVec { data_type } => match *data_type {
+          Field::FieldStruct { struct_name } => call_struct_visitor(struct_name, set_vec),
           simple_type => call_simple_type_visitor(simple_type, set_vec),
         },
 
         simple_type => call_simple_type_visitor(simple_type, set_val),
-      })
+      }
     })
     .filter_map(|f| f)
     .collect()

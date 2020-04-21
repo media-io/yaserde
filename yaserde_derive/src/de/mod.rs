@@ -2,7 +2,7 @@ pub mod build_default_value;
 pub mod expand_enum;
 pub mod expand_struct;
 
-use crate::attribute;
+use crate::common::YaSerdeAttribute;
 use proc_macro2::TokenStream;
 use syn;
 use syn::Ident;
@@ -12,7 +12,7 @@ pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<TokenStream, 
   let attrs = &ast.attrs;
   let data = &ast.data;
 
-  let root_attrs = attribute::YaSerdeAttribute::parse(attrs);
+  let root_attrs = YaSerdeAttribute::parse(attrs);
   let root = root_attrs.clone().root.unwrap_or_else(|| name.to_string());
 
   let impl_block = match *data {

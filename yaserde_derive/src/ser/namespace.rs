@@ -1,4 +1,4 @@
-use crate::attribute::YaSerdeAttribute;
+use crate::common::YaSerdeAttribute;
 use proc_macro2::TokenStream;
 
 pub fn generate_namespaces_definition(attributes: &YaSerdeAttribute) -> TokenStream {

@@ -1,8 +1,6 @@
-use crate::attribute::*;
-use crate::field_type::*;
-use crate::ser::{
-  element::*, implement_deserializer::implement_deserializer, label::build_label_name,
-};
+use crate::common::{Field, YaSerdeAttribute};
+
+use crate::ser::{element::*, implement_deserializer::implement_deserializer};
 use proc_macro2::TokenStream;
 use syn::spanned::Spanned;
 use syn::DataStruct;
@@ -19,31 +17,26 @@ pub fn serialize(
     .iter()
     .map(|field| {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-      if !field_attrs.attribute {
+      if !Field::is_attribute(field) {
         return None;
       }
 
-      let label = &field.ident;
+      let label = Field::label(field);
+      let label_name = Field::renamed_label(field, root_attributes);
 
-      let label_name = build_label_name(
-        &label.as_ref().unwrap(),
-        &field_attrs,
-        &root_attributes.default_namespace,
-      );
-
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeString
-        | FieldType::FieldTypeBool
-        | FieldType::FieldTypeI8
-        | FieldType::FieldTypeU8
-        | FieldType::FieldTypeI16
-        | FieldType::FieldTypeU16
-        | FieldType::FieldTypeI32
-        | FieldType::FieldTypeU32
-        | FieldType::FieldTypeI64
-        | FieldType::FieldTypeU64
-        | FieldType::FieldTypeF32
-        | FieldType::FieldTypeF64 => {
+      match Field::from(field) {
+        Field::FieldString
+        | Field::FieldBool
+        | Field::FieldI8
+        | Field::FieldU8
+        | Field::FieldI16
+        | Field::FieldU16
+        | Field::FieldI32
+        | Field::FieldU32
+        | Field::FieldI64
+        | Field::FieldU64
+        | Field::FieldF32
+        | Field::FieldF64 => {
           if let Some(ref d) = field_attrs.default {
             let default_function = Ident::new(&d, field.span());
             Some(quote! {
@@ -62,8 +55,8 @@ pub fn serialize(
             })
           }
         }
-        FieldType::FieldTypeOption { data_type } => match *data_type {
-          FieldType::FieldTypeString => {
+        Field::FieldOption { data_type } => match *data_type {
+          Field::FieldString => {
             if let Some(ref d) = field_attrs.default {
               let default_function = Ident::new(&d, field.span());
               Some(quote! {
@@ -89,17 +82,17 @@ pub fn serialize(
               })
             }
           }
-          FieldType::FieldTypeBool
-          | FieldType::FieldTypeI8
-          | FieldType::FieldTypeU8
-          | FieldType::FieldTypeI16
-          | FieldType::FieldTypeU16
-          | FieldType::FieldTypeI32
-          | FieldType::FieldTypeU32
-          | FieldType::FieldTypeI64
-          | FieldType::FieldTypeU64
-          | FieldType::FieldTypeF32
-          | FieldType::FieldTypeF64 => {
+          Field::FieldBool
+          | Field::FieldI8
+          | Field::FieldU8
+          | Field::FieldI16
+          | Field::FieldU16
+          | Field::FieldI32
+          | Field::FieldU32
+          | Field::FieldI64
+          | Field::FieldU64
+          | Field::FieldF32
+          | Field::FieldF64 => {
             if let Some(ref d) = field_attrs.default {
               let default_function = Ident::new(&d, field.span());
               Some(quote! {
@@ -127,7 +120,7 @@ pub fn serialize(
               })
             }
           }
-          FieldType::FieldTypeVec { .. } => {
+          Field::FieldVec { .. } => {
             let item_ident = Ident::new("yaserde_item", field.span());
             let inner = enclose_formatted_characters(&item_ident, label_name);
 
@@ -151,7 +144,7 @@ pub fn serialize(
               })
             }
           }
-          FieldType::FieldTypeStruct { .. } => {
+          Field::FieldStruct { .. } => {
             if let Some(ref d) = field_attrs.default {
               let default_function = Ident::new(&d, field.span());
               Some(quote! {
@@ -183,7 +176,7 @@ pub fn serialize(
           }
           _ => unimplemented!(),
         },
-        FieldType::FieldTypeStruct { .. } => {
+        Field::FieldStruct { .. } => {
           if let Some(ref d) = field_attrs.default {
             let default_function = Ident::new(&d, field.span());
             Some(quote! {
@@ -203,7 +196,7 @@ pub fn serialize(
           }
         }
         _ => None,
-      })
+      }
     })
     .filter_map(|x| x)
     .collect();
@@ -213,51 +206,49 @@ pub fn serialize(
     .iter()
     .map(|field| {
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-      if field_attrs.attribute {
+      if Field::is_attribute(field) {
         return None;
       }
 
-      let label = &field.ident;
-      if field_attrs.text {
+      let label = Field::label(field);
+      if Field::is_text_content(field) {
         return Some(quote!(
           let data_event = XmlEvent::characters(&self.#label);
           writer.write(data_event).map_err(|e| e.to_string())?;
         ));
       }
 
-      let label_name = build_label_name(
-        &label.as_ref().unwrap(),
-        &field_attrs,
-        &root_attributes.default_namespace,
-      );
-      let conditions = condition_generator(label, &field_attrs);
+      let label_name = Field::renamed_label(field, root_attributes);
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeString
-        | FieldType::FieldTypeBool
-        | FieldType::FieldTypeI8
-        | FieldType::FieldTypeU8
-        | FieldType::FieldTypeI16
-        | FieldType::FieldTypeU16
-        | FieldType::FieldTypeI32
-        | FieldType::FieldTypeU32
-        | FieldType::FieldTypeI64
-        | FieldType::FieldTypeU64
-        | FieldType::FieldTypeF32
-        | FieldType::FieldTypeF64 => serialize_element(label, label_name, &conditions),
-        FieldType::FieldTypeOption { data_type } => match *data_type {
-          FieldType::FieldTypeString
-          | FieldType::FieldTypeBool
-          | FieldType::FieldTypeI8
-          | FieldType::FieldTypeU8
-          | FieldType::FieldTypeI16
-          | FieldType::FieldTypeU16
-          | FieldType::FieldTypeI32
-          | FieldType::FieldTypeU32
-          | FieldType::FieldTypeI64
-          | FieldType::FieldTypeU64
-          | FieldType::FieldTypeF32
-          | FieldType::FieldTypeF64 => {
+      let conditions = condition_generator(&label, &field_attrs);
+
+      match Field::from(field) {
+        Field::FieldString
+        | Field::FieldBool
+        | Field::FieldI8
+        | Field::FieldU8
+        | Field::FieldI16
+        | Field::FieldU16
+        | Field::FieldI32
+        | Field::FieldU32
+        | Field::FieldI64
+        | Field::FieldU64
+        | Field::FieldF32
+        | Field::FieldF64 => serialize_element(&label, label_name, &conditions),
+
+        Field::FieldOption { data_type } => match *data_type {
+          Field::FieldString
+          | Field::FieldBool
+          | Field::FieldI8
+          | Field::FieldU8
+          | Field::FieldI16
+          | Field::FieldU16
+          | Field::FieldI32
+          | Field::FieldU32
+          | Field::FieldI64
+          | Field::FieldU64
+          | Field::FieldF32
+          | Field::FieldF64 => {
             let item_ident = Ident::new("yaserde_item", field.span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
@@ -269,7 +260,7 @@ pub fn serialize(
               }
             })
           }
-          FieldType::FieldTypeVec { .. } => {
+          Field::FieldVec { .. } => {
             let item_ident = Ident::new("yaserde_item", field.span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
@@ -283,7 +274,7 @@ pub fn serialize(
               }
             })
           }
-          FieldType::FieldTypeStruct { .. } => Some(if field_attrs.flatten {
+          Field::FieldStruct { .. } => Some(if field_attrs.flatten {
             quote! {
               if let Some(ref item) = &self.#label {
                 writer.set_start_event_name(None);
@@ -302,7 +293,7 @@ pub fn serialize(
           }),
           _ => unimplemented!(),
         },
-        FieldType::FieldTypeStruct { .. } => {
+        Field::FieldStruct { .. } => {
           let (start_event, skip_start) = if field_attrs.flatten {
             (quote!(None), true)
           } else {
@@ -315,8 +306,8 @@ pub fn serialize(
             self.#label.serialize(writer)?;
           })
         }
-        FieldType::FieldTypeVec { data_type } => match *data_type {
-          FieldType::FieldTypeString => {
+        Field::FieldVec { data_type } => match *data_type {
+          Field::FieldString => {
             let item_ident = Ident::new("yaserde_item", field.span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
@@ -326,17 +317,17 @@ pub fn serialize(
               }
             })
           }
-          FieldType::FieldTypeBool
-          | FieldType::FieldTypeI8
-          | FieldType::FieldTypeU8
-          | FieldType::FieldTypeI16
-          | FieldType::FieldTypeU16
-          | FieldType::FieldTypeI32
-          | FieldType::FieldTypeU32
-          | FieldType::FieldTypeI64
-          | FieldType::FieldTypeU64
-          | FieldType::FieldTypeF32
-          | FieldType::FieldTypeF64 => {
+          Field::FieldBool
+          | Field::FieldI8
+          | Field::FieldU8
+          | Field::FieldI16
+          | Field::FieldU16
+          | Field::FieldI32
+          | Field::FieldU32
+          | Field::FieldI64
+          | Field::FieldU64
+          | Field::FieldF32
+          | Field::FieldF64 => {
             let item_ident = Ident::new("yaserde_item", field.span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
@@ -346,7 +337,7 @@ pub fn serialize(
               }
             })
           }
-          FieldType::FieldTypeOption { .. } => Some(quote! {
+          Field::FieldOption { .. } => Some(quote! {
             for item in &self.#label {
               if let Some(value) = item {
                 writer.set_start_event_name(None);
@@ -355,18 +346,18 @@ pub fn serialize(
               }
             }
           }),
-          FieldType::FieldTypeStruct { .. } => Some(quote! {
+          Field::FieldStruct { .. } => Some(quote! {
             for item in &self.#label {
               writer.set_start_event_name(None);
               writer.set_skip_start_end(false);
               item.serialize(writer)?;
             }
           }),
-          FieldType::FieldTypeVec { .. } => {
+          Field::FieldVec { .. } => {
             unimplemented!();
           }
         },
-      })
+      }
     })
     .filter_map(|x| x)
     .collect();

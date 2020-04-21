@@ -1,11 +1,12 @@
-use crate::attribute::*;
+use crate::common::{Field, YaSerdeAttribute};
 use crate::de::build_default_value::build_default_value;
-use crate::field_type::*;
 use proc_macro2::{Span, TokenStream};
 use std::collections::BTreeMap;
-use syn::spanned::Spanned;
-use syn::DataStruct;
-use syn::Ident;
+use syn::{
+  spanned::Spanned,
+  DataStruct,
+  Ident,
+};
 
 pub fn parse(
   data_struct: &DataStruct,
@@ -33,14 +34,14 @@ pub fn parse(
       let label = &get_value_label(&field.ident);
       let field_attrs = YaSerdeAttribute::parse(&field.attrs);
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeStruct { struct_name } => build_default_value(
+      match Field::from(field) {
+        Field::FieldStruct { struct_name } => build_default_value(
           label,
           &quote! {#struct_name},
           &quote! {#struct_name::default()},
           &field_attrs.default,
         ),
-        FieldType::FieldTypeOption { .. } => {
+        Field::FieldOption { .. } => {
           if let Some(d) = &field_attrs.default {
             let default_function = Ident::new(&d, field.span());
 
@@ -55,18 +56,18 @@ pub fn parse(
             })
           }
         }
-        FieldType::FieldTypeVec { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { ref struct_name } => build_default_value(
+        Field::FieldVec { data_type } => match *data_type {
+          Field::FieldStruct { ref struct_name } => build_default_value(
             label,
             &quote! {Vec<#struct_name>},
             &quote! {vec![]},
             &field_attrs.default,
           ),
-          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => {
+          Field::FieldOption { .. } | Field::FieldVec { .. } => {
             unimplemented!();
           }
           simple_type => {
-            let type_token = get_simple_type_token(&simple_type);
+            let type_token: TokenStream = simple_type.into();
 
             build_default_value(
               label,
@@ -77,7 +78,8 @@ pub fn parse(
           }
         },
         simple_type => {
-          let type_token = get_simple_type_token(&simple_type);
+          let type_token: TokenStream = simple_type.into();
+
           build_default_value(
             label,
             &type_token,
@@ -85,7 +87,7 @@ pub fn parse(
             &field_attrs.default,
           )
         }
-      })
+      }
     })
     .filter_map(|x| x)
     .collect();
@@ -123,10 +125,10 @@ pub fn parse(
         })
       };
 
-      let simple_type_visitor = |simple_type: FieldType| {
-        let field_type = get_simple_type_token(&simple_type);
-        let visitor = get_simple_type_visitor(&simple_type);
+      let simple_type_visitor = |simple_type: Field| {
+        let visitor = simple_type.get_simple_type_visitor();
         let visitor_label = build_visitor_ident(&label_name, field.span(), None);
+        let field_type: TokenStream = simple_type.into();
 
         Some(quote! {
           #[allow(non_snake_case, non_camel_case_types)]
@@ -141,20 +143,20 @@ pub fn parse(
         })
       };
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeStruct { struct_name } => struct_visitor(struct_name),
-        FieldType::FieldTypeOption { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { struct_name } => struct_visitor(struct_name),
-          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => None,
+      match Field::from(field) {
+        Field::FieldStruct { struct_name } => struct_visitor(struct_name),
+        Field::FieldOption { data_type } => match *data_type {
+          Field::FieldStruct { struct_name } => struct_visitor(struct_name),
+          Field::FieldOption { .. } | Field::FieldVec { .. } => None,
           simple_type => simple_type_visitor(simple_type),
         },
-        FieldType::FieldTypeVec { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { struct_name } => struct_visitor(struct_name),
-          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => None,
+        Field::FieldVec { data_type } => match *data_type {
+          Field::FieldStruct { struct_name } => struct_visitor(struct_name),
+          Field::FieldOption { .. } | Field::FieldVec { .. } => None,
           simple_type => simple_type_visitor(simple_type),
         },
         simple_type => simple_type_visitor(simple_type),
-      })
+      }
     })
     .filter_map(|x| x)
     .collect();
@@ -192,10 +194,12 @@ pub fn parse(
         })
       };
 
-      let visit_simple = |simple_type: FieldType, action: TokenStream| {
+      let visit_simple = |simple_type: Field, action: TokenStream| {
+        let field_visitor = simple_type.get_simple_type_visitor();
+        let field_type: TokenStream = simple_type.into();
         build_call_visitor(
-          &get_simple_type_token(&simple_type),
-          &get_simple_type_visitor(&simple_type),
+          &field_type,
+          &field_visitor,
           &action,
           &field_attrs,
           label,
@@ -204,18 +208,18 @@ pub fn parse(
         )
       };
 
-      let visit_sub = |sub_type: Box<FieldType>, action: TokenStream| match *sub_type {
-        FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => unimplemented!(),
-        FieldType::FieldTypeStruct { struct_name } => visit_struct(struct_name, action),
+      let visit_sub = |sub_type: Box<Field>, action: TokenStream| match *sub_type {
+        Field::FieldOption { .. } | Field::FieldVec { .. } => unimplemented!(),
+        Field::FieldStruct { struct_name } => visit_struct(struct_name, action),
         simple_type => visit_simple(simple_type, action),
       };
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeStruct { struct_name } => visit_struct(struct_name, quote! {= value}),
-        FieldType::FieldTypeOption { data_type } => visit_sub(data_type, quote! {= Some(value)}),
-        FieldType::FieldTypeVec { data_type } => visit_sub(data_type, quote! {.push(value)}),
+      match Field::from(field) {
+        Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! {= value}),
+        Field::FieldOption { data_type } => visit_sub(data_type, quote! {= Some(value)}),
+        Field::FieldVec { data_type } => visit_sub(data_type, quote! {.push(value)}),
         simple_type => visit_simple(simple_type, quote! {= value}),
-      })
+      }
     })
     .filter_map(|x| x)
     .collect();
@@ -231,18 +235,18 @@ pub fn parse(
         return None;
       }
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeStruct { .. } => Some(quote! {
+      match Field::from(field) {
+        Field::FieldStruct { .. } => Some(quote! {
           #value_label = yaserde::de::from_str(&unused_xml_elements)?;
         }),
-        FieldType::FieldTypeOption { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { .. } => Some(quote! {
+        Field::FieldOption { data_type } => match *data_type {
+          Field::FieldStruct { .. } => Some(quote! {
             #value_label = yaserde::de::from_str(&unused_xml_elements).ok();
           }),
           field_type => unimplemented!("\"flatten\" is not implemented for {:?}", field_type),
         },
         field_type => unimplemented!("\"flatten\" is not implemented for {:?}", field_type),
-      })
+      }
     })
     .filter_map(|x| x)
     .collect();
@@ -294,27 +298,27 @@ pub fn parse(
         )
       };
 
-      let visit_simple = |simple_type: FieldType, action: TokenStream| {
+      let visit_simple = |simple_type: Field, action: TokenStream| {
         visit(
           &action,
-          &get_simple_type_visitor(&simple_type),
+          &simple_type.get_simple_type_visitor(),
           &visitor_label,
         )
       };
 
-      let visit_sub = |sub_type: Box<FieldType>, action: TokenStream| match *sub_type {
-        FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => unimplemented!(),
-        FieldType::FieldTypeStruct { struct_name } => visit_struct(struct_name, action),
+      let visit_sub = |sub_type: Box<Field>, action: TokenStream| match *sub_type {
+        Field::FieldOption { .. } | Field::FieldVec { .. } => unimplemented!(),
+        Field::FieldStruct { struct_name } => visit_struct(struct_name, action),
         simple_type => visit_simple(simple_type, action),
       };
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeString => visit_string(),
-        FieldType::FieldTypeOption { data_type } => visit_sub(data_type, quote! {= Some(value)}),
-        FieldType::FieldTypeVec { .. } => unimplemented!(),
-        FieldType::FieldTypeStruct { struct_name } => visit_struct(struct_name, quote! {= value}),
+      match Field::from(field) {
+        Field::FieldString => visit_string(),
+        Field::FieldOption { data_type } => visit_sub(data_type, quote! {= Some(value)}),
+        Field::FieldVec { .. } => unimplemented!(),
+        Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! {= value}),
         simple_type => visit_simple(simple_type, quote! {= value}),
-      })
+      }
     })
     .filter_map(|x| x)
     .collect();
@@ -334,16 +338,14 @@ pub fn parse(
         }
       };
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeString => set_text(&quote! {text_content.to_owned()}),
-        FieldType::FieldTypeStruct { .. }
-        | FieldType::FieldTypeOption { .. }
-        | FieldType::FieldTypeVec { .. } => None,
+      match Field::from(field) {
+        Field::FieldString => set_text(&quote! {text_content.to_owned()}),
+        Field::FieldStruct { .. } | Field::FieldOption { .. } | Field::FieldVec { .. } => None,
         simple_type => {
-          let type_token = get_simple_type_token(&simple_type);
+          let type_token: TokenStream = simple_type.into();
           set_text(&quote! {#type_token::from_str(text_content).unwrap()})
         }
-      })
+      }
     })
     .filter_map(|x| x)
     .collect();
@@ -355,11 +357,8 @@ pub fn parse(
       let label = &field.ident;
       let value_label = &get_value_label(&field.ident);
 
-      get_field_type(field).map(|_| {
-        quote! { #label: #value_label, }
-      })
+      quote! { #label: #value_label, }
     })
-    .filter_map(|x| x)
     .collect();
 
   let (init_unused, write_unused, visit_unused) = if call_flatten_visitors.is_empty() {

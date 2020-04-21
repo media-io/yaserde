@@ -1,4 +1,4 @@
-use crate::attribute::*;
+use crate::common::YaSerdeAttribute;
 use proc_macro2::{Ident, Span, TokenStream};
 
 pub fn enclose_formatted_characters(label: &Ident, label_name: String) -> TokenStream {
