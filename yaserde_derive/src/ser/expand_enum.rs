@@ -1,4 +1,4 @@
-use crate::common::{Field, YaSerdeAttribute};
+use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use crate::ser::{implement_deserializer::implement_deserializer, label::build_label_name};
 use proc_macro2::TokenStream;
 use syn::DataEnum;
@@ -49,23 +49,22 @@ fn inner_enum_inspector(
           let enum_fields: TokenStream = fields
             .named
             .iter()
+            .map(|field| YaSerdeField::new(field.clone()))
+            .filter(|field| !field.is_attribute())
             .map(|field| {
-              if Field::is_attribute(field) {
-                return None;
-              }
 
-              let field_label = Field::label(field);
+              let field_label = field.label();
 
-              if Field::is_text_content(field) {
+              if field.is_text_content() {
                 return Some(quote!(
                   let data_event = XmlEvent::characters(&self.#field_label);
                   writer.write(data_event).map_err(|e| e.to_string())?;
                 ));
               }
 
-              let field_label_name = Field::renamed_label(field, root_attributes);
+              let field_label_name = field.renamed_label(root_attributes);
 
-              match Field::from(field) {
+              match field.get_type() {
                 Field::FieldString
                 | Field::FieldBool
                 | Field::FieldU8

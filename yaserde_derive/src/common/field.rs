@@ -1,8 +1,98 @@
 use crate::common::attribute::YaSerdeAttribute;
 use proc_macro2::{Ident, TokenStream};
+use proc_macro2::Span;
 use std::fmt;
 use syn;
 use syn::Type::Path;
+use syn::spanned::Spanned;
+
+#[derive(Debug)]
+pub struct YaSerdeField {
+  syn_field: syn::Field,
+  attributes: YaSerdeAttribute,
+}
+
+impl YaSerdeField {
+  pub fn new(syn_field: syn::Field) -> Self {
+    let attributes = YaSerdeAttribute::parse(&syn_field.attrs);
+
+    YaSerdeField{
+      syn_field,
+      attributes,
+    }
+  }
+
+  pub fn is_attribute(&self) -> bool {
+    self.attributes.attribute
+  }
+
+  pub fn is_text_content(&self) -> bool {
+    self.attributes.text
+  }
+
+  pub fn label(&self) -> Option<Ident> {
+    self.syn_field.ident.clone()
+  }
+
+  pub fn renamed_label(&self, root_attributes: &YaSerdeAttribute) -> String {
+    let prefix = if root_attributes.default_namespace == self.attributes.prefix {
+      "".to_string()
+    } else {
+      self.attributes
+        .prefix
+        .clone()
+        .map_or("".to_string(), |prefix| prefix + ":")
+    };
+
+    let label =
+      self.attributes
+      .rename
+      .clone()
+      .unwrap_or_else(|| self.label().as_ref().unwrap().to_string());
+
+    format!("{}{}", prefix, label)
+  }
+
+  pub fn get_type(&self) -> Field {
+    Field::from(&self.syn_field)
+  }
+
+  pub fn get_span(&self) -> Span {
+    self.syn_field.span()
+  }
+
+  pub fn get_default_function(&self) -> Option<Ident> {
+    self.attributes.default.as_ref().map(|default|{
+      Ident::new(&default, self.get_span())
+    })
+  }
+
+  pub fn get_skip_serializing_if_function(&self) -> Option<Ident> {
+    self.attributes.skip_serializing_if.as_ref().map(|skip_serializing_if|{
+      Ident::new(&skip_serializing_if, self.get_span())
+    })
+  }
+
+  pub fn ser_wrap_default_attribute(&self, builder: TokenStream, setter: TokenStream) -> TokenStream {
+    let label = self.label();
+    if let Some(ref default_function) = self.get_default_function() {
+      quote! {
+        let yaserde_inner = #builder;
+        let struct_start_event =
+          if self.#label != #default_function() {
+            #setter
+          } else {
+            struct_start_event
+          };
+      }
+    } else {
+      quote! {
+        let yaserde_inner = #builder;
+        let struct_start_event = #setter;
+      }
+    }
+  }
+}
 
 #[derive(Debug)]
 pub enum Field {
