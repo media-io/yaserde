@@ -27,11 +27,10 @@ fn default_field_string() {
   serialize_and_validate!(model, content);
   deserialize_and_validate!(content, model, XmlStruct);
 
-
   let content = "<base><background>my_value</background></base>";
   let model = XmlStruct {
-      background: "my_value".to_string(),
-    };
+    background: "my_value".to_string(),
+  };
   serialize_and_validate!(model, content);
   deserialize_and_validate!(content, model, XmlStruct);
 }
@@ -85,7 +84,7 @@ fn default_field_number() {
 }
 
 #[test]
-fn de_default_attribute_string() {
+fn default_attribute_string() {
   fn default_string() -> String {
     "my_default_value".to_string()
   }

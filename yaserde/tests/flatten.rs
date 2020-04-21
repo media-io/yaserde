@@ -9,7 +9,7 @@ use yaserde::{YaDeserialize, YaSerialize};
 
 #[test]
 fn basic_flatten() {
-  #[derive(Default, PartialEq, Debug, YaSerialize)]
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct DateTime {
     #[yaserde(flatten)]
     date: Date,
@@ -18,7 +18,7 @@ fn basic_flatten() {
     kind: DateKind,
   }
 
-  #[derive(Default, PartialEq, Debug, YaSerialize)]
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct Date {
     year: i32,
     month: i32,
@@ -29,18 +29,18 @@ fn basic_flatten() {
     optional_extra: Option<OptionalExtra>,
   }
 
-  #[derive(Default, PartialEq, Debug, YaSerialize)]
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
   pub struct Extra {
     week: i32,
     century: i32,
   }
 
-  #[derive(Default, PartialEq, Debug, YaSerialize)]
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
   pub struct OptionalExtra {
     lunar_day: i32,
   }
 
-  #[derive(PartialEq, Debug, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   pub enum DateKind {
     #[yaserde(rename = "holidays")]
     Holidays(Vec<String>),
@@ -88,6 +88,7 @@ fn basic_flatten() {
     </DateTime>"#;
 
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, DateTime);
 }
 
 #[test]

@@ -7,7 +7,7 @@ use std::io::Write;
 use yaserde::YaSerialize;
 
 #[test]
-fn ser_skip_serializing_if_for_struct() {
+fn skip_serializing_if_for_struct() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(root = "base")]
   pub struct XmlStruct {

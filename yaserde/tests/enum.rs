@@ -3,18 +3,18 @@ extern crate yaserde;
 #[macro_use]
 extern crate yaserde_derive;
 
-use std::io::Write;
-use yaserde::YaSerialize;
+use std::io::{Read, Write};
+use yaserde::{YaDeserialize, YaSerialize};
 
 #[test]
-fn ser_enum() {
-  #[derive(YaSerialize, PartialEq, Debug)]
+fn basic_enum() {
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(root = "base")]
   pub struct XmlStruct {
     color: Color,
   }
 
-  #[derive(YaSerialize, PartialEq, Debug)]
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(root = "color")]
   pub enum Color {
     White,
@@ -46,17 +46,23 @@ fn ser_enum() {
 
   assert_eq!(Color::default(), Color::White);
 
-  #[derive(YaSerialize, PartialEq, Debug)]
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   pub struct RGBColor {
     red: String,
     green: String,
     blue: String,
   }
 
-  #[derive(YaSerialize, PartialEq, Debug)]
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   pub enum Alpha {
     Transparent,
     Opaque,
+  }
+
+  impl Default for Alpha {
+    fn default() -> Alpha {
+      Alpha::Transparent
+    }
   }
 
   let model = XmlStruct {
@@ -65,6 +71,7 @@ fn ser_enum() {
 
   let content = "<base><color>Black</color></base>";
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
     color: Color::Custom {
@@ -110,45 +117,54 @@ fn ser_enum() {
 </base>"#;
 
   serialize_and_validate!(model, content);
+  // TODO
+  // deserialize_and_validate!(content, model, XmlStruct);
 }
 
 #[test]
-fn ser_attribute_enum() {
-  #[derive(YaSerialize, PartialEq, Debug)]
+fn attribute_enum() {
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(root = "base")]
   pub struct XmlStruct {
     #[yaserde(attribute)]
     color: Color,
   }
 
-  #[derive(YaSerialize, PartialEq, Debug)]
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(root = "color")]
   pub enum Color {
     #[yaserde(rename = "pink")]
     Pink,
   }
 
+  impl Default for Color {
+    fn default() -> Color {
+      Color::Pink
+    }
+  }
+
   let model = XmlStruct { color: Color::Pink };
 
   let content = r#"<base color="pink" />"#;
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
 }
 
 #[test]
-fn ser_unnamed_enum() {
-  #[derive(YaSerialize, PartialEq, Debug)]
+fn unnamed_enum() {
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(root = "base")]
   pub struct XmlStruct {
     color: Enum,
   }
 
-  #[derive(YaSerialize, PartialEq, Debug, Default)]
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   pub struct OtherStruct {
     fi: i32,
     se: i32,
   }
 
-  #[derive(YaSerialize, PartialEq, Debug)]
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   pub enum Enum {
     Simple,
     Field(String),
@@ -178,6 +194,7 @@ fn ser_unnamed_enum() {
 
   let content = "<base><color><Field>some_text</Field></color></base>";
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
     color: Enum::FullPath(String::from("some_text")),
@@ -185,6 +202,7 @@ fn ser_unnamed_enum() {
 
   let content = "<base><color><FullPath>some_text</FullPath></color></base>";
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
     color: Enum::Integer(56),
@@ -192,6 +210,7 @@ fn ser_unnamed_enum() {
 
   let content = "<base><color><Integer>56</Integer></color></base>";
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
     color: Enum::UserStruct(OtherStruct { fi: 24, se: 42 }),
@@ -199,6 +218,7 @@ fn ser_unnamed_enum() {
 
   let content = "<base><color><UserStruct><fi>24</fi><se>42</se></UserStruct></color></base>";
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
     color: Enum::OptionString(Some(String::from("some_text"))),
@@ -206,6 +226,7 @@ fn ser_unnamed_enum() {
 
   let content = "<base><color><OptionString>some_text</OptionString></color></base>";
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
     color: Enum::OptionString(None),
@@ -213,6 +234,8 @@ fn ser_unnamed_enum() {
 
   let content = "<base><color /></base>";
   serialize_and_validate!(model, content);
+  // TODO
+  // deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
     color: Enum::OptionUserStruct(Some(OtherStruct { fi: 12, se: 23 })),
@@ -221,6 +244,7 @@ fn ser_unnamed_enum() {
   let content =
     "<base><color><OptionUserStruct><fi>12</fi><se>23</se></OptionUserStruct></color></base>";
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
     color: Enum::OptionUserStruct(None),
@@ -228,6 +252,8 @@ fn ser_unnamed_enum() {
 
   let content = "<base><color /></base>";
   serialize_and_validate!(model, content);
+  // TODO
+  // deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
     color: Enum::Strings(vec![String::from("abc"), String::from("def")]),
@@ -235,6 +261,7 @@ fn ser_unnamed_enum() {
 
   let content = "<base><color><Strings>abc</Strings><Strings>def</Strings></color></base>";
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
     color: Enum::Ints(vec![23, 45]),
@@ -242,6 +269,7 @@ fn ser_unnamed_enum() {
 
   let content = "<base><color><Ints>23</Ints><Ints>45</Ints></color></base>";
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
     color: Enum::Structs(vec![
@@ -252,6 +280,7 @@ fn ser_unnamed_enum() {
 
   let content = "<base><color><Structs><fi>12</fi><se>23</se></Structs><Structs><fi>34</fi><se>45</se></Structs></color></base>";
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
     color: Enum::ToRename(87),
@@ -259,6 +288,7 @@ fn ser_unnamed_enum() {
 
   let content = "<base><color><renamed>87</renamed></color></base>";
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
     color: Enum::ToRenameDots(84),
@@ -266,4 +296,5 @@ fn ser_unnamed_enum() {
 
   let content = "<base><color><renamed.with.dots>84</renamed.with.dots></color></base>";
   serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
 }
