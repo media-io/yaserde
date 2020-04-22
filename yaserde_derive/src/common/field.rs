@@ -118,19 +118,13 @@ impl YaSerdeField {
       .map(|skip_serializing_if| Ident::new(&skip_serializing_if, self.get_span()))
   }
 
-  pub fn get_namespace_matching(&self, root_attributes: &YaSerdeAttribute) -> TokenStream {
-    root_attributes
-      .namespaces
-      .iter()
-      .map(|(prefix, namespace)| {
-        if self.attributes.prefix == Some(prefix.to_string()) {
-          Some(quote!(#namespace => {}))
-        } else {
-          None
-        }
-      })
-      .filter_map(|x| x)
-      .collect()
+  pub fn get_namespace_matching(
+    &self,
+    root_attributes: &YaSerdeAttribute,
+    element_namespace: TokenStream,
+    element_name: TokenStream,
+    ) -> TokenStream {
+    root_attributes.get_namespace_matching(&self.attributes.prefix, element_namespace, element_name, false)
   }
 
   pub fn ser_wrap_default_attribute(
@@ -184,37 +178,6 @@ pub enum Field {
 }
 
 impl Field {
-  pub fn is_attribute(token_field: &syn::Field) -> bool {
-    YaSerdeAttribute::parse(&token_field.attrs).attribute
-  }
-
-  pub fn is_text_content(token_field: &syn::Field) -> bool {
-    YaSerdeAttribute::parse(&token_field.attrs).text
-  }
-
-  pub fn label(token_field: &syn::Field) -> Option<Ident> {
-    token_field.ident.clone()
-  }
-
-  pub fn renamed_label(token_field: &syn::Field, root_attributes: &YaSerdeAttribute) -> String {
-    let attributes = YaSerdeAttribute::parse(&token_field.attrs);
-
-    let prefix = if root_attributes.default_namespace == attributes.prefix {
-      "".to_string()
-    } else {
-      attributes
-        .prefix
-        .clone()
-        .map_or("".to_string(), |prefix| prefix + ":")
-    };
-
-    let label = attributes
-      .rename
-      .unwrap_or_else(|| token_field.ident.as_ref().unwrap().to_string());
-
-    format!("{}{}", prefix, label)
-  }
-
   pub fn get_simple_type_visitor(&self) -> TokenStream {
     let ident = format_ident!("visit_{}", self.to_string());
     quote! {#ident}

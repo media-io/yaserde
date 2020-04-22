@@ -10,7 +10,7 @@ use yaserde::{YaDeserialize, YaSerialize};
 fn struct_simple_namespace() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
-    root = "book",
+    rename = "book",
     prefix = "ns",
     namespace = "ns: http://www.sample.com/ns/domain"
   )]
@@ -41,7 +41,7 @@ fn struct_simple_namespace() {
 fn struct_multiple_namespaces() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
-    root = "book",
+    rename = "book",
     prefix = "ns",
     namespace = "ns: http://www.sample.com/ns/domain",
     namespace = "ns2: http://www.sample.com/ns/domain_2"
@@ -73,7 +73,7 @@ fn struct_multiple_namespaces() {
 fn struct_partial_namespace() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
-    root = "book",
+    rename = "book",
     prefix = "ns",
     namespace = "ns: http://www.sample.com/ns/domain"
   )]
@@ -103,7 +103,7 @@ fn struct_partial_namespace() {
 fn struct_sub_namespace_definition() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
-    root = "book",
+    rename = "book",
     prefix = "ns",
     namespace = "ns: http://www.sample.com/ns/domain",
     namespace = "ns2: http://www.sample.com/ns/domain_2"
@@ -206,7 +206,7 @@ fn struct_namespace_nested_defined_at_root() {
 fn struct_attribute_namespace() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
-    root = "root",
+    rename = "root",
     namespace = "ns1: http://www.sample.com/ns/domain1",
     namespace = "ns2: http://www.sample.com/ns/domain2"
   )]
@@ -236,7 +236,7 @@ fn struct_attribute_namespace() {
 fn struct_implicit_default_namespace() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
-    root = "tt",
+    rename = "tt",
     namespace = "http://www.w3.org/ns/ttml",
     namespace = "ttm: http://www.w3.org/ns/ttml#metadata"
   )]
@@ -258,7 +258,7 @@ fn struct_implicit_default_namespace() {
 fn struct_explicit_default_namespace() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
-    root = "tt",
+    rename = "tt",
     default_namespace = "ttml",
     namespace = "ttml: http://www.w3.org/ns/ttml",
     namespace = "ttm: http://www.w3.org/ns/ttml#metadata"
@@ -281,7 +281,7 @@ fn struct_explicit_default_namespace() {
 fn struct_default_namespace_via_attribute_with_prefix() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
-    root = "tt",
+    rename = "tt",
     prefix = "TTML",
     default_namespace = "TTML",
     namespace = "TTML: http://www.w3.org/ns/ttml",
@@ -305,7 +305,7 @@ fn struct_default_namespace_via_attribute_with_prefix() {
 fn enum_namespace() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
-    root = "root",
+    rename = "root",
     prefix = "ns",
     namespace = "ns: http://www.sample.com/ns/domain"
   )]
@@ -335,7 +335,7 @@ fn enum_namespace() {
 fn enum_multi_namespaces() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
-    root = "root",
+    rename = "root",
     namespace = "ns1: http://www.sample.com/ns/domain1",
     namespace = "ns2: http://www.sample.com/ns/domain2"
   )]
@@ -376,7 +376,7 @@ fn enum_multi_namespaces() {
 fn enum_attribute_namespace() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
-    root = "root",
+    rename = "root",
     prefix = "ns",
     namespace = "ns: http://www.sample.com/ns/domain"
   )]
@@ -415,7 +415,7 @@ fn enum_attribute_namespace() {
 fn struct_bad_namespace() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
-    root = "book",
+    rename = "book",
     prefix = "ns",
     namespace = "ns: http://www.sample.com/ns/domain",
     namespace = "ns2: http://www.sample.com/ns/domain_2"

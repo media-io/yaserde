@@ -9,7 +9,7 @@ use yaserde::YaSerialize;
 #[test]
 fn ser_basic() {
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     item: String,
   }
@@ -25,7 +25,7 @@ fn ser_basic() {
 #[test]
 fn ser_list_of_items() {
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     items: Vec<String>,
   }
@@ -38,13 +38,13 @@ fn ser_list_of_items() {
   serialize_and_validate!(model, content);
 
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStructOfStruct {
     items: Vec<SubStruct>,
   }
 
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "items")]
+  #[yaserde(rename = "items")]
   pub struct SubStruct {
     field: String,
   }
@@ -68,7 +68,7 @@ fn ser_list_of_items() {
 #[test]
 fn ser_attributes() {
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     #[yaserde(attribute)]
     item: String,
@@ -76,7 +76,7 @@ fn ser_attributes() {
   }
 
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "sub")]
+  #[yaserde(rename = "sub")]
   pub struct SubStruct {
     #[yaserde(attribute)]
     subitem: String,
@@ -167,7 +167,7 @@ fn ser_attributes_complex() {
 #[test]
 fn ser_rename() {
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     #[yaserde(attribute, rename = "Item")]
     item: String,
@@ -178,7 +178,7 @@ fn ser_rename() {
   }
 
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "sub")]
+  #[yaserde(rename = "sub")]
   pub struct SubStruct {
     #[yaserde(attribute, rename = "sub_item")]
     subitem: String,
@@ -214,7 +214,7 @@ fn ser_rename() {
 #[test]
 fn ser_text_content_with_attributes() {
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     #[yaserde(attribute, rename = "Item")]
     item: String,
@@ -223,7 +223,7 @@ fn ser_text_content_with_attributes() {
   }
 
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "sub")]
+  #[yaserde(rename = "sub")]
   pub struct SubStruct {
     #[yaserde(attribute, rename = "sub_item")]
     subitem: String,
@@ -263,7 +263,7 @@ fn ser_text_content_with_attributes() {
 #[test]
 fn ser_name_issue_21() {
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     name: String,
   }

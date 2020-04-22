@@ -1,6 +1,4 @@
-use proc_macro2::token_stream::IntoIter;
-use proc_macro2::Delimiter;
-use proc_macro2::TokenTree;
+use proc_macro2::{token_stream::IntoIter, Delimiter, TokenStream, TokenTree};
 use std::collections::BTreeMap;
 use syn::Attribute;
 
@@ -12,7 +10,6 @@ pub struct YaSerdeAttribute {
   pub flatten: bool,
   pub namespaces: BTreeMap<String, String>,
   pub prefix: Option<String>,
-  pub root: Option<String>,
   pub rename: Option<String>,
   pub skip_serializing_if: Option<String>,
   pub text: bool,
@@ -41,7 +38,6 @@ impl YaSerdeAttribute {
     let mut namespaces = BTreeMap::new();
     let mut prefix = None;
     let mut rename = None;
-    let mut root = None;
     let mut skip_serializing_if = None;
     let mut text = false;
 
@@ -84,9 +80,6 @@ impl YaSerdeAttribute {
                   "rename" => {
                     rename = get_value(&mut attr_iter);
                   }
-                  "root" => {
-                    root = get_value(&mut attr_iter);
-                  }
                   "skip_serializing_if" => {
                     skip_serializing_if = get_value(&mut attr_iter);
                   }
@@ -110,10 +103,50 @@ impl YaSerdeAttribute {
       namespaces,
       prefix,
       rename,
-      root,
       skip_serializing_if,
       text,
     }
+  }
+
+  pub fn get_namespace_matching(
+    &self,
+    prefix: &Option<String>,
+    element_namespace: TokenStream,
+    element_name: TokenStream,
+    take_root_prefix: bool
+    ) -> TokenStream {
+    let configured_prefix =
+      if take_root_prefix {
+        self.prefix.clone()
+      } else {
+        prefix.clone()
+      };
+
+    let namespaces_matches : TokenStream =
+      self
+        .namespaces
+        .iter()
+        .map(|(prefix, namespace)| {
+          if configured_prefix == Some(prefix.to_string()) {
+            Some(quote!(#namespace => {}))
+          } else {
+            None
+          }
+        })
+        .filter_map(|x| x)
+        .collect();
+
+    quote!(
+      if let Some(namespace) = #element_namespace {
+        match namespace.as_str() {
+          #namespaces_matches
+          bad_namespace => {
+            let msg = format!("bad namespace for {}, found {}", #element_name, bad_namespace);
+            return Err(msg);
+          }
+        }
+      }
+    )
   }
 }
 
@@ -130,7 +163,6 @@ fn parse_empty_attributes() {
       flatten: false,
       namespaces: BTreeMap::new(),
       prefix: None,
-      root: None,
       rename: None,
       skip_serializing_if: None,
       text: false,
@@ -180,7 +212,6 @@ fn parse_attributes() {
       flatten: false,
       namespaces: BTreeMap::new(),
       prefix: None,
-      root: None,
       rename: None,
       skip_serializing_if: None,
       text: false,
@@ -205,7 +236,6 @@ fn parse_attributes_with_values() {
     arguments: PathArguments::None,
   });
 
-  // #[()]
   let attributes = vec![Attribute {
     pound_token: Pound {
       spans: [Span::call_site()],
@@ -234,7 +264,6 @@ fn parse_attributes_with_values() {
       flatten: true,
       namespaces,
       prefix: None,
-      root: None,
       rename: None,
       skip_serializing_if: None,
       text: false,

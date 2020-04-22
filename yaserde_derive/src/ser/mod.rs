@@ -15,25 +15,30 @@ pub fn expand_derive_serialize(ast: &syn::DeriveInput) -> Result<TokenStream, St
   let attrs = &ast.attrs;
   let data = &ast.data;
 
-  let root_attrs = YaSerdeAttribute::parse(attrs);
-  let root = root_attrs.clone().root.unwrap_or_else(|| name.to_string());
+  let root_attributes = YaSerdeAttribute::parse(attrs);
+  let root_name = root_attributes
+    .clone()
+    .rename
+    .unwrap_or_else(|| name.to_string());
 
-  let prefix = if root_attrs.default_namespace == root_attrs.prefix {
+  let prefix = if root_attributes.default_namespace == root_attributes.prefix {
     "".to_string()
   } else {
-    root_attrs
+    root_attributes
       .clone()
       .prefix
       .map_or("".to_string(), |prefix| prefix + ":")
   };
 
-  let root = format!("{}{}", prefix, root);
+  let root_name = format!("{}{}", prefix, root_name);
 
   let impl_block = match *data {
     syn::Data::Struct(ref data_struct) => {
-      expand_struct::serialize(data_struct, name, &root, &root_attrs)
+      expand_struct::serialize(data_struct, name, &root_name, &root_attributes)
     }
-    syn::Data::Enum(ref data_enum) => expand_enum::serialize(data_enum, name, &root, &root_attrs),
+    syn::Data::Enum(ref data_enum) => {
+      expand_enum::serialize(data_enum, name, &root_name, &root_attributes)
+    }
     syn::Data::Union(ref _data_union) => unimplemented!(),
   };
 

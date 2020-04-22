@@ -9,13 +9,13 @@ use yaserde::{YaDeserialize, YaSerialize};
 #[test]
 fn basic_enum() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     color: Color,
   }
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(root = "color")]
+  #[yaserde(rename = "color")]
   pub enum Color {
     White,
     Black,
@@ -124,14 +124,14 @@ fn basic_enum() {
 #[test]
 fn attribute_enum() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     #[yaserde(attribute)]
     color: Color,
   }
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(root = "color")]
+  #[yaserde(rename = "color")]
   pub enum Color {
     #[yaserde(rename = "pink")]
     Pink,
@@ -153,7 +153,7 @@ fn attribute_enum() {
 #[test]
 fn unnamed_enum() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     color: Enum,
   }

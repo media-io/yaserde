@@ -9,18 +9,7 @@ pub fn parse(
   root: &str,
   root_attributes: &YaSerdeAttribute,
 ) -> TokenStream {
-  let namespaces_matches: TokenStream = root_attributes
-    .namespaces
-    .iter()
-    .map(|(prefix, namespace)| {
-      if root_attributes.prefix.as_ref() == Some(prefix) {
-        Some(quote!(#namespace => {}))
-      } else {
-        None
-      }
-    })
-    .filter_map(|x| x)
-    .collect();
+  let namespaces_matching = root_attributes.get_namespace_matching(&None, quote!(struct_namespace), quote!(named_element), true);
 
   let variables: TokenStream = data_struct
     .fields
@@ -330,15 +319,7 @@ pub fn parse(
         debug!("Struct: start to parse {:?}", named_element);
 
         if reader.depth() == 0 {
-          if let Some(ref namespace) = struct_namespace {
-            match namespace.as_str() {
-              #namespaces_matches
-              bad_ns => {
-                let msg = format!("bad namespace for {}, found {}", named_element, bad_ns);
-                return Err(msg);
-              }
-            }
-          }
+          #namespaces_matching
         }
 
         #variables
@@ -419,21 +400,13 @@ fn build_call_visitor(
   let label_name = field.renamed_label_without_namespace();
   let visitor_label = build_visitor_ident(&label_name, field.get_span(), None);
 
-  let namespaces_matches = field.get_namespace_matching(root_attributes);
+  let namespaces_matching = field.get_namespace_matching(root_attributes, quote!(name.namespace.as_ref()), quote!(name.local_name.as_str()));
 
   Some(quote! {
     #label_name => {
       let visitor = #visitor_label{};
 
-      if let Some(namespace) = name.namespace.as_ref() {
-        match namespace.as_str() {
-          #namespaces_matches
-          bad_ns => {
-            let msg = format!("bad field namespace for {}, found {}", name.local_name.as_str(), bad_ns);
-            return Err(msg);
-          }
-        }
-      }
+      #namespaces_matching
 
       let result = reader.read_inner_value::<#field_type, _>(|reader| {
         if let Ok(XmlEvent::Characters(s)) = reader.peek() {

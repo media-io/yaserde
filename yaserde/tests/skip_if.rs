@@ -13,7 +13,7 @@ fn skip_serializing_if_for_struct() {
   }
 
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     #[yaserde(
       skip_serializing_if = "check_string_function",

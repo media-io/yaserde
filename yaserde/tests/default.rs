@@ -13,7 +13,7 @@ fn default_field_string() {
   }
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     #[yaserde(default = "default_string")]
     background: String,
@@ -42,7 +42,7 @@ fn default_field_boolean() {
   }
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     #[yaserde(default = "default_boolean")]
     background: bool,
@@ -66,7 +66,7 @@ fn default_field_number() {
   }
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     #[yaserde(default = "default_number")]
     background: u8,
@@ -90,7 +90,7 @@ fn default_attribute_string() {
   }
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(root = "base")]
+  #[yaserde(rename = "base")]
   pub struct XmlStruct {
     #[yaserde(attribute, default = "default_string")]
     background: String,

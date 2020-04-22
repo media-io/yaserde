@@ -144,7 +144,7 @@ mod testing {
   macro_rules! test_for_type {
     ($type:ty, $value:expr, $content:expr) => {{
       #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-      #[yaserde(root = "data")]
+      #[yaserde(rename = "data")]
       pub struct Data {
         item: $type,
       }
@@ -166,7 +166,7 @@ mod testing {
   macro_rules! test_for_attribute_type {
     ($type: ty, $value: expr, $content: expr) => {{
       #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-      #[yaserde(root = "data")]
+      #[yaserde(rename = "data")]
       pub struct Data {
         #[yaserde(attribute)]
         item: $type,
