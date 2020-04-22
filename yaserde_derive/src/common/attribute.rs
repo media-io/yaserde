@@ -113,28 +113,26 @@ impl YaSerdeAttribute {
     prefix: &Option<String>,
     element_namespace: TokenStream,
     element_name: TokenStream,
-    take_root_prefix: bool
-    ) -> TokenStream {
-    let configured_prefix =
-      if take_root_prefix {
-        self.prefix.clone()
-      } else {
-        prefix.clone()
-      };
+    take_root_prefix: bool,
+  ) -> TokenStream {
+    let configured_prefix = if take_root_prefix {
+      self.prefix.clone()
+    } else {
+      prefix.clone()
+    };
 
-    let namespaces_matches : TokenStream =
-      self
-        .namespaces
-        .iter()
-        .map(|(prefix, namespace)| {
-          if configured_prefix == Some(prefix.to_string()) {
-            Some(quote!(#namespace => {}))
-          } else {
-            None
-          }
-        })
-        .filter_map(|x| x)
-        .collect();
+    let namespaces_matches: TokenStream = self
+      .namespaces
+      .iter()
+      .map(|(prefix, namespace)| {
+        if configured_prefix == Some(prefix.to_string()) {
+          Some(quote!(#namespace => {}))
+        } else {
+          None
+        }
+      })
+      .filter_map(|x| x)
+      .collect();
 
     quote!(
       if let Some(namespace) = #element_namespace {

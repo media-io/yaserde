@@ -9,7 +9,12 @@ pub fn parse(
   root: &str,
   root_attributes: &YaSerdeAttribute,
 ) -> TokenStream {
-  let namespaces_matching = root_attributes.get_namespace_matching(&None, quote!(struct_namespace), quote!(named_element), true);
+  let namespaces_matching = root_attributes.get_namespace_matching(
+    &None,
+    quote!(struct_namespace),
+    quote!(named_element),
+    true,
+  );
 
   let variables: TokenStream = data_struct
     .fields
@@ -400,7 +405,11 @@ fn build_call_visitor(
   let label_name = field.renamed_label_without_namespace();
   let visitor_label = build_visitor_ident(&label_name, field.get_span(), None);
 
-  let namespaces_matching = field.get_namespace_matching(root_attributes, quote!(name.namespace.as_ref()), quote!(name.local_name.as_str()));
+  let namespaces_matching = field.get_namespace_matching(
+    root_attributes,
+    quote!(name.namespace.as_ref()),
+    quote!(name.local_name.as_str()),
+  );
 
   Some(quote! {
     #label_name => {

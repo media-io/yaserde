@@ -13,13 +13,18 @@ pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<TokenStream, 
   let data = &ast.data;
 
   let root_attributes = YaSerdeAttribute::parse(attrs);
-  let root_name = root_attributes.clone().rename.unwrap_or_else(|| name.to_string());
+  let root_name = root_attributes
+    .clone()
+    .rename
+    .unwrap_or_else(|| name.to_string());
 
   let impl_block = match *data {
     syn::Data::Struct(ref data_struct) => {
       expand_struct::parse(data_struct, name, &root_name, &root_attributes)
     }
-    syn::Data::Enum(ref data_enum) => expand_enum::parse(data_enum, name, &root_name, &root_attributes),
+    syn::Data::Enum(ref data_enum) => {
+      expand_enum::parse(data_enum, name, &root_name, &root_attributes)
+    }
     syn::Data::Union(ref _data_union) => unimplemented!(),
   };
 

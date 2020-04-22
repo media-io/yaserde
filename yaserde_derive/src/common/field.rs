@@ -123,8 +123,13 @@ impl YaSerdeField {
     root_attributes: &YaSerdeAttribute,
     element_namespace: TokenStream,
     element_name: TokenStream,
-    ) -> TokenStream {
-    root_attributes.get_namespace_matching(&self.attributes.prefix, element_namespace, element_name, false)
+  ) -> TokenStream {
+    root_attributes.get_namespace_matching(
+      &self.attributes.prefix,
+      element_namespace,
+      element_name,
+      false,
+    )
   }
 
   pub fn ser_wrap_default_attribute(
