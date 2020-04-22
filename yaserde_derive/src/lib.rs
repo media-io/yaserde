@@ -6,9 +6,8 @@ extern crate proc_macro2;
 extern crate quote;
 extern crate syn;
 
-mod attribute;
+mod common;
 mod de;
-mod field_type;
 mod ser;
 
 use proc_macro::TokenStream;

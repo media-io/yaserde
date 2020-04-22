@@ -1,4 +1,4 @@
-use crate::attribute::YaSerdeAttribute;
+use crate::common::YaSerdeAttribute;
 use proc_macro2::Ident;
 
 pub fn build_label_name(

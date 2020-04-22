@@ -1,28 +1,24 @@
-use proc_macro2::{Span, TokenStream};
-use syn::Ident;
+use crate::common::YaSerdeField;
+use proc_macro2::TokenStream;
 
 pub fn build_default_value(
-  label: &Option<Ident>,
-  field_type: &TokenStream,
-  value: &TokenStream,
-  default: &Option<String>,
+  field: &YaSerdeField,
+  field_type: Option<TokenStream>,
+  value: TokenStream,
 ) -> Option<TokenStream> {
-  let value = default
-    .as_ref()
-    .map(|d| {
-      let default_function = Ident::new(
-        &d,
-        label
-          .as_ref()
-          .map_or(Span::call_site(), |ident| ident.span()),
-      );
+  let label = field.get_value_label();
 
-      quote!(#default_function())
-    })
+  let default_value = field
+    .get_default_function()
+    .map(|default_function| quote!(#default_function()))
     .unwrap_or_else(|| quote!(#value));
+
+  let field_type = field_type
+    .map(|field_type| quote!(: #field_type))
+    .unwrap_or(quote!());
 
   Some(quote! {
     #[allow(unused_mut)]
-    let mut #label : #field_type = #value;
+    let mut #label #field_type = #default_value;
   })
 }

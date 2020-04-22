@@ -1,28 +1,15 @@
 #[macro_use]
+extern crate yaserde;
+#[macro_use]
 extern crate yaserde_derive;
 
-use std::io::Write;
-use yaserde::ser::to_string;
-use yaserde::YaSerialize;
+use std::io::{Read, Write};
 
-macro_rules! convert_and_validate {
-  ($model: expr, $content: expr) => {
-    let data: Result<String, String> = to_string(&$model);
-    assert_eq!(
-      data,
-      Ok(
-        String::from($content)
-          .split("\n")
-          .map(|s| s.trim())
-          .collect::<String>()
-      )
-    );
-  };
-}
+use yaserde::{YaDeserialize, YaSerialize};
 
 #[test]
-fn ser_flatten() {
-  #[derive(Default, PartialEq, Debug, YaSerialize)]
+fn basic_flatten() {
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct DateTime {
     #[yaserde(flatten)]
     date: Date,
@@ -31,7 +18,7 @@ fn ser_flatten() {
     kind: DateKind,
   }
 
-  #[derive(Default, PartialEq, Debug, YaSerialize)]
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct Date {
     year: i32,
     month: i32,
@@ -42,18 +29,18 @@ fn ser_flatten() {
     optional_extra: Option<OptionalExtra>,
   }
 
-  #[derive(Default, PartialEq, Debug, YaSerialize)]
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
   pub struct Extra {
     week: i32,
     century: i32,
   }
 
-  #[derive(Default, PartialEq, Debug, YaSerialize)]
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
   pub struct OptionalExtra {
     lunar_day: i32,
   }
 
-  #[derive(PartialEq, Debug, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   pub enum DateKind {
     #[yaserde(rename = "holidays")]
     Holidays(Vec<String>),
@@ -87,7 +74,6 @@ fn ser_flatten() {
   };
 
   let content = r#"
-    <?xml version="1.0" encoding="utf-8"?>
     <DateTime>
       <year>2020</year>
       <month>1</month>
@@ -101,12 +87,13 @@ fn ser_flatten() {
       <holidays>Polar Bear Swim Day</holidays>
     </DateTime>"#;
 
-  convert_and_validate!(model, content);
+  serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, DateTime);
 }
 
 #[test]
-fn ser_root_flatten_struct() {
-  #[derive(YaSerialize, PartialEq, Debug)]
+fn root_flatten_struct() {
+  #[derive(YaDeserialize, YaSerialize, PartialEq, Debug)]
   #[yaserde(flatten)]
   pub struct Content {
     binary_data: String,
@@ -117,12 +104,15 @@ fn ser_root_flatten_struct() {
     binary_data: "binary".to_string(),
     string_data: "string".to_string(),
   };
-  let content = r#"<?xml version="1.0" encoding="utf-8"?><binary_data>binary</binary_data><string_data>string</string_data>"#;
-  convert_and_validate!(model, content);
+
+  let content = "<binary_data>binary</binary_data><string_data>string</string_data>";
+
+  serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, Content);
 }
 
 #[test]
-fn ser_root_flatten_enum() {
+fn root_flatten_enum() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(flatten)]
   pub enum Content {
@@ -143,14 +133,14 @@ fn ser_root_flatten_enum() {
   let model = Content::Binary(Binary {
     binary_data: "binary".to_string(),
   });
-  let content =
-    r#"<?xml version="1.0" encoding="utf-8"?><Binary><binary_data>binary</binary_data></Binary>"#;
-  convert_and_validate!(model, content);
+
+  let content = "<Binary><binary_data>binary</binary_data></Binary>";
+  serialize_and_validate!(model, content);
 
   let model = Content::Data(Data {
     string_data: "string".to_string(),
   });
-  let content =
-    r#"<?xml version="1.0" encoding="utf-8"?><Data><string_data>string</string_data></Data>"#;
-  convert_and_validate!(model, content);
+
+  let content = "<Data><string_data>string</string_data></Data>";
+  serialize_and_validate!(model, content);
 }

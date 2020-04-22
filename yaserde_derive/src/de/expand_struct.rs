@@ -1,11 +1,7 @@
-use crate::attribute::*;
+use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use crate::de::build_default_value::build_default_value;
-use crate::field_type::*;
 use proc_macro2::{Span, TokenStream};
-use std::collections::BTreeMap;
-use syn::spanned::Spanned;
-use syn::DataStruct;
-use syn::Ident;
+use syn::{DataStruct, Ident};
 
 pub fn parse(
   data_struct: &DataStruct,
@@ -13,79 +9,43 @@ pub fn parse(
   root: &str,
   root_attributes: &YaSerdeAttribute,
 ) -> TokenStream {
-  let namespaces_matches: TokenStream = root_attributes
-    .namespaces
-    .iter()
-    .map(|(p, ns)| {
-      if root_attributes.prefix.as_ref() == Some(p) {
-        Some(quote!(#ns => {}))
-      } else {
-        None
-      }
-    })
-    .filter_map(|x| x)
-    .collect();
+  let namespaces_matching = root_attributes.get_namespace_matching(
+    &None,
+    quote!(struct_namespace),
+    quote!(named_element),
+    true,
+  );
 
   let variables: TokenStream = data_struct
     .fields
     .iter()
-    .map(|field| {
-      let label = &get_value_label(&field.ident);
-      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeStruct { struct_name } => build_default_value(
-          label,
-          &quote! {#struct_name},
-          &quote! {#struct_name::default()},
-          &field_attrs.default,
-        ),
-        FieldType::FieldTypeOption { .. } => {
-          if let Some(d) = &field_attrs.default {
-            let default_function = Ident::new(&d, field.span());
-
-            Some(quote! {
-              #[allow(unused_mut, non_snake_case, non_camel_case_types)]
-              let mut #label = #default_function();
-            })
-          } else {
-            Some(quote! {
-              #[allow(unused_mut, non_snake_case, non_camel_case_types)]
-              let mut #label = None;
-            })
-          }
+    .map(|field| YaSerdeField::new(field.clone()))
+    .map(|field| match field.get_type() {
+      Field::FieldStruct { struct_name } => build_default_value(
+        &field,
+        Some(quote!(#struct_name)),
+        quote!(#struct_name::default()),
+      ),
+      Field::FieldOption { .. } => build_default_value(&field, None, quote!(None)),
+      Field::FieldVec { data_type } => match *data_type {
+        Field::FieldStruct { ref struct_name } => {
+          build_default_value(&field, Some(quote!(Vec<#struct_name>)), quote!(vec![]))
         }
-        FieldType::FieldTypeVec { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { ref struct_name } => build_default_value(
-            label,
-            &quote! {Vec<#struct_name>},
-            &quote! {vec![]},
-            &field_attrs.default,
-          ),
-          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => {
-            unimplemented!();
-          }
-          simple_type => {
-            let type_token = get_simple_type_token(&simple_type);
-
-            build_default_value(
-              label,
-              &quote! {Vec<#type_token>},
-              &quote! {vec![]},
-              &field_attrs.default,
-            )
-          }
-        },
+        Field::FieldOption { .. } | Field::FieldVec { .. } => {
+          unimplemented!();
+        }
         simple_type => {
-          let type_token = get_simple_type_token(&simple_type);
-          build_default_value(
-            label,
-            &type_token,
-            &quote! {#type_token::default()},
-            &field_attrs.default,
-          )
+          let type_token: TokenStream = simple_type.into();
+
+          build_default_value(&field, Some(quote!(Vec<#type_token>)), quote!(vec![]))
         }
-      })
+      },
+      simple_type => {
+        let type_token: TokenStream = simple_type.into();
+        let value_builder = quote!(#type_token::default());
+
+        build_default_value(&field, Some(type_token), value_builder)
+      }
     })
     .filter_map(|x| x)
     .collect();
@@ -93,12 +53,8 @@ pub fn parse(
   let field_visitors: TokenStream = data_struct
     .fields
     .iter()
+    .map(|field| YaSerdeField::new(field.clone()))
     .map(|field| {
-      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-      let label_name = field_attrs
-        .rename
-        .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string());
-
       let struct_visitor = |struct_name: syn::Path| {
         let struct_id: String = struct_name
           .segments
@@ -106,7 +62,7 @@ pub fn parse(
           .map(|s| s.ident.to_string())
           .collect();
 
-        let visitor_label = build_visitor_ident(&label_name, field.span(), Some(&struct_name));
+        let visitor_label = field.get_visitor_ident(Some(&struct_name));
 
         Some(quote! {
           #[allow(non_snake_case, non_camel_case_types)]
@@ -123,10 +79,10 @@ pub fn parse(
         })
       };
 
-      let simple_type_visitor = |simple_type: FieldType| {
-        let field_type = get_simple_type_token(&simple_type);
-        let visitor = get_simple_type_visitor(&simple_type);
-        let visitor_label = build_visitor_ident(&label_name, field.span(), None);
+      let simple_type_visitor = |simple_type: Field| {
+        let visitor = simple_type.get_simple_type_visitor();
+        let visitor_label = field.get_visitor_ident(None);
+        let field_type: TokenStream = simple_type.into();
 
         Some(quote! {
           #[allow(non_snake_case, non_camel_case_types)]
@@ -141,20 +97,20 @@ pub fn parse(
         })
       };
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeStruct { struct_name } => struct_visitor(struct_name),
-        FieldType::FieldTypeOption { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { struct_name } => struct_visitor(struct_name),
-          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => None,
+      match field.get_type() {
+        Field::FieldStruct { struct_name } => struct_visitor(struct_name),
+        Field::FieldOption { data_type } => match *data_type {
+          Field::FieldStruct { struct_name } => struct_visitor(struct_name),
+          Field::FieldOption { .. } | Field::FieldVec { .. } => None,
           simple_type => simple_type_visitor(simple_type),
         },
-        FieldType::FieldTypeVec { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { struct_name } => struct_visitor(struct_name),
-          FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => None,
+        Field::FieldVec { data_type } => match *data_type {
+          Field::FieldStruct { struct_name } => struct_visitor(struct_name),
+          Field::FieldOption { .. } | Field::FieldVec { .. } => None,
           simple_type => simple_type_visitor(simple_type),
         },
         simple_type => simple_type_visitor(simple_type),
-      })
+      }
     })
     .filter_map(|x| x)
     .collect();
@@ -162,19 +118,11 @@ pub fn parse(
   let call_visitors: TokenStream = data_struct
     .fields
     .iter()
+    .map(|field| YaSerdeField::new(field.clone()))
+    .filter(|field| !field.is_attribute() || !field.is_flatten())
     .map(|field| {
-      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-      let label = &field.ident;
-      let value_label = &get_value_label(&field.ident);
-
-      if field_attrs.attribute || field_attrs.flatten {
-        return None;
-      }
-
-      let label_name = field_attrs
-        .rename
-        .clone()
-        .unwrap_or_else(|| label.as_ref().unwrap().to_string());
+      let value_label = field.get_value_label();
+      let label_name = field.renamed_label_without_namespace();
 
       let visit_struct = |struct_name: syn::Path, action: TokenStream| {
         Some(quote! {
@@ -192,30 +140,30 @@ pub fn parse(
         })
       };
 
-      let visit_simple = |simple_type: FieldType, action: TokenStream| {
+      let visit_simple = |simple_type: Field, action: TokenStream| {
+        let field_visitor = simple_type.get_simple_type_visitor();
+        let field_type: TokenStream = simple_type.into();
         build_call_visitor(
-          &get_simple_type_token(&simple_type),
-          &get_simple_type_visitor(&simple_type),
+          &field_type,
+          &field_visitor,
           &action,
-          &field_attrs,
-          label,
-          &root_attributes.namespaces,
-          field.span(),
+          &field,
+          &root_attributes,
         )
       };
 
-      let visit_sub = |sub_type: Box<FieldType>, action: TokenStream| match *sub_type {
-        FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => unimplemented!(),
-        FieldType::FieldTypeStruct { struct_name } => visit_struct(struct_name, action),
+      let visit_sub = |sub_type: Box<Field>, action: TokenStream| match *sub_type {
+        Field::FieldOption { .. } | Field::FieldVec { .. } => unimplemented!(),
+        Field::FieldStruct { struct_name } => visit_struct(struct_name, action),
         simple_type => visit_simple(simple_type, action),
       };
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeStruct { struct_name } => visit_struct(struct_name, quote! {= value}),
-        FieldType::FieldTypeOption { data_type } => visit_sub(data_type, quote! {= Some(value)}),
-        FieldType::FieldTypeVec { data_type } => visit_sub(data_type, quote! {.push(value)}),
+      match field.get_type() {
+        Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! {= value}),
+        Field::FieldOption { data_type } => visit_sub(data_type, quote! {= Some(value)}),
+        Field::FieldVec { data_type } => visit_sub(data_type, quote! {.push(value)}),
         simple_type => visit_simple(simple_type, quote! {= value}),
-      })
+      }
     })
     .filter_map(|x| x)
     .collect();
@@ -223,26 +171,23 @@ pub fn parse(
   let call_flatten_visitors: TokenStream = data_struct
     .fields
     .iter()
+    .map(|field| YaSerdeField::new(field.clone()))
+    .filter(|field| !field.is_attribute() && field.is_flatten())
     .map(|field| {
-      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-      let value_label = &get_value_label(&field.ident);
+      let value_label = field.get_value_label();
 
-      if field_attrs.attribute || !field_attrs.flatten {
-        return None;
-      }
-
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeStruct { .. } => Some(quote! {
+      match field.get_type() {
+        Field::FieldStruct { .. } => Some(quote! {
           #value_label = yaserde::de::from_str(&unused_xml_elements)?;
         }),
-        FieldType::FieldTypeOption { data_type } => match *data_type {
-          FieldType::FieldTypeStruct { .. } => Some(quote! {
+        Field::FieldOption { data_type } => match *data_type {
+          Field::FieldStruct { .. } => Some(quote! {
             #value_label = yaserde::de::from_str(&unused_xml_elements).ok();
           }),
-          field_type => unimplemented!("\"flatten\" is not implemented for {:?}", field_type),
+          field_type => unimplemented!(r#""flatten" is not implemented for {:?}"#, field_type),
         },
-        field_type => unimplemented!("\"flatten\" is not implemented for {:?}", field_type),
-      })
+        field_type => unimplemented!(r#""flatten" is not implemented for {:?}"#, field_type),
+      }
     })
     .filter_map(|x| x)
     .collect();
@@ -250,19 +195,12 @@ pub fn parse(
   let attributes_loading: TokenStream = data_struct
     .fields
     .iter()
+    .map(|field| YaSerdeField::new(field.clone()))
+    .filter(|field| field.is_attribute())
     .map(|field| {
-      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-      if !field_attrs.attribute {
-        return None;
-      }
-
-      let label = &get_value_label(&field.ident);
-
-      let label_name = field_attrs
-        .rename
-        .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string());
-
-      let visitor_label = build_visitor_ident(&label_name, field.span(), None);
+      let label = field.get_value_label();
+      let label_name = field.renamed_label_without_namespace();
+      let visitor_label = build_visitor_ident(&label_name, field.get_span(), None);
 
       let visit = |action: &TokenStream, visitor: &TokenStream, visitor_label: &Ident| {
         Some(quote! {
@@ -290,31 +228,31 @@ pub fn parse(
         visit(
           &action,
           &quote! {visit_str},
-          &build_visitor_ident(&label_name, field.span(), Some(&struct_name)),
+          &build_visitor_ident(&label_name, field.get_span(), Some(&struct_name)),
         )
       };
 
-      let visit_simple = |simple_type: FieldType, action: TokenStream| {
+      let visit_simple = |simple_type: Field, action: TokenStream| {
         visit(
           &action,
-          &get_simple_type_visitor(&simple_type),
+          &simple_type.get_simple_type_visitor(),
           &visitor_label,
         )
       };
 
-      let visit_sub = |sub_type: Box<FieldType>, action: TokenStream| match *sub_type {
-        FieldType::FieldTypeOption { .. } | FieldType::FieldTypeVec { .. } => unimplemented!(),
-        FieldType::FieldTypeStruct { struct_name } => visit_struct(struct_name, action),
+      let visit_sub = |sub_type: Box<Field>, action: TokenStream| match *sub_type {
+        Field::FieldOption { .. } | Field::FieldVec { .. } => unimplemented!(),
+        Field::FieldStruct { struct_name } => visit_struct(struct_name, action),
         simple_type => visit_simple(simple_type, action),
       };
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeString => visit_string(),
-        FieldType::FieldTypeOption { data_type } => visit_sub(data_type, quote! {= Some(value)}),
-        FieldType::FieldTypeVec { .. } => unimplemented!(),
-        FieldType::FieldTypeStruct { struct_name } => visit_struct(struct_name, quote! {= value}),
+      match field.get_type() {
+        Field::FieldString => visit_string(),
+        Field::FieldOption { data_type } => visit_sub(data_type, quote! {= Some(value)}),
+        Field::FieldVec { .. } => unimplemented!(),
+        Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! {= value}),
         simple_type => visit_simple(simple_type, quote! {= value}),
-      })
+      }
     })
     .filter_map(|x| x)
     .collect();
@@ -322,28 +260,26 @@ pub fn parse(
   let set_text: TokenStream = data_struct
     .fields
     .iter()
+    .map(|field| YaSerdeField::new(field.clone()))
     .map(|field| {
-      let label = &get_value_label(&field.ident);
-      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
+      let label = field.get_value_label();
 
       let set_text = |action: &TokenStream| {
-        if field_attrs.text {
+        if field.is_text_content() {
           Some(quote! {#label = #action;})
         } else {
           None
         }
       };
 
-      get_field_type(field).and_then(|f| match f {
-        FieldType::FieldTypeString => set_text(&quote! {text_content.to_owned()}),
-        FieldType::FieldTypeStruct { .. }
-        | FieldType::FieldTypeOption { .. }
-        | FieldType::FieldTypeVec { .. } => None,
+      match field.get_type() {
+        Field::FieldString => set_text(&quote! {text_content.to_owned()}),
+        Field::FieldStruct { .. } | Field::FieldOption { .. } | Field::FieldVec { .. } => None,
         simple_type => {
-          let type_token = get_simple_type_token(&simple_type);
+          let type_token: TokenStream = simple_type.into();
           set_text(&quote! {#type_token::from_str(text_content).unwrap()})
         }
-      })
+      }
     })
     .filter_map(|x| x)
     .collect();
@@ -351,15 +287,13 @@ pub fn parse(
   let struct_builder: TokenStream = data_struct
     .fields
     .iter()
+    .map(|field| YaSerdeField::new(field.clone()))
     .map(|field| {
-      let label = &field.ident;
-      let value_label = &get_value_label(&field.ident);
+      let label = &field.label();
+      let value_label = field.get_value_label();
 
-      get_field_type(field).map(|_| {
-        quote! { #label: #value_label, }
-      })
+      quote! { #label: #value_label, }
     })
-    .filter_map(|x| x)
     .collect();
 
   let (init_unused, write_unused, visit_unused) = if call_flatten_visitors.is_empty() {
@@ -390,15 +324,7 @@ pub fn parse(
         debug!("Struct: start to parse {:?}", named_element);
 
         if reader.depth() == 0 {
-          if let Some(ref namespace) = struct_namespace {
-            match namespace.as_str() {
-              #namespaces_matches
-              bad_ns => {
-                let msg = format!("bad namespace for {}, found {}", named_element, bad_ns);
-                return Err(msg);
-              }
-            }
-          }
+          #namespaces_matching
         }
 
         #variables
@@ -472,47 +398,24 @@ fn build_call_visitor(
   field_type: &TokenStream,
   visitor: &TokenStream,
   action: &TokenStream,
-  field_attrs: &YaSerdeAttribute,
-  label: &Option<Ident>,
-  namespaces: &BTreeMap<String, String>,
-  span: Span,
+  field: &YaSerdeField,
+  root_attributes: &YaSerdeAttribute,
 ) -> Option<TokenStream> {
-  let prefix = field_attrs.prefix.clone();
+  let value_label = field.get_value_label();
+  let label_name = field.renamed_label_without_namespace();
+  let visitor_label = build_visitor_ident(&label_name, field.get_span(), None);
 
-  // let label = &field.ident;
-  let value_label = get_value_label(label);
-  let label_name = field_attrs
-    .rename
-    .clone()
-    .unwrap_or_else(|| label.as_ref().unwrap().to_string());
-
-  let visitor_label = build_visitor_ident(&label_name, span, None);
-
-  let namespaces_matches: TokenStream = namespaces
-    .iter()
-    .map(|(p, ns)| {
-      if prefix == Some(p.to_string()) {
-        Some(quote!(#ns => {}))
-      } else {
-        None
-      }
-    })
-    .filter_map(|x| x)
-    .collect();
+  let namespaces_matching = field.get_namespace_matching(
+    root_attributes,
+    quote!(name.namespace.as_ref()),
+    quote!(name.local_name.as_str()),
+  );
 
   Some(quote! {
     #label_name => {
       let visitor = #visitor_label{};
 
-      if let Some(namespace) = name.namespace.as_ref() {
-        match namespace.as_str() {
-          #namespaces_matches
-          bad_ns => {
-            let msg = format!("bad field namespace for {}, found {}", name.local_name.as_str(), bad_ns);
-            return Err(msg);
-          }
-        }
-      }
+      #namespaces_matching
 
       let result = reader.read_inner_value::<#field_type, _>(|reader| {
         if let Ok(XmlEvent::Characters(s)) = reader.peek() {
@@ -529,12 +432,6 @@ fn build_call_visitor(
       }
     }
   })
-}
-
-fn get_value_label(ident: &Option<syn::Ident>) -> Option<syn::Ident> {
-  ident
-    .clone()
-    .map(|ident| syn::Ident::new(&format!("__{}_value", ident.to_string()), ident.span()))
 }
 
 fn build_visitor_ident(label: &str, span: Span, struct_name: Option<&syn::Path>) -> Ident {

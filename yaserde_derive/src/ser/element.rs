@@ -1,5 +1,5 @@
-use crate::attribute::*;
-use proc_macro2::{Ident, Span, TokenStream};
+use crate::common::YaSerdeField;
+use proc_macro2::{Ident, TokenStream};
 
 pub fn enclose_formatted_characters(label: &Ident, label_name: String) -> TokenStream {
   enclose_xml_event(label_name, quote!(format!("{}", &self.#label)))
@@ -13,7 +13,7 @@ pub fn enclose_characters(label: &Option<Ident>, label_name: String) -> TokenStr
   enclose_xml_event(label_name, quote!(format!("{}", self.#label)))
 }
 
-pub fn enclose_xml_event(label_name: String, yaserde_format: TokenStream) -> TokenStream {
+fn enclose_xml_event(label_name: String, yaserde_format: TokenStream) -> TokenStream {
   quote! {
     let start_event = XmlEvent::start_element(#label_name);
     writer.write(start_event).map_err(|e| e.to_string())?;
@@ -41,34 +41,23 @@ pub fn serialize_element(
   })
 }
 
-pub fn condition_generator(label: &Option<Ident>, attributes: &YaSerdeAttribute) -> TokenStream {
-  let mut conditions = None;
+pub fn condition_generator(label: &Option<Ident>, field: &YaSerdeField) -> TokenStream {
+  let default_condition = field
+    .get_default_function()
+    .map(|default_function| quote!(self.#label != #default_function()));
 
-  if let Some(ref d) = attributes.default {
-    let default_function = Ident::new(
-      &d,
-      label
-        .as_ref()
-        .map_or(Span::call_site(), |ident| ident.span()),
-    );
-
-    conditions = Some(quote!(self.#label != #default_function()))
-  }
-
-  if let Some(ref s) = attributes.skip_serializing_if {
-    let skip_if_function = Ident::new(
-      &s,
-      label
-        .as_ref()
-        .map_or(Span::call_site(), |ident| ident.span()),
-    );
-
-    conditions = if let Some(prev_conditions) = conditions {
-      Some(quote!(!#skip_if_function() && #prev_conditions))
-    } else {
-      Some(quote!(!self.#skip_if_function(&self.#label)))
-    };
-  }
-
-  conditions.map(|c| quote!(if #c)).unwrap_or(quote!())
+  field
+    .get_skip_serializing_if_function()
+    .map(|skip_if_function| {
+      if let Some(prev_conditions) = &default_condition {
+        quote!(if !self.#skip_if_function(&self.#label) && #prev_conditions)
+      } else {
+        quote!(if !self.#skip_if_function(&self.#label))
+      }
+    })
+    .unwrap_or_else(|| {
+      default_condition
+        .map(|condition| quote!(if #condition))
+        .unwrap_or(quote!())
+    })
 }

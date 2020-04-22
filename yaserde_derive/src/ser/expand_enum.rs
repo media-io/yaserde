@@ -1,8 +1,6 @@
-use crate::attribute::*;
-use crate::field_type::*;
+use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use crate::ser::{implement_deserializer::implement_deserializer, label::build_label_name};
 use proc_macro2::TokenStream;
-use syn::spanned::Spanned;
 use syn::DataEnum;
 use syn::Fields;
 use syn::Ident;
@@ -51,39 +49,33 @@ fn inner_enum_inspector(
           let enum_fields: TokenStream = fields
             .named
             .iter()
+            .map(|field| YaSerdeField::new(field.clone()))
+            .filter(|field| !field.is_attribute())
             .map(|field| {
-              let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-              if field_attrs.attribute {
-                return None;
-              }
+              let field_label = field.label();
 
-              let field_label = &field.ident;
-              if field_attrs.text {
+              if field.is_text_content() {
                 return Some(quote!(
                   let data_event = XmlEvent::characters(&self.#field_label);
                   writer.write(data_event).map_err(|e| e.to_string())?;
                 ));
               }
 
-              let renamed_field_label = match field_attrs.rename {
-                Some(value) => Some(Ident::new(&value.replace("\"", ""), field.span())),
-                None => field.ident.clone(),
-              };
-              let field_label_name = renamed_field_label.unwrap().to_string();
+              let field_label_name = field.renamed_label(root_attributes);
 
-              match get_field_type(field) {
-                Some(FieldType::FieldTypeString)
-                | Some(FieldType::FieldTypeBool)
-                | Some(FieldType::FieldTypeU8)
-                | Some(FieldType::FieldTypeI8)
-                | Some(FieldType::FieldTypeU16)
-                | Some(FieldType::FieldTypeI16)
-                | Some(FieldType::FieldTypeU32)
-                | Some(FieldType::FieldTypeI32)
-                | Some(FieldType::FieldTypeF32)
-                | Some(FieldType::FieldTypeU64)
-                | Some(FieldType::FieldTypeI64)
-                | Some(FieldType::FieldTypeF64) => Some({
+              match field.get_type() {
+                Field::FieldString
+                | Field::FieldBool
+                | Field::FieldU8
+                | Field::FieldI8
+                | Field::FieldU16
+                | Field::FieldI16
+                | Field::FieldU32
+                | Field::FieldI32
+                | Field::FieldF32
+                | Field::FieldU64
+                | Field::FieldI64
+                | Field::FieldF64 => Some({
                   quote! {
                     match self {
                       &#name::#label{ref #field_label, ..} => {
@@ -101,7 +93,7 @@ fn inner_enum_inspector(
                     }
                   }
                 }),
-                Some(FieldType::FieldTypeStruct { .. }) => Some(quote! {
+                Field::FieldStruct { .. } => Some(quote! {
                   match self {
                     &#name::#label{ref #field_label, ..} => {
                       writer.set_start_event_name(Some(#field_label_name.to_string()));
@@ -111,7 +103,7 @@ fn inner_enum_inspector(
                     _ => {}
                   }
                 }),
-                Some(FieldType::FieldTypeVec { .. }) => Some(quote! {
+                Field::FieldVec { .. } => Some(quote! {
                   match self {
                     &#name::#label{ref #field_label, ..} => {
                       for item in #field_label {
@@ -123,7 +115,7 @@ fn inner_enum_inspector(
                     _ => {}
                   }
                 }),
-                _ => None,
+                Field::FieldOption { .. } => None,
               }
             })
             .filter_map(|x| x)
@@ -139,12 +131,9 @@ fn inner_enum_inspector(
           let enum_fields: TokenStream = fields
             .unnamed
             .iter()
+            .map(|field| YaSerdeField::new(field.clone()))
+            .filter(|field| !field.is_attribute())
             .map(|field| {
-              let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-              if field_attrs.attribute {
-                return None;
-              }
-
               let write_element = |action: &TokenStream| {
                 quote! {
                   let struct_start_event = XmlEvent::start_element(#label_name);
@@ -176,7 +165,7 @@ fn inner_enum_inspector(
 
               let write_sub_type = |data_type| {
                 write_element(match data_type {
-                  FieldType::FieldTypeString => &write_string_chars,
+                  Field::FieldString => &write_string_chars,
                   _ => &serialize,
                 })
               };
@@ -192,8 +181,8 @@ fn inner_enum_inspector(
                 }
               };
 
-              match get_field_type(field) {
-                Some(FieldType::FieldTypeOption { data_type }) => {
+              match field.get_type() {
+                Field::FieldOption { data_type } => {
                   let write = write_sub_type(*data_type);
 
                   Some(match_field(&quote! {
@@ -202,7 +191,7 @@ fn inner_enum_inspector(
                     }
                   }))
                 }
-                Some(FieldType::FieldTypeVec { data_type }) => {
+                Field::FieldVec { data_type } => {
                   let write = write_sub_type(*data_type);
 
                   Some(match_field(&quote! {
@@ -211,14 +200,9 @@ fn inner_enum_inspector(
                     }
                   }))
                 }
-                Some(FieldType::FieldTypeStruct { .. }) => {
-                  Some(write_element(&match_field(&serialize)))
-                }
-                Some(FieldType::FieldTypeString) => {
-                  Some(match_field(&write_element(&write_string_chars)))
-                }
-                Some(_simple_type) => Some(match_field(&write_simple_type)),
-                _ => None,
+                Field::FieldStruct { .. } => Some(write_element(&match_field(&serialize))),
+                Field::FieldString => Some(match_field(&write_element(&write_string_chars))),
+                _simple_type => Some(match_field(&write_simple_type)),
               }
             })
             .filter_map(|x| x)
