@@ -37,6 +37,7 @@ fn basic_option_types() {
   test_for_type!(Option::<f64>, Some(-12.5 as f64), Some("-12.5"));
   test_for_type!(Option::<f64>, None, None);
 
+  // TODO
   // test_for_type!(Option::<Vec::<u8>>, None, None);
   // test_for_type!(Option::<Vec::<u8>>, Some(vec![0]), Some("0"));
   // test_for_type!(Option::<Vec::<String>>, None, None);

@@ -52,7 +52,6 @@ fn inner_enum_inspector(
             .map(|field| YaSerdeField::new(field.clone()))
             .filter(|field| !field.is_attribute())
             .map(|field| {
-
               let field_label = field.label();
 
               if field.is_text_content() {
@@ -132,11 +131,9 @@ fn inner_enum_inspector(
           let enum_fields: TokenStream = fields
             .unnamed
             .iter()
-            .map(|token_field| {
-              if Field::is_attribute(token_field) {
-                return None;
-              }
-
+            .map(|field| YaSerdeField::new(field.clone()))
+            .filter(|field| !field.is_attribute())
+            .map(|field| {
               let write_element = |action: &TokenStream| {
                 quote! {
                   let struct_start_event = XmlEvent::start_element(#label_name);
@@ -184,7 +181,7 @@ fn inner_enum_inspector(
                 }
               };
 
-              match Field::from(token_field) {
+              match field.get_type() {
                 Field::FieldOption { data_type } => {
                   let write = write_sub_type(*data_type);
 

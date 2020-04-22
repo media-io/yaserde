@@ -1,10 +1,10 @@
 use crate::common::attribute::YaSerdeAttribute;
-use proc_macro2::{Ident, TokenStream};
 use proc_macro2::Span;
+use proc_macro2::{Ident, TokenStream};
 use std::fmt;
 use syn;
-use syn::Type::Path;
 use syn::spanned::Spanned;
+use syn::Type::Path;
 
 #[derive(Debug)]
 pub struct YaSerdeField {
@@ -16,7 +16,7 @@ impl YaSerdeField {
   pub fn new(syn_field: syn::Field) -> Self {
     let attributes = YaSerdeAttribute::parse(&syn_field.attrs);
 
-    YaSerdeField{
+    YaSerdeField {
       syn_field,
       attributes,
     }
@@ -30,27 +30,68 @@ impl YaSerdeField {
     self.attributes.text
   }
 
+  pub fn is_flatten(&self) -> bool {
+    self.attributes.flatten
+  }
+
+  // pub fn get_attributes(&self) -> YaSerdeAttribute {
+  //   self.attributes.clone()
+  // }
+
   pub fn label(&self) -> Option<Ident> {
     self.syn_field.ident.clone()
+  }
+
+  pub fn get_value_label(&self) -> Option<syn::Ident> {
+    self
+      .syn_field
+      .ident
+      .clone()
+      .map(|ident| syn::Ident::new(&format!("__{}_value", ident.to_string()), ident.span()))
+  }
+
+  pub fn renamed_label_without_namespace(&self) -> String {
+    self
+      .attributes
+      .rename
+      .clone()
+      .unwrap_or_else(|| self.label().as_ref().unwrap().to_string())
   }
 
   pub fn renamed_label(&self, root_attributes: &YaSerdeAttribute) -> String {
     let prefix = if root_attributes.default_namespace == self.attributes.prefix {
       "".to_string()
     } else {
-      self.attributes
+      self
+        .attributes
         .prefix
         .clone()
         .map_or("".to_string(), |prefix| prefix + ":")
     };
 
-    let label =
-      self.attributes
-      .rename
-      .clone()
-      .unwrap_or_else(|| self.label().as_ref().unwrap().to_string());
+    let label = self.renamed_label_without_namespace();
 
     format!("{}{}", prefix, label)
+  }
+
+  pub fn get_visitor_ident(&self, struct_name: Option<&syn::Path>) -> Ident {
+    let label = self.renamed_label_without_namespace();
+
+    let struct_id = struct_name.map_or_else(
+      || "".to_string(),
+      |struct_name| {
+        struct_name
+          .segments
+          .iter()
+          .map(|s| s.ident.to_string())
+          .collect()
+      },
+    );
+
+    Ident::new(
+      &format!("__Visitor_{}_{}", label.replace(".", "_"), struct_id),
+      self.get_span(),
+    )
   }
 
   pub fn get_type(&self) -> Field {
@@ -62,35 +103,64 @@ impl YaSerdeField {
   }
 
   pub fn get_default_function(&self) -> Option<Ident> {
-    self.attributes.default.as_ref().map(|default|{
-      Ident::new(&default, self.get_span())
-    })
+    self
+      .attributes
+      .default
+      .as_ref()
+      .map(|default| Ident::new(&default, self.get_span()))
   }
 
   pub fn get_skip_serializing_if_function(&self) -> Option<Ident> {
-    self.attributes.skip_serializing_if.as_ref().map(|skip_serializing_if|{
-      Ident::new(&skip_serializing_if, self.get_span())
-    })
+    self
+      .attributes
+      .skip_serializing_if
+      .as_ref()
+      .map(|skip_serializing_if| Ident::new(&skip_serializing_if, self.get_span()))
   }
 
-  pub fn ser_wrap_default_attribute(&self, builder: TokenStream, setter: TokenStream) -> TokenStream {
+  pub fn get_namespace_matching(&self, root_attributes: &YaSerdeAttribute) -> TokenStream {
+    root_attributes
+      .namespaces
+      .iter()
+      .map(|(prefix, namespace)| {
+        if self.attributes.prefix == Some(prefix.to_string()) {
+          Some(quote!(#namespace => {}))
+        } else {
+          None
+        }
+      })
+      .filter_map(|x| x)
+      .collect()
+  }
+
+  pub fn ser_wrap_default_attribute(
+    &self,
+    builder: Option<TokenStream>,
+    setter: TokenStream,
+  ) -> TokenStream {
     let label = self.label();
-    if let Some(ref default_function) = self.get_default_function() {
-      quote! {
-        let yaserde_inner = #builder;
-        let struct_start_event =
-          if self.#label != #default_function() {
-            #setter
-          } else {
-            struct_start_event
-          };
-      }
-    } else {
-      quote! {
-        let yaserde_inner = #builder;
+
+    let yaserde_inner_definition = builder
+      .map(|builder| quote!(let yaserde_inner = #builder;))
+      .unwrap_or(quote!());
+
+    self
+      .get_default_function()
+      .map(|default_function| {
+        quote! {
+          #yaserde_inner_definition
+          let struct_start_event =
+            if self.#label != #default_function() {
+              #setter
+            } else {
+              struct_start_event
+            };
+        }
+      })
+      .unwrap_or(quote! {
+        #yaserde_inner_definition
         let struct_start_event = #setter;
-      }
-    }
+      })
   }
 }
 
@@ -140,7 +210,6 @@ impl Field {
 
     let label = attributes
       .rename
-      .clone()
       .unwrap_or_else(|| token_field.ident.as_ref().unwrap().to_string());
 
     format!("{}{}", prefix, label)

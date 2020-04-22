@@ -8,9 +8,18 @@ use yaserde::YaSerialize;
 
 #[test]
 fn skip_serializing_if_for_struct() {
+  fn default_string_function() -> String {
+    "mask_default".to_string()
+  }
+
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(root = "base")]
   pub struct XmlStruct {
+    #[yaserde(
+      skip_serializing_if = "check_string_function",
+      default = "default_string_function"
+    )]
+    string_with_default_item: String,
     #[yaserde(skip_serializing_if = "check_string_function")]
     string_item: String,
     #[yaserde(skip_serializing_if = "check_bool_function")]
@@ -40,6 +49,7 @@ fn skip_serializing_if_for_struct() {
   }
 
   let model = XmlStruct {
+    string_with_default_item: "mask_default".to_string(),
     string_item: "something".to_string(),
     bool_item: true,
     f32_item: 0.0,

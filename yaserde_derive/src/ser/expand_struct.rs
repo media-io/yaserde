@@ -2,7 +2,6 @@ use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 
 use crate::ser::{element::*, implement_deserializer::implement_deserializer};
 use proc_macro2::TokenStream;
-use syn::spanned::Spanned;
 use syn::DataStruct;
 use syn::Ident;
 
@@ -33,27 +32,23 @@ pub fn serialize(
         | Field::FieldI64
         | Field::FieldU64
         | Field::FieldF32
-        | Field::FieldF64 => {
-          Some(field.ser_wrap_default_attribute(
-            quote!(self.#label.to_string()),
-            quote!({
-              struct_start_event.attr(#label_name, &yaserde_inner)
-            })
-          ))
-        }
+        | Field::FieldF64 => Some(field.ser_wrap_default_attribute(
+          Some(quote!(self.#label.to_string())),
+          quote!({
+            struct_start_event.attr(#label_name, &yaserde_inner)
+          }),
+        )),
         Field::FieldOption { data_type } => match *data_type {
-          Field::FieldString => {
-            Some(field.ser_wrap_default_attribute(
-              quote!({}),
-              quote!({
-                if let Some(ref value) = self.#label {
-                  struct_start_event.attr(#label_name, value)
-                } else {
-                  struct_start_event
-                }
-              })
-            ))
-          }
+          Field::FieldString => Some(field.ser_wrap_default_attribute(
+            None,
+            quote!({
+              if let Some(ref value) = self.#label {
+                struct_start_event.attr(#label_name, value)
+              } else {
+                struct_start_event
+              }
+            }),
+          )),
           Field::FieldBool
           | Field::FieldI8
           | Field::FieldU8
@@ -64,57 +59,51 @@ pub fn serialize(
           | Field::FieldI64
           | Field::FieldU64
           | Field::FieldF32
-          | Field::FieldF64 => {
-            Some(field.ser_wrap_default_attribute(
-              quote!(self.#label.map_or_else(|| String::new(), |v| v.to_string())),
-              quote!({
-                if let Some(ref value) = self.#label {
-                  struct_start_event.attr(#label_name, &yaserde_inner)
-                } else {
-                  struct_start_event
-                }
-              })
-            ))
-          }
+          | Field::FieldF64 => Some(field.ser_wrap_default_attribute(
+            Some(quote!(self.#label.map_or_else(|| String::new(), |v| v.to_string()))),
+            quote!({
+              if let Some(ref value) = self.#label {
+                struct_start_event.attr(#label_name, &yaserde_inner)
+              } else {
+                struct_start_event
+              }
+            }),
+          )),
           Field::FieldVec { .. } => {
             let item_ident = Ident::new("yaserde_item", field.get_span());
             let inner = enclose_formatted_characters(&item_ident, label_name);
 
             Some(field.ser_wrap_default_attribute(
-              quote!({}),
+              None,
               quote!({
                 if let Some(ref yaserde_list) = self.#label {
                   for yaserde_item in yaserde_list.iter() {
                     #inner
                   }
                 }
-              })
+              }),
             ))
           }
-          Field::FieldStruct { .. } => {
-            Some(field.ser_wrap_default_attribute(
-              quote!(self.#label
+          Field::FieldStruct { .. } => Some(field.ser_wrap_default_attribute(
+            Some(quote!(self.#label
                   .as_ref()
-                  .map_or_else(|| Ok(String::new()), |v| yaserde::ser::to_string_content(v))?),
-              quote!({
-                if let Some(ref yaserde_struct) = self.#label {
-                  struct_start_event.attr(#label_name, &yaserde_inner)
-                } else {
-                  struct_start_event
-                }
-              })
-            ))
-          }
+                  .map_or_else(|| Ok(String::new()), |v| yaserde::ser::to_string_content(v))?)),
+            quote!({
+              if let Some(ref yaserde_struct) = self.#label {
+                struct_start_event.attr(#label_name, &yaserde_inner)
+              } else {
+                struct_start_event
+              }
+            }),
+          )),
           Field::FieldOption { .. } => unimplemented!(),
         },
-        Field::FieldStruct { .. } => {
-          Some(field.ser_wrap_default_attribute(
-            quote!(yaserde::ser::to_string_content(&self.#label)?),
-            quote!({
-              struct_start_event.attr(#label_name, &yaserde_inner)
-            })
-          ))
-        }
+        Field::FieldStruct { .. } => Some(field.ser_wrap_default_attribute(
+          Some(quote!(yaserde::ser::to_string_content(&self.#label)?)),
+          quote!({
+            struct_start_event.attr(#label_name, &yaserde_inner)
+          }),
+        )),
         Field::FieldVec { .. } => None,
       }
     })
@@ -124,25 +113,21 @@ pub fn serialize(
   let struct_inspector: TokenStream = data_struct
     .fields
     .iter()
+    .map(|field| YaSerdeField::new(field.clone()))
+    .filter(|field| !field.is_attribute())
     .map(|field| {
-      let field_attrs = YaSerdeAttribute::parse(&field.attrs);
-      if Field::is_attribute(field) {
-        return None;
-      }
-
-      let label = Field::label(field);
-      if Field::is_text_content(field) {
+      let label = field.label();
+      if field.is_text_content() {
         return Some(quote!(
           let data_event = XmlEvent::characters(&self.#label);
           writer.write(data_event).map_err(|e| e.to_string())?;
         ));
       }
 
-      let label_name = Field::renamed_label(field, root_attributes);
+      let label_name = field.renamed_label(root_attributes);
+      let conditions = condition_generator(&label, &field);
 
-      let conditions = condition_generator(&label, &field_attrs);
-
-      match Field::from(field) {
+      match field.get_type() {
         Field::FieldString
         | Field::FieldBool
         | Field::FieldI8
@@ -169,7 +154,7 @@ pub fn serialize(
           | Field::FieldU64
           | Field::FieldF32
           | Field::FieldF64 => {
-            let item_ident = Ident::new("yaserde_item", field.span());
+            let item_ident = Ident::new("yaserde_item", field.get_span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
             Some(quote! {
@@ -181,7 +166,7 @@ pub fn serialize(
             })
           }
           Field::FieldVec { .. } => {
-            let item_ident = Ident::new("yaserde_item", field.span());
+            let item_ident = Ident::new("yaserde_item", field.get_span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
             Some(quote! {
@@ -194,7 +179,7 @@ pub fn serialize(
               }
             })
           }
-          Field::FieldStruct { .. } => Some(if field_attrs.flatten {
+          Field::FieldStruct { .. } => Some(if field.is_flatten() {
             quote! {
               if let Some(ref item) = &self.#label {
                 writer.set_start_event_name(None);
@@ -214,7 +199,7 @@ pub fn serialize(
           _ => unimplemented!(),
         },
         Field::FieldStruct { .. } => {
-          let (start_event, skip_start) = if field_attrs.flatten {
+          let (start_event, skip_start) = if field.is_flatten() {
             (quote!(None), true)
           } else {
             (quote!(Some(#label_name.to_string())), false)
@@ -228,7 +213,7 @@ pub fn serialize(
         }
         Field::FieldVec { data_type } => match *data_type {
           Field::FieldString => {
-            let item_ident = Ident::new("yaserde_item", field.span());
+            let item_ident = Ident::new("yaserde_item", field.get_span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
             Some(quote! {
@@ -248,7 +233,7 @@ pub fn serialize(
           | Field::FieldU64
           | Field::FieldF32
           | Field::FieldF64 => {
-            let item_ident = Ident::new("yaserde_item", field.span());
+            let item_ident = Ident::new("yaserde_item", field.get_span());
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
             Some(quote! {

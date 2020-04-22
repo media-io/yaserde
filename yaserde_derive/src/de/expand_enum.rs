@@ -1,11 +1,6 @@
-use crate::common::{Field, YaSerdeAttribute};
+use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use proc_macro2::TokenStream;
-use syn::{
-  spanned::Spanned,
-  DataEnum,
-  Fields,
-  Ident,
-};
+use syn::{DataEnum, Fields, Ident};
 
 pub fn parse(
   data_enum: &DataEnum,
@@ -142,9 +137,10 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
   fields
     .unnamed
     .iter()
+    .map(|field| YaSerdeField::new(field.clone()))
     .enumerate()
     .map(|(idx, field)| {
-      let visitor_label = Ident::new(&format!("__Visitor_{}", idx), field.span());
+      let visitor_label = Ident::new(&format!("__Visitor_{}", idx), field.get_span());
 
       let make_visitor =
         |visitor: &TokenStream, field_type: &TokenStream, fn_body: &TokenStream| {
@@ -172,7 +168,7 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
         )
       };
 
-      match Field::from(field) {
+      match field.get_type() {
         Field::FieldStruct { struct_name } => {
           let struct_id: String = struct_name
             .segments
@@ -208,9 +204,10 @@ fn build_unnamed_visitor_calls(
   fields
     .unnamed
     .iter()
+    .map(|field| YaSerdeField::new(field.clone()))
     .enumerate()
     .map(|(idx, field)| {
-      let visitor_label = Ident::new(&format!("__Visitor_{}", idx), field.span());
+      let visitor_label = Ident::new(&format!("__Visitor_{}", idx), field.get_span());
 
       let call_simple_type_visitor = |simple_type: Field, action| {
         let visitor = simple_type.get_simple_type_visitor();
@@ -278,7 +275,7 @@ fn build_unnamed_visitor_calls(
         }
       };
 
-      match Field::from(field) {
+      match field.get_type() {
         Field::FieldStruct { struct_name } => call_struct_visitor(struct_name, set_val),
         Field::FieldOption { data_type } => match *data_type {
           Field::FieldStruct { struct_name } => call_struct_visitor(struct_name, set_opt),
