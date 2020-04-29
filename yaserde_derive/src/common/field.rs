@@ -2,7 +2,6 @@ use crate::common::attribute::YaSerdeAttribute;
 use proc_macro2::Span;
 use proc_macro2::{Ident, TokenStream};
 use std::fmt;
-use syn;
 use syn::spanned::Spanned;
 use syn::Type::Path;
 
@@ -33,10 +32,6 @@ impl YaSerdeField {
   pub fn is_flatten(&self) -> bool {
     self.attributes.flatten
   }
-
-  // pub fn get_attributes(&self) -> YaSerdeAttribute {
-  //   self.attributes.clone()
-  // }
 
   pub fn label(&self) -> Option<Ident> {
     self.syn_field.ident.clone()

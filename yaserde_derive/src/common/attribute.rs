@@ -1,4 +1,4 @@
-use proc_macro2::{token_stream::IntoIter, Delimiter, TokenStream, TokenTree};
+use proc_macro2::{token_stream::IntoIter, Delimiter, Ident, TokenStream, TokenTree};
 use std::collections::BTreeMap;
 use syn::Attribute;
 
@@ -105,6 +105,21 @@ impl YaSerdeAttribute {
       rename,
       skip_serializing_if,
       text,
+    }
+  }
+
+  pub fn xml_element_name(&self, ident: &Ident) -> String {
+    self.rename.clone().unwrap_or_else(|| ident.to_string())
+  }
+
+  pub fn prefix_namespace(&self) -> String {
+    if self.default_namespace == self.prefix {
+      "".to_string()
+    } else {
+      self
+        .clone()
+        .prefix
+        .map_or("".to_string(), |prefix| prefix + ":")
     }
   }
 
