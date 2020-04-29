@@ -4,7 +4,6 @@
 use crate::YaSerialize;
 use std::io::{Cursor, Write};
 use std::str;
-use xml;
 use xml::writer::XmlEvent;
 use xml::{EmitterConfig, EventWriter};
 

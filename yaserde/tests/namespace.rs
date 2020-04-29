@@ -376,7 +376,7 @@ fn enum_multi_namespaces() {
 fn enum_attribute_namespace() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
-    rename = "root",
+    rename = "rootA",
     prefix = "ns",
     namespace = "ns: http://www.sample.com/ns/domain"
   )]
@@ -394,9 +394,9 @@ fn enum_attribute_namespace() {
   }
 
   let content = r#"
-    <ns:root xmlns:ns="http://www.sample.com/ns/domain">
+    <ns:rootA xmlns:ns="http://www.sample.com/ns/domain">
       ns:Item
-    </ns:root>
+    </ns:rootA>
   "#;
 
   let model = XmlStruct::Item;
@@ -405,10 +405,10 @@ fn enum_attribute_namespace() {
 
   let model = XmlStruct::ItemWithField("Value".to_string());
 
-  let content = r#"<ns:root xmlns:ns="http://www.sample.com/ns/domain"><ns:ItemWithField>Value</ns:ItemWithField></ns:root>"#;
+  let content = r#"<ns:rootA xmlns:ns="http://www.sample.com/ns/domain"><ns:ItemWithField>Value</ns:ItemWithField></ns:rootA>"#;
   serialize_and_validate!(model, content);
   // TODO
-  // deserialize_and_validate!(content, model, XmlStruct);
+  deserialize_and_validate!(content, model, XmlStruct);
 }
 
 #[test]

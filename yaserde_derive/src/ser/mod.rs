@@ -7,7 +7,6 @@ pub mod namespace;
 
 use crate::common::YaSerdeAttribute;
 use proc_macro2::TokenStream;
-use syn;
 use syn::Ident;
 
 pub fn expand_derive_serialize(ast: &syn::DeriveInput) -> Result<TokenStream, String> {
@@ -16,21 +15,12 @@ pub fn expand_derive_serialize(ast: &syn::DeriveInput) -> Result<TokenStream, St
   let data = &ast.data;
 
   let root_attributes = YaSerdeAttribute::parse(attrs);
-  let root_name = root_attributes
-    .clone()
-    .rename
-    .unwrap_or_else(|| name.to_string());
 
-  let prefix = if root_attributes.default_namespace == root_attributes.prefix {
-    "".to_string()
-  } else {
-    root_attributes
-      .clone()
-      .prefix
-      .map_or("".to_string(), |prefix| prefix + ":")
-  };
-
-  let root_name = format!("{}{}", prefix, root_name);
+  let root_name = format!(
+    "{}{}",
+    root_attributes.prefix_namespace(),
+    root_attributes.xml_element_name(name)
+  );
 
   let impl_block = match *data {
     syn::Data::Struct(ref data_struct) => {

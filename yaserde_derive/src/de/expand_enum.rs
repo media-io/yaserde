@@ -8,6 +8,13 @@ pub fn parse(
   root: &str,
   root_attributes: &YaSerdeAttribute,
 ) -> TokenStream {
+  let namespaces_matching = root_attributes.get_namespace_matching(
+    &None,
+    quote!(enum_namespace),
+    quote!(named_element),
+    true,
+  );
+
   let match_to_enum: TokenStream = data_enum
     .variants
     .iter()
@@ -27,13 +34,16 @@ pub fn parse(
     impl YaDeserialize for #name {
       #[allow(unused_variables)]
       fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, String> {
-        let named_element =
+        let (named_element, enum_namespace) =
           if let XmlEvent::StartElement{name, ..} = reader.peek()?.to_owned() {
-            name.local_name.to_owned()
+            (name.local_name.to_owned(), name.namespace.clone())
           } else {
-            String::from(#root)
+            (String::from(#root), None)
           };
+
         debug!("Enum: start to parse {:?}", named_element);
+
+        #namespaces_matching
 
         #[allow(unused_assignments, unused_mut)]
         let mut enum_value = None;
@@ -41,7 +51,7 @@ pub fn parse(
         loop {
           match reader.peek()?.to_owned() {
             XmlEvent::StartElement{ref name, ref attributes, ..} => {
-
+              println!("{:?}", name.local_name.as_str());
               match name.local_name.as_str() {
                 #match_to_enum
                 _named_element => {
@@ -90,9 +100,7 @@ pub fn parse(
 }
 
 fn parse_variant(variant: &syn::Variant, name: &Ident) -> Option<TokenStream> {
-  let xml_element_name = YaSerdeAttribute::parse(&variant.attrs)
-    .rename
-    .unwrap_or_else(|| variant.ident.to_string());
+  let xml_element_name = YaSerdeAttribute::parse(&variant.attrs).xml_element_name(&variant.ident);
 
   let variant_name = {
     let label = &variant.ident;
@@ -217,17 +225,6 @@ fn build_unnamed_visitor_calls(
 
         Some(quote! {
           let visitor = #visitor_label{};
-
-          if let Some(namespace) = name.namespace.as_ref() {
-            match namespace.as_str() {
-              bad_ns => {
-                let msg = format!("bad field namespace for {}, found {}",
-                  name.local_name.as_str(),
-                  bad_ns);
-                return Err(msg);
-              }
-            }
-          }
 
           let result = reader.read_inner_value::<#field_type, _>(|reader| {
             if let XmlEvent::EndElement { .. } = *reader.peek()? {

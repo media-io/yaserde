@@ -4,7 +4,6 @@ pub mod expand_struct;
 
 use crate::common::YaSerdeAttribute;
 use proc_macro2::TokenStream;
-use syn;
 use syn::Ident;
 
 pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<TokenStream, String> {
@@ -13,10 +12,12 @@ pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<TokenStream, 
   let data = &ast.data;
 
   let root_attributes = YaSerdeAttribute::parse(attrs);
-  let root_name = root_attributes
-    .clone()
-    .rename
-    .unwrap_or_else(|| name.to_string());
+
+  let root_name = format!(
+    "{}{}",
+    root_attributes.prefix_namespace(),
+    root_attributes.xml_element_name(name)
+  );
 
   let impl_block = match *data {
     syn::Data::Struct(ref data_struct) => {
