@@ -407,7 +407,6 @@ fn enum_attribute_namespace() {
 
   let content = r#"<ns:rootA xmlns:ns="http://www.sample.com/ns/domain"><ns:ItemWithField>Value</ns:ItemWithField></ns:rootA>"#;
   serialize_and_validate!(model, content);
-  // TODO
   deserialize_and_validate!(content, model, XmlStruct);
 }
 

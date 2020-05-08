@@ -1,9 +1,11 @@
 #[macro_use]
+extern crate yaserde;
+#[macro_use]
 extern crate yaserde_derive;
 
-use std::io::Read;
+use std::io::{Read, Write};
 use yaserde::de::from_str;
-use yaserde::YaDeserialize;
+use yaserde::{YaDeserialize, YaSerialize};
 
 macro_rules! convert_and_validate {
   ($content: expr, $struct: tt, $model: expr) => {
@@ -164,6 +166,70 @@ fn de_attributes() {
       sub: SubStruct {
         subitem: "sub-something".to_string(),
       },
+    }
+  );
+}
+
+#[test]
+fn de_attributes_custom_deserializer() {
+  mod other_mod {
+    use super::*;
+
+    use xml::reader::XmlEvent;
+
+    #[derive(Debug, Default, PartialEq)]
+    pub struct Attributes {
+      pub items: Vec<String>,
+    }
+
+    impl YaDeserialize for Attributes {
+      fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, String> {
+        loop {
+          match reader.next_event()? {
+            XmlEvent::StartElement { .. } => {}
+            XmlEvent::Characters(ref text_content) => {
+              let items: Vec<String> = text_content
+                .split(' ')
+                .map(|item| item.to_owned())
+                .collect();
+              return Ok(Attributes { items });
+            }
+            _ => {
+              break;
+            }
+          }
+        }
+
+        Err("Unable to parse attribute".to_string())
+      }
+    }
+  }
+
+  #[derive(Default, YaDeserialize, PartialEq, Debug)]
+  pub struct Struct {
+    #[yaserde(attribute)]
+    attr_option_string: Option<std::string::String>,
+    #[yaserde(attribute)]
+    attr_option_struct: Option<other_mod::Attributes>,
+  }
+
+  convert_and_validate!(
+    r#"<Struct />"#,
+    Struct,
+    Struct {
+      attr_option_string: None,
+      attr_option_struct: None
+    }
+  );
+
+  convert_and_validate!(
+    r#"<Struct attr_option_string="some value" attr_option_struct="variant2 variant3" />"#,
+    Struct,
+    Struct {
+      attr_option_string: Some("some value".to_string()),
+      attr_option_struct: Some(other_mod::Attributes {
+        items: vec!["variant2".to_string(), "variant3".to_string()]
+      })
     }
   );
 }
@@ -841,7 +907,15 @@ fn de_same_field_name_sub_sub() {
   convert_and_validate!("<Struct><sub /></Struct>", Struct, Struct::default());
 
   convert_and_validate!(
-    "<Struct><sub><sub><sub>42</sub></sub></sub></Struct>",
+    "<Struct>
+      <sub>
+        <sub>
+          <sub>
+            42
+          </sub>
+        </sub>
+      </sub>
+    </Struct>",
     Struct,
     Struct {
       sub: SubStruct {
@@ -849,4 +923,38 @@ fn de_same_field_name_sub_sub() {
       }
     }
   );
+}
+
+#[test]
+fn de_same_field_name_but_some_other_fields_or_something() {
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[yaserde(rename = "foo")]
+  pub struct FooOuter {
+    pub other: bool,
+    #[yaserde(rename = "foo")]
+    pub foo: Option<FooInner>,
+  }
+
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  pub struct FooInner {
+    pub blah: bool,
+  }
+
+  let content = r#"
+    <foo>
+      <other>false</other>
+      <foo>
+        <blah>false</blah>
+      </foo>
+    </foo>
+  "#;
+
+  let model = FooOuter {
+    other: false,
+    foo: Some(FooInner { blah: false }),
+  };
+
+  serialize_and_validate!(model, content);
+  // TODO fix it
+  // deserialize_and_validate!(content, model, FooOuter);
 }

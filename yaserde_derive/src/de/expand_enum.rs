@@ -51,7 +51,7 @@ pub fn parse(
         loop {
           match reader.peek()?.to_owned() {
             XmlEvent::StartElement{ref name, ref attributes, ..} => {
-              println!("{:?}", name.local_name.as_str());
+              // trace!("{:?}", name.local_name.as_str());
               match name.local_name.as_str() {
                 #match_to_enum
                 _named_element => {
