@@ -1,4 +1,5 @@
 use crate::common::attribute::YaSerdeAttribute;
+use heck::CamelCase;
 use proc_macro2::Span;
 use proc_macro2::{Ident, TokenStream};
 use std::fmt;
@@ -84,7 +85,7 @@ impl YaSerdeField {
     );
 
     Ident::new(
-      &format!("__Visitor_{}_{}", label.replace(".", "_"), struct_id),
+      &format!("__Visitor_{}_{}", label.replace(".", "_").to_camel_case(), struct_id),
       self.get_span(),
     )
   }

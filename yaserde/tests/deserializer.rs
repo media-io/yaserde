@@ -47,6 +47,39 @@ fn de_basic() {
 }
 
 #[test]
+fn de_dash_param() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(root = "book")]
+  pub struct Book {
+    #[yaserde(rename = "author-release")]
+    author: String,
+    title: String,
+  }
+
+  let content =
+    "<book><author-release>Antoine de Saint-Exupéry</author-release><title>Little prince</title></book>";
+  convert_and_validate!(
+    content,
+    Book,
+    Book {
+      author: String::from("Antoine de Saint-Exupéry"),
+      title: String::from("Little prince"),
+    }
+  );
+
+  let content =
+    "<book><title>Little prince</title><author-release>Antoine de Saint-Exupéry</author-release></book>";
+  convert_and_validate!(
+    content,
+    Book,
+    Book {
+      author: String::from("Antoine de Saint-Exupéry"),
+      title: String::from("Little prince"),
+    }
+  );
+}
+
+#[test]
 fn de_multiple_segments() {
   mod other_mod {
     use std::io::Read;
