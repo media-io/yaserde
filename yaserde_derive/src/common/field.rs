@@ -85,7 +85,11 @@ impl YaSerdeField {
     );
 
     Ident::new(
-      &format!("__Visitor_{}_{}", label.replace(".", "_").to_camel_case(), struct_id),
+      &format!(
+        "__Visitor_{}_{}",
+        label.replace(".", "_").to_camel_case(),
+        struct_id
+      ),
       self.get_span(),
     )
   }

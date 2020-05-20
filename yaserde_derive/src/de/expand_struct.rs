@@ -448,7 +448,11 @@ fn build_visitor_ident(label: &str, span: Span, struct_name: Option<&syn::Path>)
   );
 
   Ident::new(
-    &format!("__Visitor_{}_{}", label.replace(".", "_").to_camel_case(), struct_id),
+    &format!(
+      "__Visitor_{}_{}",
+      label.replace(".", "_").to_camel_case(),
+      struct_id
+    ),
     span,
   )
 }
