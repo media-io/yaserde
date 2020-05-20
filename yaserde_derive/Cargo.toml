@@ -1,6 +1,6 @@
 [package]
 name = "yaserde_derive"
-version = "0.3.16"
+version = "0.3.17"
 authors = ["Marc-Antoine Arnaud <arnaud.marcantoine@gmail.com>"]
 description = "Serialization and deserialization macros"
 keywords = ["Serialization", "Deserialization"]
@@ -12,6 +12,7 @@ readme = "../README.md"
 edition = "2018"
 
 [dependencies]
+heck = "0.3.1"
 syn = { version = "~1.0", features = ["visit", "extra-traits"] }
 proc-macro2 = "~1.0"
 quote = "~1.0"
