@@ -110,3 +110,32 @@ fn default_attribute_string() {
   serialize_and_validate!(model, content);
   deserialize_and_validate!(content, model, XmlStruct);
 }
+
+#[test]
+fn module_inclusion() {
+  mod module {
+    use super::*;
+
+    #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
+    #[yaserde(rename = "module")]
+    pub struct Module {
+      #[yaserde(attribute)]
+      pub color: String,
+    }
+  }
+
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+  #[yaserde(rename = "base")]
+  pub struct XmlStruct {
+    background: module::Module,
+  }
+
+  let content = r#"<base><background color="blue" /></base>"#;
+  let model = XmlStruct {
+    background: module::Module {
+      color: "blue".to_string(),
+    },
+  };
+  serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, XmlStruct);
+}

@@ -225,7 +225,11 @@ impl From<&syn::Path> for Field {
 
 impl From<&syn::Field> for Field {
   fn from(field: &syn::Field) -> Self {
-    match field.ty {
+    let mut ty = &field.ty;
+    while let syn::Type::Group(g) = ty {
+      ty = &g.elem;
+    }
+    match ty {
       Path(ref path) => Field::from(&path.path),
       _ => panic!("unable to match {:?}", field.ty),
     }
