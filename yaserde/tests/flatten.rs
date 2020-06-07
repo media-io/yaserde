@@ -144,3 +144,43 @@ fn root_flatten_enum() {
   let content = "<Data><string_data>string</string_data></Data>";
   serialize_and_validate!(model, content);
 }
+
+#[test]
+fn flatten_attribute() {
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  struct HtmlText {
+    #[yaserde(flatten)]
+    text_attributes: TextAttributes,
+    #[yaserde(attribute)]
+    display: String,
+  }
+
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  struct TextAttributes {
+    #[yaserde(attribute)]
+    bold: bool,
+    #[yaserde(flatten)]
+    font: FontAttributes,
+  }
+
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[yaserde(namespace = "ns: http://www.sample.com/ns/domain")]
+  pub struct FontAttributes {
+    #[yaserde(attribute, prefix = "ns")]
+    size: u32,
+  }
+
+  let model = HtmlText {
+    text_attributes: TextAttributes {
+      bold: true,
+      font: FontAttributes { size: 24 },
+    },
+    display: "block".to_string(),
+  };
+
+  let content = r#"
+    <HtmlText xmlns:ns="http://www.sample.com/ns/domain" display="block" bold="true" ns:size="24" />"#;
+
+  serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, HtmlText);
+}

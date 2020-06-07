@@ -1,7 +1,7 @@
 pub mod element;
 pub mod expand_enum;
 pub mod expand_struct;
-pub mod implement_deserializer;
+pub mod implement_serializer;
 pub mod label;
 pub mod namespace;
 

@@ -1,5 +1,5 @@
 use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
-use crate::ser::{implement_deserializer::implement_deserializer, label::build_label_name};
+use crate::ser::{implement_serializer::implement_serializer, label::build_label_name};
 use proc_macro2::TokenStream;
 use syn::DataEnum;
 use syn::Fields;
@@ -13,7 +13,7 @@ pub fn serialize(
 ) -> TokenStream {
   let inner_enum_inspector = inner_enum_inspector(data_enum, name, root_attributes);
 
-  implement_deserializer(
+  implement_serializer(
     name,
     root,
     root_attributes,

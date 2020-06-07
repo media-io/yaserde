@@ -293,7 +293,7 @@ fn ser_custom() {
     value: i32,
   }
 
-  impl YaSerialize for Day {
+  impl<'a> YaSerialize<'a> for Day {
     fn serialize<W: Write>(&self, writer: &mut yaserde::ser::Serializer<W>) -> Result<(), String> {
       let _ret = writer.write(xml::writer::XmlEvent::start_element("DoubleDay"));
       let _ret = writer.write(xml::writer::XmlEvent::characters(
@@ -301,6 +301,20 @@ fn ser_custom() {
       ));
       let _ret = writer.write(xml::writer::XmlEvent::end_element());
       Ok(())
+    }
+
+    fn serialize_attributes(
+      &self,
+      attributes: Vec<xml::attribute::OwnedAttribute>,
+      namespace: xml::namespace::Namespace,
+    ) -> Result<
+      (
+        Vec<xml::attribute::OwnedAttribute>,
+        xml::namespace::Namespace,
+      ),
+      String,
+    > {
+      Ok((attributes, namespace))
     }
   }
 

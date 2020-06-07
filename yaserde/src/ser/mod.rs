@@ -7,21 +7,24 @@ use std::str;
 use xml::writer::XmlEvent;
 use xml::{EmitterConfig, EventWriter};
 
-pub fn to_string<T: YaSerialize>(model: &T) -> Result<String, String> {
+pub fn to_string<'a, T: YaSerialize<'a>>(model: &T) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());
   let cursor = serialize_with_writer(model, buf, &Config::default())?;
   let data = str::from_utf8(cursor.get_ref()).expect("Found invalid UTF-8");
   Ok(String::from(data))
 }
 
-pub fn to_string_with_config<T: YaSerialize>(model: &T, config: &Config) -> Result<String, String> {
+pub fn to_string_with_config<'a, T: YaSerialize<'a>>(
+  model: &T,
+  config: &Config,
+) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());
   let cursor = serialize_with_writer(model, buf, config)?;
   let data = str::from_utf8(cursor.get_ref()).expect("Found invalid UTF-8");
   Ok(String::from(data))
 }
 
-pub fn serialize_with_writer<W: Write, T: YaSerialize>(
+pub fn serialize_with_writer<'a, W: Write, T: YaSerialize<'a>>(
   model: &T,
   writer: W,
   _config: &Config,
@@ -33,14 +36,14 @@ pub fn serialize_with_writer<W: Write, T: YaSerialize>(
   }
 }
 
-pub fn to_string_content<T: YaSerialize>(model: &T) -> Result<String, String> {
+pub fn to_string_content<'a, T: YaSerialize<'a>>(model: &T) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());
   let cursor = serialize_with_writer_content(model, buf)?;
   let data = str::from_utf8(cursor.get_ref()).expect("Found invalid UTF-8");
   Ok(String::from(data))
 }
 
-pub fn serialize_with_writer_content<W: Write, T: YaSerialize>(
+pub fn serialize_with_writer_content<'a, W: Write, T: YaSerialize<'a>>(
   model: &T,
   writer: W,
 ) -> Result<W, String> {
