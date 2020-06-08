@@ -293,7 +293,7 @@ fn ser_custom() {
     value: i32,
   }
 
-  impl<'a> YaSerialize<'a> for Day {
+  impl YaSerialize for Day {
     fn serialize<W: Write>(&self, writer: &mut yaserde::ser::Serializer<W>) -> Result<(), String> {
       let _ret = writer.write(xml::writer::XmlEvent::start_element("DoubleDay"));
       let _ret = writer.write(xml::writer::XmlEvent::characters(

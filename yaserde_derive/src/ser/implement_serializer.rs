@@ -16,7 +16,7 @@ pub fn implement_serializer(
   quote! {
     use xml::writer::XmlEvent;
 
-    impl<'a> YaSerialize<'a> for #name {
+    impl YaSerialize for #name {
       #[allow(unused_variables)]
       fn serialize<W: Write>(&self, writer: &mut yaserde::ser::Serializer<W>)
         -> Result<(), String> {
