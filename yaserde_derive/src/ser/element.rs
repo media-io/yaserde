@@ -58,6 +58,6 @@ pub fn condition_generator(label: &Option<Ident>, field: &YaSerdeField) -> Token
     .unwrap_or_else(|| {
       default_condition
         .map(|condition| quote!(if #condition))
-        .unwrap_or(quote!())
+        .unwrap_or_default()
     })
 }

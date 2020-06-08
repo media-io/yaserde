@@ -15,7 +15,7 @@ pub fn build_default_value(
 
   let field_type = field_type
     .map(|field_type| quote!(: #field_type))
-    .unwrap_or(quote!());
+    .unwrap_or_default();
 
   Some(quote! {
     #[allow(unused_mut)]

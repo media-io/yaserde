@@ -141,7 +141,7 @@ impl YaSerdeField {
 
     let yaserde_inner_definition = builder
       .map(|builder| quote!(let yaserde_inner = #builder;))
-      .unwrap_or(quote!());
+      .unwrap_or_default();
 
     self
       .get_default_function()
