@@ -8,6 +8,8 @@ rust:
   - 1.40.0
   - 1.41.0
   - 1.42.0
+  - 1.43.0
+  - 1.44.0
   - stable
   - beta
   - nightly
@@ -50,11 +52,16 @@ matrix:
 
 script:
   - cargo test
+
+# Need to cache the whole `.cargo` directory to keep .crates.toml for
+# cargo-update to work
 cache:
-  cargo: true
+  directories:
+    - /home/travis/.cargo
+
+# But don't cache the cargo registry
 before_cache:
-  # Travis can't cache files that are not readable by "others"
-  - chmod -R a+r $HOME/.cargo
+  - rm -rf /home/travis/.cargo/registry
 
 addons:
   apt:
