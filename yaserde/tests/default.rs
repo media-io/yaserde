@@ -6,8 +6,14 @@ extern crate yaserde_derive;
 use std::io::{Read, Write};
 use yaserde::{YaDeserialize, YaSerialize};
 
+fn init() {
+  let _ = env_logger::builder().is_test(true).try_init();
+}
+
 #[test]
 fn default_field_string() {
+  init();
+
   fn default_string() -> String {
     "my_default_value".to_string()
   }
@@ -37,6 +43,8 @@ fn default_field_string() {
 
 #[test]
 fn default_field_boolean() {
+  init();
+
   fn default_boolean() -> bool {
     true
   }
@@ -61,6 +69,8 @@ fn default_field_boolean() {
 
 #[test]
 fn default_field_number() {
+  init();
+
   fn default_number() -> u8 {
     6
   }
@@ -85,6 +95,8 @@ fn default_field_number() {
 
 #[test]
 fn default_attribute_string() {
+  init();
+
   fn default_string() -> String {
     "my_default_value".to_string()
   }
@@ -113,6 +125,8 @@ fn default_attribute_string() {
 
 #[test]
 fn module_inclusion() {
+  init();
+
   mod module {
     use super::*;
 

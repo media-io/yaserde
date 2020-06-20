@@ -7,8 +7,14 @@ use std::io::{Read, Write};
 
 use yaserde::{YaDeserialize, YaSerialize};
 
+fn init() {
+  let _ = env_logger::builder().is_test(true).try_init();
+}
+
 #[test]
 fn basic_flatten() {
+  init();
+
   #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct DateTime {
     #[yaserde(flatten)]
@@ -93,6 +99,8 @@ fn basic_flatten() {
 
 #[test]
 fn root_flatten_struct() {
+  init();
+
   #[derive(YaDeserialize, YaSerialize, PartialEq, Debug)]
   #[yaserde(flatten)]
   pub struct Content {
@@ -113,6 +121,8 @@ fn root_flatten_struct() {
 
 #[test]
 fn root_flatten_enum() {
+  init();
+
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(flatten)]
   pub enum Content {
@@ -147,6 +157,8 @@ fn root_flatten_enum() {
 
 #[test]
 fn flatten_attribute() {
+  init();
+
   #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct HtmlText {
     #[yaserde(flatten)]

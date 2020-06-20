@@ -6,8 +6,14 @@ extern crate yaserde_derive;
 use std::io::{Read, Write};
 use yaserde::{YaDeserialize, YaSerialize};
 
+fn init() {
+  let _ = env_logger::builder().is_test(true).try_init();
+}
+
 #[test]
 fn struct_simple_namespace() {
+  init();
+
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "book",
@@ -39,6 +45,8 @@ fn struct_simple_namespace() {
 
 #[test]
 fn struct_multiple_namespaces() {
+  init();
+
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "book",
@@ -71,6 +79,8 @@ fn struct_multiple_namespaces() {
 
 #[test]
 fn struct_partial_namespace() {
+  init();
+
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "book",
@@ -101,6 +111,8 @@ fn struct_partial_namespace() {
 
 #[test]
 fn struct_sub_namespace_definition() {
+  init();
+
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "book",
@@ -134,6 +146,8 @@ fn struct_sub_namespace_definition() {
 
 #[test]
 fn struct_namespace_nested() {
+  init();
+
   #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(prefix = "nsa", namespace = "nsa: http://www.sample.com/ns/a")]
   struct A {
@@ -167,6 +181,8 @@ fn struct_namespace_nested() {
 
 #[test]
 fn struct_namespace_nested_defined_at_root() {
+  init();
+
   #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(prefix = "nsa", namespace = "nsa: http://www.sample.com/ns/a")]
   struct A {
@@ -204,6 +220,8 @@ fn struct_namespace_nested_defined_at_root() {
 
 #[test]
 fn struct_attribute_namespace() {
+  init();
+
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "root",
@@ -234,6 +252,8 @@ fn struct_attribute_namespace() {
 
 #[test]
 fn struct_implicit_default_namespace() {
+  init();
+
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "tt",
@@ -256,6 +276,8 @@ fn struct_implicit_default_namespace() {
 
 #[test]
 fn struct_explicit_default_namespace() {
+  init();
+
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "tt",
@@ -279,6 +301,8 @@ fn struct_explicit_default_namespace() {
 
 #[test]
 fn struct_default_namespace_via_attribute_with_prefix() {
+  init();
+
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "tt",
@@ -303,6 +327,8 @@ fn struct_default_namespace_via_attribute_with_prefix() {
 
 #[test]
 fn enum_namespace() {
+  init();
+
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "root",
@@ -333,6 +359,8 @@ fn enum_namespace() {
 
 #[test]
 fn enum_multi_namespaces() {
+  init();
+
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "root",
@@ -374,6 +402,8 @@ fn enum_multi_namespaces() {
 
 #[test]
 fn enum_attribute_namespace() {
+  init();
+
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "rootA",
@@ -412,6 +442,8 @@ fn enum_attribute_namespace() {
 
 #[test]
 fn struct_bad_namespace() {
+  init();
+
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "book",

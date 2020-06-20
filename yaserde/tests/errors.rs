@@ -5,8 +5,14 @@ use std::io::Read;
 use yaserde::de::from_str;
 use yaserde::YaDeserialize;
 
+fn init() {
+  let _ = env_logger::builder().is_test(true).try_init();
+}
+
 #[test]
 fn de_no_content() {
+  init();
+
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "book")]
   pub struct Book {
@@ -26,6 +32,8 @@ fn de_no_content() {
 
 #[test]
 fn de_wrong_end_balise() {
+  init();
+
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "book")]
   pub struct Book {

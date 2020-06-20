@@ -6,8 +6,14 @@ extern crate yaserde_derive;
 use std::io::Write;
 use yaserde::YaSerialize;
 
+fn init() {
+  let _ = env_logger::builder().is_test(true).try_init();
+}
+
 #[test]
 fn skip_serializing_if_for_struct() {
+  init();
+
   fn default_string_function() -> String {
     "mask_default".to_string()
   }
