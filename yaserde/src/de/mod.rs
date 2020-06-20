@@ -85,7 +85,7 @@ impl<'de, R: Read> Deserializer<R> {
       }
       _ => {}
     }
-    debug!("Fetched {:?}", next_event);
+    debug!("Fetched {:?}, new depth {}", next_event, self.depth);
     Ok(next_event)
   }
 

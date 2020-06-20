@@ -311,7 +311,7 @@ pub fn parse(
     use yaserde::Visitor;
     #[allow(unknown_lints, unused_imports)]
     use std::str::FromStr;
-    use log::debug;
+    use log::{debug, trace};
 
     impl YaDeserialize for #name {
       #[allow(unused_variables)]
@@ -322,7 +322,9 @@ pub fn parse(
           } else {
             (String::from(#root), None)
           };
-        debug!("Struct: start to parse {:?}", named_element);
+        let start_depth = reader.depth();
+        debug!("Struct {} @ {}: start to parse {:?}", stringify!(#name), start_depth,
+               named_element);
 
         if reader.depth() == 0 {
           #namespaces_matching
@@ -336,6 +338,7 @@ pub fn parse(
 
         loop {
           let event = reader.peek()?.to_owned();
+          trace!("Struct {} @ {}: matching {:?}", stringify!(#name), start_depth, event);
           match event {
             XmlEvent::StartElement{ref name, ref attributes, ..} => {
               let mut skipped = false;
@@ -389,6 +392,7 @@ pub fn parse(
 
         #visit_unused
 
+        debug!("Struct {} @ {}: success", stringify!(#name), start_depth);
         Ok(#name{#struct_builder})
       }
     }

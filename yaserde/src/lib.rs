@@ -213,6 +213,7 @@ mod testing {
   #[macro_export]
   macro_rules! deserialize_and_validate {
     ($content: expr, $model: expr, $struct: tt) => {
+      log::debug!("deserialize_and_validate @ {}:{}", file!(), line!());
       let loaded: Result<$struct, String> = yaserde::de::from_str($content);
       assert_eq!(loaded, Ok($model));
     };
@@ -221,6 +222,7 @@ mod testing {
   #[macro_export]
   macro_rules! serialize_and_validate {
     ($model: expr, $content: expr) => {
+      log::debug!("serialize_and_validate @ {}:{}", file!(), line!());
       let data: Result<String, String> = yaserde::ser::to_string(&$model);
 
       let content = String::from(r#"<?xml version="1.0" encoding="utf-8"?>"#) + &$content;

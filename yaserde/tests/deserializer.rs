@@ -3,6 +3,7 @@ extern crate yaserde;
 #[macro_use]
 extern crate yaserde_derive;
 
+use log::debug;
 use std::io::{Read, Write};
 use yaserde::de::from_str;
 use yaserde::{YaDeserialize, YaSerialize};
@@ -13,6 +14,7 @@ fn init() {
 
 macro_rules! convert_and_validate {
   ($content: expr, $struct: tt, $model: expr) => {
+    debug!("convert_and_validate @ {}:{}", file!(), line!());
     let loaded: Result<$struct, String> = from_str($content);
     assert_eq!(loaded, Ok($model));
   };
