@@ -341,26 +341,20 @@ pub fn parse(
           trace!("Struct {} @ {}: matching {:?}", stringify!(#name), start_depth, event);
           match event {
             XmlEvent::StartElement{ref name, ref attributes, ..} => {
-              let mut skipped = false;
-
               match name.local_name.as_str() {
                 #call_visitors
-                named_element => {
+                _ => {
                   let event = reader.next_event()?;
                   #write_unused
 
                   if depth > 0 { // Don't skip root element
-                    skipped = true;
                     reader.skip_element(|event| {
                       #write_unused
                     })?;
                   }
                 }
-                // name => {
-                //   return Err(format!("unknown key {}", name))
-                // }
               }
-              if depth == 0 && !skipped { // Look for attributes only at element start
+              if depth == 0 { // Look for attributes only at element start
                 #attributes_loading
               }
               depth += 1;
