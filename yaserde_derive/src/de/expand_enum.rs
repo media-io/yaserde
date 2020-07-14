@@ -29,7 +29,7 @@ pub fn parse(
     use yaserde::Visitor;
     #[allow(unknown_lints, unused_imports)]
     use std::str::FromStr;
-    use log::debug;
+    use log::{debug, trace};
 
     impl YaDeserialize for #name {
       #[allow(unused_variables)]
@@ -41,7 +41,8 @@ pub fn parse(
             (String::from(#root), None)
           };
 
-        debug!("Enum: start to parse {:?}", named_element);
+        let start_depth = reader.depth();
+        debug!("Enum {} @ {}: start to parse {:?}", stringify!(#name), start_depth, named_element);
 
         #namespaces_matching
 
@@ -49,9 +50,10 @@ pub fn parse(
         let mut enum_value = None;
 
         loop {
-          match reader.peek()?.to_owned() {
+          let event = reader.peek()?.to_owned();
+          trace!("Enum {} @ {}: matching {:?}", stringify!(#name), start_depth, event);
+          match event {
             XmlEvent::StartElement{ref name, ref attributes, ..} => {
-              // trace!("{:?}", name.local_name.as_str());
               match name.local_name.as_str() {
                 #match_to_enum
                 _named_element => {
@@ -88,6 +90,7 @@ pub fn parse(
           }
         }
 
+        debug!("Enum {} @ {}: success", stringify!(#name), start_depth);
         match enum_value {
           Some(value) => Ok(value),
           None => {

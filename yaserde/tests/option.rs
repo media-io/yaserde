@@ -6,8 +6,14 @@ extern crate yaserde_derive;
 use std::io::{Read, Write};
 use yaserde::{YaDeserialize, YaSerialize};
 
+fn init() {
+  let _ = env_logger::builder().is_test(true).try_init();
+}
+
 #[test]
 fn basic_option_types() {
+  init();
+
   test_for_type!(Option::<String>, Some("test".to_string()), Some("test"));
   test_for_type!(Option::<String>, None, None);
   test_for_type!(Option::<bool>, Some(true), Some("true"));
@@ -75,6 +81,8 @@ fn basic_option_types() {
 
 #[test]
 fn option_struct() {
+  init();
+
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   struct Test {
     field: SubTest,

@@ -6,8 +6,14 @@ extern crate yaserde_derive;
 use std::io::{Read, Write};
 use yaserde::{YaDeserialize, YaSerialize};
 
+fn init() {
+  let _ = env_logger::builder().is_test(true).try_init();
+}
+
 #[test]
 fn ser_type() {
+  init();
+
   test_for_type!(String, "test".to_string(), Some("test"));
   test_for_type!(bool, true, Some("true"));
   test_for_type!(u8, 12 as u8, Some("12"));
