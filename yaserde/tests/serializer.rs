@@ -60,9 +60,30 @@ fn ser_list_of_items() {
     ],
   };
 
-  let content =
-    "<base><items><field>something1</field></items><items><field>something2</field></items></base>";
+  let content = "<base><items><field>something1</field></items><items><field>something2</field></items></base>";
   serialize_and_validate!(model2, content);
+
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(rename = "base")]
+  pub struct XmlStructOfStructRenamedField {
+      #[yaserde(rename = "listField")]
+      items: Vec<SubStruct>,
+  }
+
+  let model3 = XmlStructOfStructRenamedField {
+    items: vec![
+      SubStruct {
+        field: "something1".to_string(),
+      },
+      SubStruct {
+        field: "something2".to_string(),
+      },
+    ],
+  };
+
+  // SubStruct has 'rename' set, but it's ignored because SubStruct is used as a field of XmlStructOfStructRenamedField that overrides the 'rename
+  let content = "<base><listField><field>something1</field></listField><listField><field>something2</field></listField></base>";
+  serialize_and_validate!(model3, content);
 }
 
 #[test]
