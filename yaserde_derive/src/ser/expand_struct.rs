@@ -267,13 +267,27 @@ pub fn serialize(
               }
             }
           }),
-          Field::FieldStruct { .. } => Some(quote! {
+          Field::FieldStruct { .. } => {
+          Some(quote! {
+            //&self.#label
             for item in &self.#label {
               writer.set_start_event_name(Some(#label_name.to_string()));
               writer.set_skip_start_end(false);
               item.serialize(writer)?;
             }
-          }),
+          })
+//         let (start_event, skip_start) = if field.is_flatten() {
+//             (quote!(None), true)
+//           } else {
+//             (quote!(Some(#label_name.to_string())), false)
+//           };
+//
+//           Some(quote! {
+//             writer.set_start_event_name(#start_event);
+//             writer.set_skip_start_end(#skip_start);
+//             self.#label.serialize(writer)?;
+//           })
+           },
           Field::FieldVec { .. } => {
             unimplemented!();
           }
