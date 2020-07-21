@@ -104,30 +104,31 @@ fn ser_list_of_items() {
     ],
   };
 
-  let content = "<base><items><field>something1</field></items><items><field>something2</field></items></base>";
+  let content =
+    "<base><items><field>something1</field></items><items><field>something2</field></items></base>";
   serialize_and_validate!(model3, content);
 
   #[derive(YaSerialize, PartialEq, Debug)]
-    #[yaserde(rename = "base")]
-    pub struct XmlStructOfStructFlattenedField {
-      #[yaserde(flatten)]
-      items: Vec<SubStruct>,
-    }
+  #[yaserde(rename = "base")]
+  pub struct XmlStructOfStructFlattenedField {
+    #[yaserde(flatten)]
+    items: Vec<SubStruct>,
+  }
 
-    let model3 = XmlStructOfStructFlattenedField {
-      items: vec![
-        SubStruct {
-          field: "something1".to_string(),
-        },
-        SubStruct {
-          field: "something2".to_string(),
-        },
-      ],
-    };
+  let model3 = XmlStructOfStructFlattenedField {
+    items: vec![
+      SubStruct {
+        field: "something1".to_string(),
+      },
+      SubStruct {
+        field: "something2".to_string(),
+      },
+    ],
+  };
 
-    // SubStruct has 'rename' set, but it's ignored because SubStruct is used as a field of XmlStructOfStructRenamedFlattenedField that overrides the 'rename
-    let content = "<base><field>something1</field><field>something2</field></base>";
-    serialize_and_validate!(model3, content);
+  // SubStruct has 'rename' set, but it's ignored because SubStruct is used as a field of XmlStructOfStructRenamedFlattenedField that overrides the 'rename
+  let content = "<base><field>something1</field><field>something2</field></base>";
+  serialize_and_validate!(model3, content);
 }
 
 #[test]
