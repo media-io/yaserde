@@ -33,12 +33,12 @@ pub fn parse(
 
     impl YaDeserialize for #name {
       #[allow(unused_variables)]
-      fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, String> {
+      fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, std::string::String> {
         let (named_element, enum_namespace) =
           if let XmlEvent::StartElement{name, ..} = reader.peek()?.to_owned() {
             (name.local_name.to_owned(), name.namespace.clone())
           } else {
-            (String::from(#root), None)
+            (std::string::String::from(#root), None)
           };
 
         let start_depth = reader.depth();
@@ -161,7 +161,7 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
             impl<'de> Visitor<'de> for #visitor_label {
               type Value = #field_type;
 
-              fn #visitor(self, v: &str) -> Result<Self::Value, String> {
+              fn #visitor(self, v: &str) -> Result<Self::Value,  std::string::String> {
                 #fn_body
               }
             }
@@ -181,7 +181,7 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
 
       match field.get_type() {
         Field::FieldStruct { struct_name } => {
-          let struct_id: String = struct_name
+          let struct_id: std::string::String = struct_name
             .segments
             .iter()
             .map(|s| s.ident.to_string())
@@ -192,7 +192,7 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
             &quote! { #struct_name },
             &quote! {
               let content = "<".to_string() + #struct_id + ">" + v + "</" + #struct_id + ">";
-              let value : Result<#struct_name, String> = yaserde::de::from_str(&content);
+              let value : Result<#struct_name, std::string::String> = yaserde::de::from_str(&content);
               value
             },
           )
@@ -267,7 +267,7 @@ fn build_unnamed_visitor_calls(
         match enum_value {
           Some(ref mut v) => match v {
             #variant_name(ref mut v) => v.push(value),
-            _ => return Err(String::from("Got sequence of different types"))
+            _ => return Err(std::string::String::from("Got sequence of different types"))
           }
           None => {
             enum_value = Some(#variant_name(vec![value]));

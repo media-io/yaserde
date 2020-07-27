@@ -62,7 +62,7 @@ pub fn serialize(
             | Field::FieldU64
             | Field::FieldF32
             | Field::FieldF64 => field.ser_wrap_default_attribute(
-              Some(quote!(self.#label.map_or_else(|| String::new(), |v| v.to_string()))),
+              Some(quote!(self.#label.map_or_else(|| std::string::String::new(), |v| v.to_string()))),
               quote!({
                 if let Some(ref value) = self.#label {
                   struct_start_event.attr(#label_name, &yaserde_inner)
@@ -89,7 +89,7 @@ pub fn serialize(
             Field::FieldStruct { .. } => field.ser_wrap_default_attribute(
               Some(quote!(self.#label
                     .as_ref()
-                    .map_or_else(|| Ok(String::new()), |v| yaserde::ser::to_string_content(v))?)),
+                    .map_or_else(|| Ok(std::string::String::new()), |v| yaserde::ser::to_string_content(v))?)),
               quote!({
                 if let Some(ref yaserde_struct) = self.#label {
                   struct_start_event.attr(#label_name, &yaserde_inner)

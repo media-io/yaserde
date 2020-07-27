@@ -15,7 +15,7 @@ fn init() {
 macro_rules! convert_and_validate {
   ($content: expr, $struct: tt, $model: expr) => {
     debug!("convert_and_validate @ {}:{}", file!(), line!());
-    let loaded: Result<$struct, String> = from_str($content);
+    let loaded: Result<$struct, std::string::String> = from_str($content);
     assert_eq!(loaded, Ok($model));
   };
 }
@@ -785,7 +785,9 @@ fn de_custom() {
   }
 
   impl YaDeserialize for Day {
-    fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, String> {
+    fn deserialize<R: Read>(
+      reader: &mut yaserde::de::Deserializer<R>,
+    ) -> Result<Self, std::string::String> {
       use std::str::FromStr;
 
       if let xml::reader::XmlEvent::StartElement { name, .. } = reader.peek()?.to_owned() {
