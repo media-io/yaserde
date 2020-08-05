@@ -254,7 +254,7 @@ impl From<&syn::PathSegment> for Field {
 impl Into<proc_macro2::TokenStream> for Field {
   fn into(self) -> proc_macro2::TokenStream {
     match self {
-      Field::FieldString => quote! {String},
+      Field::FieldString => quote! {std::string::String},
       Field::FieldBool => quote! {bool},
       Field::FieldI8 => quote! {i8},
       Field::FieldU8 => quote! {u8},
@@ -272,7 +272,7 @@ impl Into<proc_macro2::TokenStream> for Field {
 }
 
 impl Into<String> for &Field {
-  fn into(self) -> String {
+  fn into(self) -> std::string::String {
     match self {
       Field::FieldString => "str".to_string(),
       Field::FieldBool => "bool".to_string(),
@@ -293,7 +293,7 @@ impl Into<String> for &Field {
 
 impl fmt::Display for Field {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    let string_representation: String = self.into();
+    let string_representation: std::string::String = self.into();
     write!(f, "{}", string_representation)
   }
 }

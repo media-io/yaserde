@@ -19,7 +19,7 @@ pub fn implement_serializer(
     impl YaSerialize for #name {
       #[allow(unused_variables)]
       fn serialize<W: Write>(&self, writer: &mut yaserde::ser::Serializer<W>)
-        -> Result<(), String> {
+        -> Result<(), std::string::String> {
         let skip = writer.skip_start_end();
 
         if !#flatten && !skip {
@@ -61,7 +61,7 @@ pub fn implement_serializer(
         Ok(())
       }
 
-      fn serialize_attributes(&self, mut source_attributes: Vec<xml::attribute::OwnedAttribute>, mut source_namespace: xml::namespace::Namespace) -> Result<(Vec<xml::attribute::OwnedAttribute>, xml::namespace::Namespace), String> {
+      fn serialize_attributes(&self, mut source_attributes: Vec<xml::attribute::OwnedAttribute>, mut source_namespace: xml::namespace::Namespace) -> Result<(Vec<xml::attribute::OwnedAttribute>, xml::namespace::Namespace), std::string::String> {
         let mut child_attributes : Vec<xml::attribute::OwnedAttribute> = vec![];
         let mut child_attributes_namespace = xml::namespace::Namespace::empty();
 

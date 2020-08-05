@@ -57,7 +57,7 @@ pub fn parse(
     .map(|field| YaSerdeField::new(field.clone()))
     .map(|field| {
       let struct_visitor = |struct_name: syn::Path| {
-        let struct_id: String = struct_name
+        let struct_id: std::string::String = struct_name
           .segments
           .iter()
           .map(|s| s.ident.to_string())
@@ -71,9 +71,9 @@ pub fn parse(
           impl<'de> Visitor<'de> for #visitor_label {
             type Value = #struct_name;
 
-            fn visit_str(self, v: &str) -> Result<Self::Value, String> {
+            fn visit_str(self, v: &str) -> Result<Self::Value, std::string::String> {
               let content = "<".to_string() + #struct_id + ">" + v + "</" + #struct_id + ">";
-              let value : Result<#struct_name, String> = yaserde::de::from_str(&content);
+              let value : Result<#struct_name, std::string::String> = yaserde::de::from_str(&content);
               value
             }
           }
@@ -91,7 +91,7 @@ pub fn parse(
           impl<'de> Visitor<'de> for #visitor_label {
             type Value = #field_type;
 
-            fn #visitor(self, v: &str) -> Result<Self::Value, String> {
+            fn #visitor(self, v: &str) -> Result<Self::Value, std::string::String> {
               Ok(#field_type::from_str(v).unwrap())
             }
           }
@@ -315,12 +315,12 @@ pub fn parse(
 
     impl YaDeserialize for #name {
       #[allow(unused_variables)]
-      fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, String> {
+      fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, std::string::String> {
         let (named_element, struct_namespace) =
           if let XmlEvent::StartElement{name, ..} = reader.peek()?.to_owned() {
             (name.local_name.to_owned(), name.namespace.clone())
           } else {
-            (String::from(#root), None)
+            (std::string::String::from(#root), None)
           };
         let start_depth = reader.depth();
         debug!("Struct {} @ {}: start to parse {:?}", stringify!(#name), start_depth,
@@ -476,7 +476,7 @@ fn build_code_for_unused_xml_events(
     }),
     Some(quote! {
       if writer.is_some() {
-        let unused_xml_elements = String::from_utf8(buf).unwrap();
+        let unused_xml_elements = std::string::String::from_utf8(buf).unwrap();
         #call_flatten_visitors
       }
     }),
