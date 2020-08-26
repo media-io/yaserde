@@ -85,6 +85,19 @@ pub fn parse(
         let visitor_label = field.get_visitor_ident(None);
         let field_type: TokenStream = simple_type.into();
 
+        let map_if_bool =
+          if format!("{}", field_type) == "bool" {
+            quote!(
+              match v {
+                "1" => "true",
+                "0" => "false",
+                _ => v,
+              }
+            )
+          } else {
+            quote!(v)
+          };
+
         Some(quote! {
           #[allow(non_snake_case, non_camel_case_types)]
           struct #visitor_label;
@@ -92,7 +105,7 @@ pub fn parse(
             type Value = #field_type;
 
             fn #visitor(self, v: &str) -> Result<Self::Value, std::string::String> {
-              Ok(#field_type::from_str(v).unwrap())
+              Ok(#field_type::from_str(#map_if_bool).unwrap())
             }
           }
         })
