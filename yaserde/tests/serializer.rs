@@ -327,6 +327,23 @@ fn ser_text_content_with_attributes() {
 }
 
 #[test]
+fn ser_keyword() {
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(rename = "base")]
+  pub struct XmlStruct {
+    #[yaserde(attribute, rename = "ref")]
+    r#ref: String,
+  }
+
+  let model = XmlStruct {
+    r#ref: "978-1522968122".to_string(),
+  };
+
+  let content = "<base ref=\"978-1522968122\" />";
+  serialize_and_validate!(model, content);
+}
+
+#[test]
 fn ser_name_issue_21() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "base")]

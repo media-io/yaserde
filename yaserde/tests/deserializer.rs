@@ -55,6 +55,27 @@ fn de_basic() {
 }
 
 #[test]
+fn de_keyword() {
+  init();
+
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(root = "book")]
+  pub struct Book {
+    #[yaserde(attribute, rename = "ref")]
+    pub r#ref: String,
+  }
+
+  let content = "<book ref=\"978-1522968122\"></book>";
+  convert_and_validate!(
+    content,
+    Book,
+    Book {
+      r#ref: "978-1522968122".to_string()
+    }
+  );
+}
+
+#[test]
 fn de_dash_param() {
   init();
 
