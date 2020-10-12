@@ -3,6 +3,7 @@ use heck::CamelCase;
 use proc_macro2::Span;
 use proc_macro2::{Ident, TokenStream};
 use std::fmt;
+use syn::ext::IdentExt;
 use syn::spanned::Spanned;
 use syn::Type::Path;
 
@@ -43,7 +44,7 @@ impl YaSerdeField {
       .syn_field
       .ident
       .clone()
-      .map(|ident| syn::Ident::new(&format!("__{}_value", ident.to_string()), ident.span()))
+      .map(|ident| syn::Ident::new(&format!("__{}_value", ident.unraw()), ident.span()))
   }
 
   pub fn renamed_label_without_namespace(&self) -> String {
