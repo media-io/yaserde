@@ -1,9 +1,7 @@
 #[macro_use]
 extern crate yaserde_derive;
 
-use std::io::Read;
 use yaserde::de::from_str;
-use yaserde::YaDeserialize;
 
 fn init() {
   let _ = env_logger::builder().is_test(true).try_init();

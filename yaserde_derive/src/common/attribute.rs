@@ -155,7 +155,8 @@ impl YaSerdeAttribute {
         match namespace.as_str() {
           #namespaces_matches
           bad_namespace => {
-            let msg = format!("bad namespace for {}, found {}", #element_name, bad_namespace);
+            let msg =
+              ::std::format!("bad namespace for {}, found {}", #element_name, bad_namespace);
             return Err(msg);
           }
         }

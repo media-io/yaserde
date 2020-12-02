@@ -42,7 +42,7 @@ fn inner_enum_inspector(
       match variant.fields {
         Fields::Unit => Some(quote! {
           &#name::#label => {
-            let data_event = XmlEvent::characters(#label_name);
+            let data_event = ::xml::writer::XmlEvent::characters(#label_name);
             writer.write(data_event).map_err(|e| e.to_string())?;
           }
         }),
@@ -57,7 +57,7 @@ fn inner_enum_inspector(
 
               if field.is_text_content() {
                 return Some(quote!(
-                  let data_event = XmlEvent::characters(&self.#field_label);
+                  let data_event = ::xml::writer::XmlEvent::characters(&self.#field_label);
                   writer.write(data_event).map_err(|e| e.to_string())?;
                 ));
               }
@@ -79,15 +79,16 @@ fn inner_enum_inspector(
                 | Field::FieldF64 => Some({
                   quote! {
                     match self {
-                      &#name::#label{ref #field_label, ..} => {
-                        let struct_start_event = XmlEvent::start_element(#field_label_name);
+                      &#name::#label { ref #field_label, .. } => {
+                        let struct_start_event =
+                          ::xml::writer::XmlEvent::start_element(#field_label_name);
                         writer.write(struct_start_event).map_err(|e| e.to_string())?;
 
                         let string_value = #field_label.to_string();
-                        let data_event = XmlEvent::characters(&string_value);
+                        let data_event = ::xml::writer::XmlEvent::characters(&string_value);
                         writer.write(data_event).map_err(|e| e.to_string())?;
 
-                        let struct_end_event = XmlEvent::end_element();
+                        let struct_end_event = ::xml::writer::XmlEvent::end_element();
                         writer.write(struct_end_event).map_err(|e| e.to_string())?;
                       },
                       _ => {},
@@ -97,7 +98,9 @@ fn inner_enum_inspector(
                 Field::FieldStruct { .. } => Some(quote! {
                   match self {
                     &#name::#label{ref #field_label, ..} => {
-                      writer.set_start_event_name(Some(#field_label_name.to_string()));
+                      writer.set_start_event_name(
+                        ::std::option::Option::Some(#field_label_name.to_string()),
+                      );
                       writer.set_skip_start_end(false);
                       #field_label.serialize(writer)?;
                     },
@@ -106,9 +109,11 @@ fn inner_enum_inspector(
                 }),
                 Field::FieldVec { .. } => Some(quote! {
                   match self {
-                    &#name::#label{ref #field_label, ..} => {
+                    &#name::#label { ref #field_label, .. } => {
                       for item in #field_label {
-                        writer.set_start_event_name(Some(#field_label_name.to_string()));
+                        writer.set_start_event_name(
+                          ::std::option::Option::Some(#field_label_name.to_string()),
+                        );
                         writer.set_skip_start_end(false);
                         item.serialize(writer)?;
                       }
@@ -137,29 +142,29 @@ fn inner_enum_inspector(
             .map(|field| {
               let write_element = |action: &TokenStream| {
                 quote! {
-                  let struct_start_event = XmlEvent::start_element(#label_name);
+                  let struct_start_event = ::xml::writer::XmlEvent::start_element(#label_name);
                   writer.write(struct_start_event).map_err(|e| e.to_string())?;
 
                   #action
 
-                  let struct_end_event = XmlEvent::end_element();
+                  let struct_end_event = ::xml::writer::XmlEvent::end_element();
                   writer.write(struct_end_event).map_err(|e| e.to_string())?;
                 }
               };
 
               let write_string_chars = quote! {
-                let data_event = XmlEvent::characters(item);
+                let data_event = ::xml::writer::XmlEvent::characters(item);
                 writer.write(data_event).map_err(|e| e.to_string())?;
               };
 
               let write_simple_type = write_element(&quote! {
                 let s = item.to_string();
-                let data_event = XmlEvent::characters(&s);
+                let data_event = ::xml::writer::XmlEvent::characters(&s);
                 writer.write(data_event).map_err(|e| e.to_string())?;
               });
 
               let serialize = quote! {
-                writer.set_start_event_name(None);
+                writer.set_start_event_name(::std::option::Option::None);
                 writer.set_skip_start_end(true);
                 item.serialize(writer)?;
               };
@@ -187,7 +192,7 @@ fn inner_enum_inspector(
                   let write = write_sub_type(*data_type);
 
                   Some(match_field(&quote! {
-                    if let Some(item) = item {
+                    if let ::std::option::Option::Some(item) = item {
                       #write
                     }
                   }))

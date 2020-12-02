@@ -3,9 +3,6 @@ extern crate yaserde;
 #[macro_use]
 extern crate yaserde_derive;
 
-use std::io::{Read, Write};
-use yaserde::{YaDeserialize, YaSerialize};
-
 #[test]
 fn basic_enum() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]

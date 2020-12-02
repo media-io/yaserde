@@ -26,35 +26,31 @@ pub fn parse(
   let flatten = root_attributes.flatten;
 
   quote! {
-    use xml::reader::XmlEvent;
-    use yaserde::Visitor;
-    #[allow(unknown_lints, unused_imports)]
-    use std::str::FromStr;
-    use log::{debug, trace};
-
-    impl YaDeserialize for #name {
+    impl ::yaserde::YaDeserialize for #name {
       #[allow(unused_variables)]
-      fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, std::string::String> {
+      fn deserialize<R: ::std::io::Read>(
+        reader: &mut ::yaserde::de::Deserializer<R>,
+      ) -> ::std::result::Result<Self, ::std::string::String> {
         let (named_element, enum_namespace) =
-          if let XmlEvent::StartElement{name, ..} = reader.peek()?.to_owned() {
+          if let ::xml::reader::XmlEvent::StartElement{ name, .. } = reader.peek()?.to_owned() {
             (name.local_name.to_owned(), name.namespace.clone())
           } else {
-            (std::string::String::from(#root), None)
+            (::std::string::String::from(#root), ::std::option::Option::None)
           };
 
         let start_depth = reader.depth();
-        debug!("Enum {} @ {}: start to parse {:?}", stringify!(#name), start_depth, named_element);
+        ::log::debug!("Enum {} @ {}: start to parse {:?}", stringify!(#name), start_depth, named_element);
 
         #namespaces_matching
 
         #[allow(unused_assignments, unused_mut)]
-        let mut enum_value = None;
+        let mut enum_value = ::std::option::Option::None;
 
         loop {
           let event = reader.peek()?.to_owned();
-          trace!("Enum {} @ {}: matching {:?}", stringify!(#name), start_depth, event);
+          ::log::trace!("Enum {} @ {}: matching {:?}", stringify!(#name), start_depth, event);
           match event {
-            XmlEvent::StartElement{ref name, ref attributes, ..} => {
+            ::xml::reader::XmlEvent::StartElement { ref name, ref attributes, .. } => {
               match name.local_name.as_str() {
                 #match_to_enum
                 _named_element => {
@@ -62,40 +58,42 @@ pub fn parse(
                 }
               }
 
-              if let XmlEvent::Characters(content) = reader.peek()?.to_owned() {
+              if let ::xml::reader::XmlEvent::Characters(content) = reader.peek()?.to_owned() {
                 match content.as_str() {
                   #match_to_enum
                   _ => {}
                 }
               }
             }
-            XmlEvent::EndElement{ref name} => {
+            ::xml::reader::XmlEvent::EndElement { ref name } => {
               if name.local_name == named_element {
                 break;
               }
               let _root = reader.next_event();
             }
-            XmlEvent::Characters(ref text_content) => {
+            ::xml::reader::XmlEvent::Characters(ref text_content) => {
               let _root = reader.next_event();
             }
-            XmlEvent::EndDocument => {
+            ::xml::reader::XmlEvent::EndDocument => {
               if #flatten {
                 break;
               }
 
-              return Err(format!("End of document, missing some content ?"))
+              return ::std::result::Result::Err(
+                ::std::format!("End of document, missing some content ?"),
+              );
             }
             event => {
-              return Err(format!("unknown event {:?}", event))
+              return ::std::result::Result::Err(::std::format!("unknown event {:?}", event))
             }
           }
         }
 
-        debug!("Enum {} @ {}: success", stringify!(#name), start_depth);
+        ::log::debug!("Enum {} @ {}: success", stringify!(#name), start_depth);
         match enum_value {
-          Some(value) => Ok(value),
-          None => {
-            Ok(#name::default())
+          ::std::option::Option::Some(value) => ::std::result::Result::Ok(value),
+          ::std::option::Option::None => {
+            ::std::result::Result::Ok(<#name as ::std::default::Default>::default())
           },
         }
       }
@@ -114,7 +112,7 @@ fn parse_variant(variant: &syn::Variant, name: &Ident) -> Option<TokenStream> {
   match variant.fields {
     Fields::Unit => Some(quote! {
       #xml_element_name => {
-        enum_value = Some(#variant_name);
+        enum_value = ::std::option::Option::Some(#variant_name);
       }
     }),
     Fields::Unnamed(ref fields) => {
@@ -159,10 +157,13 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
           Some(quote! {
             #[allow(non_snake_case, non_camel_case_types)]
             struct #visitor_label;
-            impl<'de> Visitor<'de> for #visitor_label {
+            impl<'de> ::yaserde::Visitor<'de> for #visitor_label {
               type Value = #field_type;
 
-              fn #visitor(self, v: &str) -> Result<Self::Value,  std::string::String> {
+              fn #visitor(
+                self,
+                v: &::std::primitive::str,
+              ) -> ::std::result::Result<Self::Value, ::std::string::String> {
                 #fn_body
               }
             }
@@ -176,7 +177,7 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
         make_visitor(
           &visitor,
           &field_type,
-          &quote! { Ok(#field_type::from_str(v).unwrap()) },
+          &quote! { ::std::result::Result::Ok(#field_type::from_str(v).unwrap()) },
         )
       };
 
@@ -193,7 +194,8 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
             &quote! { #struct_name },
             &quote! {
               let content = "<".to_string() + #struct_id + ">" + v + "</" + #struct_id + ">";
-              let value : Result<#struct_name, std::string::String> = yaserde::de::from_str(&content);
+              let value: ::std::result::Result<#struct_name, ::std::string::String> =
+                ::yaserde::de::from_str(&content);
               value
             },
           )
@@ -231,18 +233,22 @@ fn build_unnamed_visitor_calls(
           let visitor = #visitor_label{};
 
           let result = reader.read_inner_value::<#field_type, _>(|reader| {
-            if let XmlEvent::EndElement { .. } = *reader.peek()? {
+            if let ::xml::reader::XmlEvent::EndElement { .. } = *reader.peek()? {
               return visitor.#visitor("");
             }
 
-            if let Ok(XmlEvent::Characters(s)) = reader.next_event() {
+            if let ::std::result::Result::Ok(::xml::reader::XmlEvent::Characters(s))
+              = reader.next_event()
+            {
               visitor.#visitor(&s)
             } else {
-              Err(format!("unable to parse content for {}", #label_name))
+              ::std::result::Result::Err(
+                ::std::format!("unable to parse content for {}", #label_name),
+              )
             }
           });
 
-          if let Ok(value) = result {
+          if let ::std::result::Result::Ok(value) = result {
             #action
           }
         })
@@ -262,16 +268,24 @@ fn build_unnamed_visitor_calls(
         })
       };
 
-      let set_val = quote! { enum_value = Some(#variant_name(value)) };
-      let set_opt = quote! { enum_value = Some(#variant_name(Some(value))) };
+      let set_val = quote! {
+        enum_value = ::std::option::Option::Some(#variant_name(value))
+      };
+      let set_opt = quote! {
+        enum_value = ::std::option::Option::Some(#variant_name(::std::option::Option::Some(value)))
+      };
       let set_vec = quote! {
         match enum_value {
           Some(ref mut v) => match v {
             #variant_name(ref mut v) => v.push(value),
-            _ => return Err(std::string::String::from("Got sequence of different types"))
+            _ => {
+              return ::std::result::Result::Err(
+                ::std::string::String::from("Got sequence of different types"),
+              );
+            }
           }
           None => {
-            enum_value = Some(#variant_name(vec![value]));
+            enum_value = ::std::option::Option::Some(#variant_name(vec![value]));
           }
         }
       };

@@ -4,9 +4,9 @@ extern crate yaserde;
 extern crate yaserde_derive;
 
 use log::debug;
-use std::io::{Read, Write};
+use std::io::Read;
 use yaserde::de::from_str;
-use yaserde::{YaDeserialize, YaSerialize};
+use yaserde::YaDeserialize;
 
 fn init() {
   let _ = env_logger::builder().is_test(true).try_init();
@@ -115,9 +115,6 @@ fn de_multiple_segments() {
   init();
 
   mod other_mod {
-    use std::io::Read;
-    use yaserde::YaDeserialize;
-
     #[derive(YaDeserialize, PartialEq, Debug, Default)]
     pub struct Page {
       pub number: i32,
@@ -311,8 +308,6 @@ fn de_attributes_complex() {
   init();
 
   mod other_mod {
-    use super::*;
-
     #[derive(YaDeserialize, PartialEq, Debug)]
     pub enum AttrEnum {
       #[yaserde(rename = "variant 1")]

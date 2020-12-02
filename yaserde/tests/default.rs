@@ -3,9 +3,6 @@ extern crate yaserde;
 #[macro_use]
 extern crate yaserde_derive;
 
-use std::io::{Read, Write};
-use yaserde::{YaDeserialize, YaSerialize};
-
 fn init() {
   let _ = env_logger::builder().is_test(true).try_init();
 }
@@ -128,8 +125,6 @@ fn module_inclusion() {
   init();
 
   mod module {
-    use super::*;
-
     #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
     #[yaserde(rename = "module")]
     pub struct Module {
