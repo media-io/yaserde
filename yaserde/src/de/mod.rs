@@ -48,7 +48,7 @@ impl<'de, R: Read> Deserializer<R> {
     if let Some(ref next) = self.peeked {
       Ok(next)
     } else {
-      Err(String::from("unable to peek next item"))
+      Err("unable to peek next item".into())
     }
   }
 

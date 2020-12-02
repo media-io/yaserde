@@ -178,9 +178,10 @@ mod testing {
       let model = Data { item: $value };
 
       let content = if let Some(str_value) = $content {
-        String::from("<data><item>") + str_value + "</item></data>"
+        let str_value: &str = str_value;
+        format!("<data><item>{}</item></data>", str_value)
       } else {
-        String::from("<data />")
+        "<data />".to_owned()
       };
 
       serialize_and_validate!(model, content);
@@ -225,15 +226,10 @@ mod testing {
       log::debug!("serialize_and_validate @ {}:{}", file!(), line!());
       let data: Result<String, String> = yaserde::ser::to_string(&$model);
 
-      let content = String::from(r#"<?xml version="1.0" encoding="utf-8"?>"#) + &$content;
+      let content = format!(r#"<?xml version="1.0" encoding="utf-8"?>{}"#, $content);
       assert_eq!(
         data,
-        Ok(
-          String::from(content)
-            .split("\n")
-            .map(|s| s.trim())
-            .collect::<String>()
-        )
+        Ok(content.split("\n").map(|s| s.trim()).collect::<String>())
       );
     };
   }

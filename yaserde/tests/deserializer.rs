@@ -37,8 +37,8 @@ fn de_basic() {
     content,
     Book,
     Book {
-      author: String::from("Antoine de Saint-Exupéry"),
-      title: String::from("Little prince"),
+      author: "Antoine de Saint-Exupéry".to_owned(),
+      title: "Little prince".to_owned(),
     }
   );
 
@@ -48,8 +48,8 @@ fn de_basic() {
     content,
     Book,
     Book {
-      author: String::from("Antoine de Saint-Exupéry"),
-      title: String::from("Little prince"),
+      author: "Antoine de Saint-Exupéry".to_owned(),
+      title: "Little prince".to_owned(),
     }
   );
 }
@@ -93,8 +93,8 @@ fn de_dash_param() {
     content,
     Book,
     Book {
-      author: String::from("Antoine de Saint-Exupéry"),
-      title: String::from("Little prince"),
+      author: "Antoine de Saint-Exupéry".to_owned(),
+      title: "Little prince".to_owned(),
     }
   );
 
@@ -104,8 +104,8 @@ fn de_dash_param() {
     content,
     Book,
     Book {
-      author: String::from("Antoine de Saint-Exupéry"),
-      title: String::from("Little prince"),
+      author: "Antoine de Saint-Exupéry".to_owned(),
+      title: "Little prince".to_owned(),
     }
   );
 }
@@ -145,11 +145,11 @@ fn de_multiple_segments() {
     content,
     Book,
     Book {
-      author: String::from("Antoine de Saint-Exupéry"),
-      title: String::from("Little prince"),
+      author: "Antoine de Saint-Exupéry".to_owned(),
+      title: "Little prince".to_owned(),
       page: other_mod::Page {
         number: 40,
-        text: String::from("The Earth is not just an ordinary planet!"),
+        text: "The Earth is not just an ordinary planet!".to_owned(),
       },
     }
   );
@@ -170,7 +170,7 @@ fn de_list_of_items() {
     content,
     Library,
     Library {
-      books: vec![String::from("Little Prince"), String::from("Harry Potter")],
+      books: vec!["Little Prince".to_owned(), "Harry Potter".to_owned()],
     }
   );
 
@@ -187,10 +187,10 @@ fn de_list_of_items() {
     Libraries {
       library: vec![
         Library {
-          books: vec![String::from("Little Prince")],
+          books: vec!["Little Prince".to_owned()],
         },
         Library {
-          books: vec![String::from("Harry Potter")],
+          books: vec!["Harry Potter".to_owned()],
         },
       ],
     }
@@ -590,7 +590,7 @@ fn de_complex_enum() {
     content,
     XmlStruct,
     XmlStruct {
-      background: Color::Black(String::from("text")),
+      background: Color::Black("text".to_owned()),
     }
   );
 
@@ -605,7 +605,7 @@ fn de_complex_enum() {
     content,
     XmlStruct,
     XmlStruct {
-      background: Color::Orange(String::from("text")),
+      background: Color::Orange("text".to_owned()),
     }
   );
 
@@ -653,7 +653,7 @@ fn de_complex_enum() {
     content,
     XmlStruct,
     XmlStruct {
-      background: Color::Yellow(Some(String::from("text"))),
+      background: Color::Yellow(Some("text".to_owned())),
     }
   );
 
@@ -687,7 +687,7 @@ fn de_complex_enum() {
     content,
     XmlStruct,
     XmlStruct {
-      background: Color::Blue(vec![String::from("abc"), String::from("def")]),
+      background: Color::Blue(vec!["abc".to_owned(), "def".to_owned()]),
     }
   );
 
@@ -776,7 +776,7 @@ fn de_name_issue_21() {
     content,
     Book,
     Book {
-      name: String::from("Little prince"),
+      name: "Little prince".to_owned(),
     }
   );
 }
@@ -805,7 +805,7 @@ fn de_custom() {
       use std::str::FromStr;
 
       if let xml::reader::XmlEvent::StartElement { name, .. } = reader.peek()?.to_owned() {
-        let expected_name = String::from("Day");
+        let expected_name = "Day".to_owned();
         if name.local_name != expected_name {
           return Err(format!(
             "Wrong StartElement name: {}, expected: {}",

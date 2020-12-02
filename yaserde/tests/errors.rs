@@ -22,9 +22,7 @@ fn de_no_content() {
   let loaded: Result<Book, String> = from_str(content);
   assert_eq!(
     loaded,
-    Err(String::from(
-      "Unexpected end of stream: no root element found"
-    ))
+    Err("Unexpected end of stream: no root element found".to_owned())
   );
 }
 
@@ -43,8 +41,6 @@ fn de_wrong_end_balise() {
   let loaded: Result<Book, String> = from_str(content);
   assert_eq!(
     loaded,
-    Err(String::from(
-      "Unexpected closing tag: book, expected author"
-    ))
+    Err("Unexpected closing tag: book, expected author".to_owned())
   );
 }
