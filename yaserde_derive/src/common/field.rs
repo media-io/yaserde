@@ -2,6 +2,7 @@ use crate::common::attribute::YaSerdeAttribute;
 use heck::CamelCase;
 use proc_macro2::Span;
 use proc_macro2::{Ident, TokenStream};
+use quote::{format_ident, quote};
 use std::fmt;
 use syn::ext::IdentExt;
 use syn::spanned::Spanned;

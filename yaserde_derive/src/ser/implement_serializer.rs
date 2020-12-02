@@ -2,6 +2,7 @@ use crate::common::YaSerdeAttribute;
 use crate::ser::namespace::generate_namespaces_definition;
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
+use quote::quote;
 
 pub fn implement_serializer(
   name: &Ident,

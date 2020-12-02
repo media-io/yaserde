@@ -1,10 +1,7 @@
 #![recursion_limit = "256"]
 
+// Required for Rust < 1.42
 extern crate proc_macro;
-extern crate proc_macro2;
-#[macro_use]
-extern crate quote;
-extern crate syn;
 
 mod common;
 mod de;

@@ -2,6 +2,7 @@ use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use crate::de::build_default_value::build_default_value;
 use heck::CamelCase;
 use proc_macro2::{Span, TokenStream};
+use quote::quote;
 use syn::{DataStruct, Ident};
 
 pub fn parse(

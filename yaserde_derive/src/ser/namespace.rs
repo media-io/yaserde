@@ -1,5 +1,6 @@
 use crate::common::YaSerdeAttribute;
 use proc_macro2::TokenStream;
+use quote::quote;
 
 pub fn generate_namespaces_definition(attributes: &YaSerdeAttribute) -> TokenStream {
   attributes

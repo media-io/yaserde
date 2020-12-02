@@ -2,6 +2,7 @@ use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 
 use crate::ser::{element::*, implement_serializer::implement_serializer};
 use proc_macro2::TokenStream;
+use quote::quote;
 use syn::DataStruct;
 use syn::Ident;
 

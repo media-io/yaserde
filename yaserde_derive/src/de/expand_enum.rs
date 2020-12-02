@@ -1,5 +1,6 @@
 use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use proc_macro2::TokenStream;
+use quote::quote;
 use syn::{DataEnum, Fields, Ident};
 
 pub fn parse(

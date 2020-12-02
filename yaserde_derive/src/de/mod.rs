@@ -4,6 +4,7 @@ pub mod expand_struct;
 
 use crate::common::YaSerdeAttribute;
 use proc_macro2::TokenStream;
+use quote::quote;
 use syn::Ident;
 
 pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<TokenStream, String> {
