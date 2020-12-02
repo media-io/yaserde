@@ -182,7 +182,7 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
 
       match field.get_type() {
         Field::FieldStruct { struct_name } => {
-          let struct_id: std::string::String = struct_name
+          let struct_id: String = struct_name
             .segments
             .iter()
             .map(|s| s.ident.to_string())

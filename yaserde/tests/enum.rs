@@ -165,7 +165,7 @@ fn unnamed_enum() {
   pub enum Enum {
     Simple,
     Field(String),
-    FullPath(std::string::String),
+    FullPath(String),
     Integer(i32),
     UserStruct(OtherStruct),
     OptionString(Option<String>),

@@ -66,7 +66,7 @@ pub fn parse(
     .map(|field| YaSerdeField::new(field.clone()))
     .map(|field| {
       let struct_visitor = |struct_name: syn::Path| {
-        let struct_id: std::string::String = struct_name
+        let struct_id: String = struct_name
           .segments
           .iter()
           .map(|s| s.ident.to_string())

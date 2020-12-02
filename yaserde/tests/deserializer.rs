@@ -15,7 +15,7 @@ fn init() {
 macro_rules! convert_and_validate {
   ($content: expr, $struct: tt, $model: expr) => {
     debug!("convert_and_validate @ {}:{}", file!(), line!());
-    let loaded: Result<$struct, std::string::String> = from_str($content);
+    let loaded: Result<$struct, String> = from_str($content);
     assert_eq!(loaded, Ok($model));
   };
 }
@@ -118,15 +118,15 @@ fn de_multiple_segments() {
     #[derive(YaDeserialize, PartialEq, Debug, Default)]
     pub struct Page {
       pub number: i32,
-      pub text: std::string::String,
+      pub text: String,
     }
   }
 
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "book")]
   pub struct Book {
-    author: std::string::String,
-    title: std::string::String,
+    author: String,
+    title: String,
     page: other_mod::Page,
   }
 
@@ -277,7 +277,7 @@ fn de_attributes_custom_deserializer() {
   #[derive(Default, YaDeserialize, PartialEq, Debug)]
   pub struct Struct {
     #[yaserde(attribute)]
-    attr_option_string: Option<std::string::String>,
+    attr_option_string: Option<String>,
     #[yaserde(attribute)]
     attr_option_struct: Option<other_mod::Attributes>,
   }
@@ -326,7 +326,7 @@ fn de_attributes_complex() {
   #[derive(Default, YaDeserialize, PartialEq, Debug)]
   pub struct Struct {
     #[yaserde(attribute)]
-    attr_option_string: Option<std::string::String>,
+    attr_option_string: Option<String>,
     #[yaserde(attribute)]
     attr_option_enum: Option<other_mod::AttrEnum>,
   }
@@ -559,7 +559,7 @@ fn de_complex_enum() {
   pub enum Color {
     White,
     Black(String),
-    Orange(std::string::String),
+    Orange(String),
     Red(i32),
     Green(OtherStruct),
     Yellow(Option<String>),
@@ -801,9 +801,7 @@ fn de_custom() {
   }
 
   impl YaDeserialize for Day {
-    fn deserialize<R: Read>(
-      reader: &mut yaserde::de::Deserializer<R>,
-    ) -> Result<Self, std::string::String> {
+    fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, String> {
       use std::str::FromStr;
 
       if let xml::reader::XmlEvent::StartElement { name, .. } = reader.peek()?.to_owned() {

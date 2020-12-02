@@ -11,14 +11,14 @@ pub fn to_string<T: YaSerialize>(model: &T) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());
   let cursor = serialize_with_writer(model, buf, &Config::default())?;
   let data = str::from_utf8(cursor.get_ref()).expect("Found invalid UTF-8");
-  Ok(std::string::String::from(data))
+  Ok(String::from(data))
 }
 
 pub fn to_string_with_config<T: YaSerialize>(model: &T, config: &Config) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());
   let cursor = serialize_with_writer(model, buf, config)?;
   let data = str::from_utf8(cursor.get_ref()).expect("Found invalid UTF-8");
-  Ok(std::string::String::from(data))
+  Ok(String::from(data))
 }
 
 pub fn serialize_with_writer<W: Write, T: YaSerialize>(
@@ -37,7 +37,7 @@ pub fn to_string_content<T: YaSerialize>(model: &T) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());
   let cursor = serialize_with_writer_content(model, buf)?;
   let data = str::from_utf8(cursor.get_ref()).expect("Found invalid UTF-8");
-  Ok(std::string::String::from(data))
+  Ok(String::from(data))
 }
 
 pub fn serialize_with_writer_content<W: Write, T: YaSerialize>(

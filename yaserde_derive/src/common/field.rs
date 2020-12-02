@@ -273,7 +273,7 @@ impl Into<proc_macro2::TokenStream> for Field {
 }
 
 impl Into<String> for &Field {
-  fn into(self) -> std::string::String {
+  fn into(self) -> String {
     match self {
       Field::FieldString => "str".to_string(),
       Field::FieldBool => "bool".to_string(),
@@ -294,7 +294,7 @@ impl Into<String> for &Field {
 
 impl fmt::Display for Field {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    let string_representation: std::string::String = self.into();
+    let string_representation: String = self.into();
     write!(f, "{}", string_representation)
   }
 }
