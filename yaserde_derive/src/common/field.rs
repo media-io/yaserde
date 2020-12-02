@@ -185,9 +185,8 @@ pub enum Field {
 }
 
 impl Field {
-  pub fn get_simple_type_visitor(&self) -> TokenStream {
-    let ident = format_ident!("visit_{}", self.to_string());
-    quote! {#ident}
+  pub fn get_simple_type_visitor(&self) -> Ident {
+    format_ident!("visit_{}", self.to_string())
   }
 }
 

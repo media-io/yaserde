@@ -1,5 +1,5 @@
 use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{DataEnum, Fields, Ident};
 
@@ -149,26 +149,25 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
     .iter()
     .map(|field| YaSerdeField::new(field.clone()))
     .enumerate()
-    .map(|(idx, field)| {
+    .filter_map(|(idx, field)| {
       let visitor_label = Ident::new(&format!("__Visitor_{}", idx), field.get_span());
 
-      let make_visitor =
-        |visitor: &TokenStream, field_type: &TokenStream, fn_body: &TokenStream| {
-          Some(quote! {
-            #[allow(non_snake_case, non_camel_case_types)]
-            struct #visitor_label;
-            impl<'de> ::yaserde::Visitor<'de> for #visitor_label {
-              type Value = #field_type;
+      let make_visitor = |visitor: &Ident, field_type: &TokenStream, fn_body: &TokenStream| {
+        quote! {
+          #[allow(non_snake_case, non_camel_case_types)]
+          struct #visitor_label;
+          impl<'de> ::yaserde::Visitor<'de> for #visitor_label {
+            type Value = #field_type;
 
-              fn #visitor(
-                self,
-                v: &::std::primitive::str,
-              ) -> ::std::result::Result<Self::Value, ::std::string::String> {
-                #fn_body
-              }
+            fn #visitor(
+              self,
+              v: &::std::primitive::str,
+            ) -> ::std::result::Result<Self::Value, ::std::string::String> {
+              #fn_body
             }
-          })
-        };
+          }
+        }
+      };
 
       let simple_type_visitor = |simple_type: Field| {
         let visitor = simple_type.get_simple_type_visitor();
@@ -189,8 +188,8 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
             .map(|s| s.ident.to_string())
             .collect();
 
-          make_visitor(
-            &quote! { visit_str },
+          Some(make_visitor(
+            &Ident::new("visit_str", Span::call_site()),
             &quote! { #struct_name },
             &quote! {
               let content = "<".to_string() + #struct_id + ">" + v + "</" + #struct_id + ">";
@@ -198,16 +197,15 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
                 ::yaserde::de::from_str(&content);
               value
             },
-          )
+          ))
         }
         Field::FieldOption { data_type } | Field::FieldVec { data_type } => match *data_type {
           Field::FieldStruct { .. } => None,
-          simple_type => simple_type_visitor(simple_type),
+          simple_type => Some(simple_type_visitor(simple_type)),
         },
-        simple_type => simple_type_visitor(simple_type),
+        simple_type => Some(simple_type_visitor(simple_type)),
       }
     })
-    .filter_map(|f| f)
     .collect()
 }
 

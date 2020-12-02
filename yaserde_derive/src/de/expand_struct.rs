@@ -229,7 +229,7 @@ pub fn parse(
       let label_name = field.renamed_label_without_namespace();
       let visitor_label = build_visitor_ident(&label_name, field.get_span(), None);
 
-      let visit = |action: &TokenStream, visitor: &TokenStream, visitor_label: &Ident| {
+      let visit = |action: &TokenStream, visitor: &Ident, visitor_label: &Ident| {
         Some(quote! {
           for attr in attributes {
             if attr.name.local_name == #label_name {
@@ -254,7 +254,7 @@ pub fn parse(
       let visit_struct = |struct_name: syn::Path, action: TokenStream| {
         visit(
           &action,
-          &quote! { visit_str },
+          &Ident::new("visit_str", Span::call_site()),
           &build_visitor_ident(&label_name, field.get_span(), Some(&struct_name)),
         )
       };
@@ -421,7 +421,7 @@ pub fn parse(
 
 fn build_call_visitor(
   field_type: &TokenStream,
-  visitor: &TokenStream,
+  visitor: &Ident,
   action: &TokenStream,
   field: &YaSerdeField,
   root_attributes: &YaSerdeAttribute,
