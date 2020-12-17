@@ -82,7 +82,7 @@ pub fn parse(
 
             fn visit_str(
               self,
-              v: &::std::primitive::str,
+              v: &str,
             ) -> ::std::result::Result<Self::Value, ::std::string::String> {
               let content = "<".to_string() + #struct_id + ">" + v + "</" + #struct_id + ">";
               ::yaserde::de::from_str(&content)
@@ -114,7 +114,7 @@ pub fn parse(
 
             fn #visitor(
               self,
-              v: &::std::primitive::str,
+              v: &str,
             ) -> ::std::result::Result<Self::Value, ::std::string::String> {
               ::std::result::Result::Ok(#field_type::from_str(#map_if_bool).unwrap())
             }
@@ -363,7 +363,7 @@ pub fn parse(
           let event = reader.peek()?.to_owned();
           ::log::trace!(
             "Struct {} @ {}: matching {:?}",
-            ::std::stringify!(#name), start_depth, event,
+            stringify!(#name), start_depth, event,
           );
           match event {
             ::xml::reader::XmlEvent::StartElement{ref name, ref attributes, ..} => {

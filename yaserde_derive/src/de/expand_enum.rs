@@ -161,7 +161,7 @@ fn build_unnamed_field_visitors(fields: &syn::FieldsUnnamed) -> TokenStream {
 
             fn #visitor(
               self,
-              v: &::std::primitive::str,
+              v: &str,
             ) -> ::std::result::Result<Self::Value, ::std::string::String> {
               #fn_body
             }

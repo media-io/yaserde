@@ -256,17 +256,17 @@ impl Into<proc_macro2::TokenStream> for Field {
   fn into(self) -> proc_macro2::TokenStream {
     match self {
       Field::FieldString => quote! { ::std::string::String },
-      Field::FieldBool => quote! { ::std::primitive::bool },
-      Field::FieldI8 => quote! { ::std::primitive::i8 },
-      Field::FieldU8 => quote! { ::std::primitive::u8 },
-      Field::FieldI16 => quote! { ::std::primitive::i16 },
-      Field::FieldU16 => quote! { ::std::primitive::u16 },
-      Field::FieldI32 => quote! { ::std::primitive::i32 },
-      Field::FieldU32 => quote! { ::std::primitive::u32 },
-      Field::FieldI64 => quote! { ::std::primitive::i64 },
-      Field::FieldU64 => quote! { ::std::primitive::u64 },
-      Field::FieldF32 => quote! { ::std::primitive::f32 },
-      Field::FieldF64 => quote! { ::std::primitive::f64 },
+      Field::FieldBool => quote! { bool },
+      Field::FieldI8 => quote! { i8 },
+      Field::FieldU8 => quote! { u8 },
+      Field::FieldI16 => quote! { i16 },
+      Field::FieldU16 => quote! { u16 },
+      Field::FieldI32 => quote! { i32 },
+      Field::FieldU32 => quote! { u32 },
+      Field::FieldI64 => quote! { i64 },
+      Field::FieldU64 => quote! { u64 },
+      Field::FieldF32 => quote! { f32 },
+      Field::FieldF64 => quote! { f64 },
       _ => panic!("Not a simple type: {:?}", self),
     }
   }
