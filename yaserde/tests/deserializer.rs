@@ -4,9 +4,9 @@ extern crate yaserde;
 extern crate yaserde_derive;
 
 use log::debug;
-use std::io::{Read, Write};
+use std::io::Read;
 use yaserde::de::from_str;
-use yaserde::{YaDeserialize, YaSerialize};
+use yaserde::YaDeserialize;
 
 fn init() {
   let _ = env_logger::builder().is_test(true).try_init();
@@ -15,7 +15,7 @@ fn init() {
 macro_rules! convert_and_validate {
   ($content: expr, $struct: tt, $model: expr) => {
     debug!("convert_and_validate @ {}:{}", file!(), line!());
-    let loaded: Result<$struct, std::string::String> = from_str($content);
+    let loaded: Result<$struct, String> = from_str($content);
     assert_eq!(loaded, Ok($model));
   };
 }
@@ -37,8 +37,8 @@ fn de_basic() {
     content,
     Book,
     Book {
-      author: String::from("Antoine de Saint-Exupéry"),
-      title: String::from("Little prince"),
+      author: "Antoine de Saint-Exupéry".to_owned(),
+      title: "Little prince".to_owned(),
     }
   );
 
@@ -48,8 +48,8 @@ fn de_basic() {
     content,
     Book,
     Book {
-      author: String::from("Antoine de Saint-Exupéry"),
-      title: String::from("Little prince"),
+      author: "Antoine de Saint-Exupéry".to_owned(),
+      title: "Little prince".to_owned(),
     }
   );
 }
@@ -93,8 +93,8 @@ fn de_dash_param() {
     content,
     Book,
     Book {
-      author: String::from("Antoine de Saint-Exupéry"),
-      title: String::from("Little prince"),
+      author: "Antoine de Saint-Exupéry".to_owned(),
+      title: "Little prince".to_owned(),
     }
   );
 
@@ -104,8 +104,8 @@ fn de_dash_param() {
     content,
     Book,
     Book {
-      author: String::from("Antoine de Saint-Exupéry"),
-      title: String::from("Little prince"),
+      author: "Antoine de Saint-Exupéry".to_owned(),
+      title: "Little prince".to_owned(),
     }
   );
 }
@@ -115,21 +115,18 @@ fn de_multiple_segments() {
   init();
 
   mod other_mod {
-    use std::io::Read;
-    use yaserde::YaDeserialize;
-
     #[derive(YaDeserialize, PartialEq, Debug, Default)]
     pub struct Page {
       pub number: i32,
-      pub text: std::string::String,
+      pub text: String,
     }
   }
 
   #[derive(YaDeserialize, PartialEq, Debug)]
   #[yaserde(root = "book")]
   pub struct Book {
-    author: std::string::String,
-    title: std::string::String,
+    author: String,
+    title: String,
     page: other_mod::Page,
   }
 
@@ -148,11 +145,11 @@ fn de_multiple_segments() {
     content,
     Book,
     Book {
-      author: String::from("Antoine de Saint-Exupéry"),
-      title: String::from("Little prince"),
+      author: "Antoine de Saint-Exupéry".to_owned(),
+      title: "Little prince".to_owned(),
       page: other_mod::Page {
         number: 40,
-        text: String::from("The Earth is not just an ordinary planet!"),
+        text: "The Earth is not just an ordinary planet!".to_owned(),
       },
     }
   );
@@ -173,7 +170,7 @@ fn de_list_of_items() {
     content,
     Library,
     Library {
-      books: vec![String::from("Little Prince"), String::from("Harry Potter")],
+      books: vec!["Little Prince".to_owned(), "Harry Potter".to_owned()],
     }
   );
 
@@ -190,10 +187,10 @@ fn de_list_of_items() {
     Libraries {
       library: vec![
         Library {
-          books: vec![String::from("Little Prince")],
+          books: vec!["Little Prince".to_owned()],
         },
         Library {
-          books: vec![String::from("Harry Potter")],
+          books: vec!["Harry Potter".to_owned()],
         },
       ],
     }
@@ -280,7 +277,7 @@ fn de_attributes_custom_deserializer() {
   #[derive(Default, YaDeserialize, PartialEq, Debug)]
   pub struct Struct {
     #[yaserde(attribute)]
-    attr_option_string: Option<std::string::String>,
+    attr_option_string: Option<String>,
     #[yaserde(attribute)]
     attr_option_struct: Option<other_mod::Attributes>,
   }
@@ -311,8 +308,6 @@ fn de_attributes_complex() {
   init();
 
   mod other_mod {
-    use super::*;
-
     #[derive(YaDeserialize, PartialEq, Debug)]
     pub enum AttrEnum {
       #[yaserde(rename = "variant 1")]
@@ -331,7 +326,7 @@ fn de_attributes_complex() {
   #[derive(Default, YaDeserialize, PartialEq, Debug)]
   pub struct Struct {
     #[yaserde(attribute)]
-    attr_option_string: Option<std::string::String>,
+    attr_option_string: Option<String>,
     #[yaserde(attribute)]
     attr_option_enum: Option<other_mod::AttrEnum>,
   }
@@ -564,7 +559,7 @@ fn de_complex_enum() {
   pub enum Color {
     White,
     Black(String),
-    Orange(std::string::String),
+    Orange(String),
     Red(i32),
     Green(OtherStruct),
     Yellow(Option<String>),
@@ -595,7 +590,7 @@ fn de_complex_enum() {
     content,
     XmlStruct,
     XmlStruct {
-      background: Color::Black(String::from("text")),
+      background: Color::Black("text".to_owned()),
     }
   );
 
@@ -610,7 +605,7 @@ fn de_complex_enum() {
     content,
     XmlStruct,
     XmlStruct {
-      background: Color::Orange(String::from("text")),
+      background: Color::Orange("text".to_owned()),
     }
   );
 
@@ -658,7 +653,7 @@ fn de_complex_enum() {
     content,
     XmlStruct,
     XmlStruct {
-      background: Color::Yellow(Some(String::from("text"))),
+      background: Color::Yellow(Some("text".to_owned())),
     }
   );
 
@@ -692,7 +687,7 @@ fn de_complex_enum() {
     content,
     XmlStruct,
     XmlStruct {
-      background: Color::Blue(vec![String::from("abc"), String::from("def")]),
+      background: Color::Blue(vec!["abc".to_owned(), "def".to_owned()]),
     }
   );
 
@@ -781,7 +776,7 @@ fn de_name_issue_21() {
     content,
     Book,
     Book {
-      name: String::from("Little prince"),
+      name: "Little prince".to_owned(),
     }
   );
 }
@@ -806,13 +801,11 @@ fn de_custom() {
   }
 
   impl YaDeserialize for Day {
-    fn deserialize<R: Read>(
-      reader: &mut yaserde::de::Deserializer<R>,
-    ) -> Result<Self, std::string::String> {
+    fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, String> {
       use std::str::FromStr;
 
       if let xml::reader::XmlEvent::StartElement { name, .. } = reader.peek()?.to_owned() {
-        let expected_name = String::from("Day");
+        let expected_name = "Day".to_owned();
         if name.local_name != expected_name {
           return Err(format!(
             "Wrong StartElement name: {}, expected: {}",

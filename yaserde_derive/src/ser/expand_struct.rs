@@ -2,6 +2,7 @@ use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 
 use crate::ser::{element::*, implement_serializer::implement_serializer};
 use proc_macro2::TokenStream;
+use quote::quote;
 use syn::DataStruct;
 use syn::Ident;
 
@@ -44,7 +45,7 @@ pub fn serialize(
             Field::FieldString => field.ser_wrap_default_attribute(
               None,
               quote!({
-                if let Some(ref value) = self.#label {
+                if let ::std::option::Option::Some(ref value) = self.#label {
                   struct_start_event.attr(#label_name, value)
                 } else {
                   struct_start_event
@@ -62,9 +63,11 @@ pub fn serialize(
             | Field::FieldU64
             | Field::FieldF32
             | Field::FieldF64 => field.ser_wrap_default_attribute(
-              Some(quote!(self.#label.map_or_else(|| std::string::String::new(), |v| v.to_string()))),
+              Some(
+                quote!(self.#label.map_or_else(|| ::std::string::String::new(), |v| v.to_string())),
+              ),
               quote!({
-                if let Some(ref value) = self.#label {
+                if let ::std::option::Option::Some(ref value) = self.#label {
                   struct_start_event.attr(#label_name, &yaserde_inner)
                 } else {
                   struct_start_event
@@ -78,7 +81,7 @@ pub fn serialize(
               field.ser_wrap_default_attribute(
                 None,
                 quote!({
-                  if let Some(ref yaserde_list) = self.#label {
+                  if let ::std::option::Option::Some(ref yaserde_list) = self.#label {
                     for yaserde_item in yaserde_list.iter() {
                       #inner
                     }
@@ -87,11 +90,16 @@ pub fn serialize(
               )
             }
             Field::FieldStruct { .. } => field.ser_wrap_default_attribute(
-              Some(quote!(self.#label
-                    .as_ref()
-                    .map_or_else(|| Ok(std::string::String::new()), |v| yaserde::ser::to_string_content(v))?)),
+              Some(quote! {
+              self.#label
+                .as_ref()
+                .map_or_else(
+                  || ::std::result::Result::Ok(::std::string::String::new()),
+                  |v| ::yaserde::ser::to_string_content(v),
+                )?
+              }),
               quote!({
-                if let Some(ref yaserde_struct) = self.#label {
+                if let ::std::option::Option::Some(ref yaserde_struct) = self.#label {
                   struct_start_event.attr(#label_name, &yaserde_inner)
                 } else {
                   struct_start_event
@@ -101,7 +109,7 @@ pub fn serialize(
             Field::FieldOption { .. } => unimplemented!(),
           },
           Field::FieldStruct { .. } => field.ser_wrap_default_attribute(
-            Some(quote!(yaserde::ser::to_string_content(&self.#label)?)),
+            Some(quote! { ::yaserde::ser::to_string_content(&self.#label)? }),
             quote!({
               struct_start_event.attr(#label_name, &yaserde_inner)
             }),
@@ -115,12 +123,15 @@ pub fn serialize(
         match field.get_type() {
           Field::FieldStruct { .. } => {
             quote!(
-              let (attributes, namespace) = self.#label.serialize_attributes(vec![], xml::namespace::Namespace::empty())?;
+              let (attributes, namespace) = self.#label.serialize_attributes(
+                ::std::vec![],
+                ::xml::namespace::Namespace::empty(),
+              )?;
               child_attributes_namespace.extend(&namespace);
               child_attributes.extend(attributes);
             )
           }
-          _ => quote!()
+          _ => quote!(),
         }
       }
     })
@@ -135,7 +146,7 @@ pub fn serialize(
       let label = field.label();
       if field.is_text_content() {
         return Some(quote!(
-          let data_event = XmlEvent::characters(&self.#label);
+          let data_event = ::xml::writer::XmlEvent::characters(&self.#label);
           writer.write(data_event).map_err(|e| e.to_string())?;
         ));
       }
@@ -187,7 +198,7 @@ pub fn serialize(
 
             Some(quote! {
               #conditions {
-                if let Some(ref yaserde_items) = &self.#label {
+                if let ::std::option::Option::Some(ref yaserde_items) = &self.#label {
                   for yaserde_item in yaserde_items.iter() {
                     #inner
                   }
@@ -197,16 +208,16 @@ pub fn serialize(
           }
           Field::FieldStruct { .. } => Some(if field.is_flatten() {
             quote! {
-              if let Some(ref item) = &self.#label {
-                writer.set_start_event_name(None);
+              if let ::std::option::Option::Some(ref item) = &self.#label {
+                writer.set_start_event_name(::std::option::Option::None);
                 writer.set_skip_start_end(true);
                 item.serialize(writer)?;
               }
             }
           } else {
             quote! {
-              if let Some(ref item) = &self.#label {
-                writer.set_start_event_name(Some(#label_name.to_string()));
+              if let ::std::option::Option::Some(ref item) = &self.#label {
+                writer.set_start_event_name(::std::option::Option::Some(#label_name.to_string()));
                 writer.set_skip_start_end(false);
                 item.serialize(writer)?;
               }
@@ -216,9 +227,12 @@ pub fn serialize(
         },
         Field::FieldStruct { .. } => {
           let (start_event, skip_start) = if field.is_flatten() {
-            (quote!(None), true)
+            (quote!(::std::option::Option::None), true)
           } else {
-            (quote!(Some(#label_name.to_string())), false)
+            (
+              quote!(::std::option::Option::Some(#label_name.to_string())),
+              false,
+            )
           };
 
           Some(quote! {
@@ -271,7 +285,7 @@ pub fn serialize(
             if field.is_flatten() {
               Some(quote! {
                 for item in &self.#label {
-                    writer.set_start_event_name(None);
+                    writer.set_start_event_name(::std::option::Option::None);
                   writer.set_skip_start_end(true);
                   item.serialize(writer)?;
                 }
@@ -279,7 +293,7 @@ pub fn serialize(
             } else {
               Some(quote! {
                 for item in &self.#label {
-                    writer.set_start_event_name(Some(#label_name.to_string()));
+                  writer.set_start_event_name(::std::option::Option::Some(#label_name.to_string()));
                   writer.set_skip_start_end(false);
                   item.serialize(writer)?;
                 }

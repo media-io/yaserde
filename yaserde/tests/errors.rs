@@ -1,9 +1,7 @@
 #[macro_use]
 extern crate yaserde_derive;
 
-use std::io::Read;
 use yaserde::de::from_str;
-use yaserde::YaDeserialize;
 
 fn init() {
   let _ = env_logger::builder().is_test(true).try_init();
@@ -24,9 +22,7 @@ fn de_no_content() {
   let loaded: Result<Book, String> = from_str(content);
   assert_eq!(
     loaded,
-    Err(String::from(
-      "Unexpected end of stream: no root element found"
-    ))
+    Err("Unexpected end of stream: no root element found".to_owned())
   );
 }
 
@@ -45,8 +41,6 @@ fn de_wrong_end_balise() {
   let loaded: Result<Book, String> = from_str(content);
   assert_eq!(
     loaded,
-    Err(String::from(
-      "Unexpected closing tag: book, expected author"
-    ))
+    Err("Unexpected closing tag: book, expected author".to_owned())
   );
 }

@@ -2,6 +2,7 @@ use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use crate::de::build_default_value::build_default_value;
 use heck::CamelCase;
 use proc_macro2::{Span, TokenStream};
+use quote::quote;
 use syn::{DataStruct, Ident};
 
 pub fn parse(
@@ -25,25 +26,33 @@ pub fn parse(
       Field::FieldStruct { struct_name } => build_default_value(
         &field,
         Some(quote!(#struct_name)),
-        quote!(#struct_name::default()),
+        quote!(<#struct_name as ::std::default::Default>::default()),
       ),
-      Field::FieldOption { .. } => build_default_value(&field, None, quote!(None)),
+      Field::FieldOption { .. } => {
+        build_default_value(&field, None, quote!(::std::option::Option::None))
+      }
       Field::FieldVec { data_type } => match *data_type {
-        Field::FieldStruct { ref struct_name } => {
-          build_default_value(&field, Some(quote!(Vec<#struct_name>)), quote!(vec![]))
-        }
+        Field::FieldStruct { ref struct_name } => build_default_value(
+          &field,
+          Some(quote!(::std::vec::Vec<#struct_name>)),
+          quote!(::std::vec![]),
+        ),
         Field::FieldOption { .. } | Field::FieldVec { .. } => {
           unimplemented!();
         }
         simple_type => {
           let type_token: TokenStream = simple_type.into();
 
-          build_default_value(&field, Some(quote!(Vec<#type_token>)), quote!(vec![]))
+          build_default_value(
+            &field,
+            Some(quote!(::std::vec::Vec<#type_token>)),
+            quote!(::std::vec![]),
+          )
         }
       },
       simple_type => {
         let type_token: TokenStream = simple_type.into();
-        let value_builder = quote!(#type_token::default());
+        let value_builder = quote!(<#type_token as ::std::default::Default>::default());
 
         build_default_value(&field, Some(type_token), value_builder)
       }
@@ -57,7 +66,7 @@ pub fn parse(
     .map(|field| YaSerdeField::new(field.clone()))
     .map(|field| {
       let struct_visitor = |struct_name: syn::Path| {
-        let struct_id: std::string::String = struct_name
+        let struct_id: String = struct_name
           .segments
           .iter()
           .map(|s| s.ident.to_string())
@@ -68,13 +77,15 @@ pub fn parse(
         Some(quote! {
           #[allow(non_snake_case, non_camel_case_types)]
           struct #visitor_label;
-          impl<'de> Visitor<'de> for #visitor_label {
+          impl<'de> ::yaserde::Visitor<'de> for #visitor_label {
             type Value = #struct_name;
 
-            fn visit_str(self, v: &str) -> Result<Self::Value, std::string::String> {
+            fn visit_str(
+              self,
+              v: &str,
+            ) -> ::std::result::Result<Self::Value, ::std::string::String> {
               let content = "<".to_string() + #struct_id + ">" + v + "</" + #struct_id + ">";
-              let value : Result<#struct_name, std::string::String> = yaserde::de::from_str(&content);
-              value
+              ::yaserde::de::from_str(&content)
             }
           }
         })
@@ -85,27 +96,27 @@ pub fn parse(
         let visitor_label = field.get_visitor_ident(None);
         let field_type: TokenStream = simple_type.into();
 
-        let map_if_bool =
-          if format!("{}", field_type) == "bool" {
-            quote!(
-              match v {
-                "1" => "true",
-                "0" => "false",
-                _ => v,
-              }
-            )
-          } else {
-            quote!(v)
-          };
+        let map_if_bool = if field_type.to_string() == "bool" {
+          quote!(match v {
+            "1" => "true",
+            "0" => "false",
+            _ => v,
+          })
+        } else {
+          quote!(v)
+        };
 
         Some(quote! {
           #[allow(non_snake_case, non_camel_case_types)]
           struct #visitor_label;
-          impl<'de> Visitor<'de> for #visitor_label {
+          impl<'de> ::yaserde::Visitor<'de> for #visitor_label {
             type Value = #field_type;
 
-            fn #visitor(self, v: &str) -> Result<Self::Value, std::string::String> {
-              Ok(#field_type::from_str(#map_if_bool).unwrap())
+            fn #visitor(
+              self,
+              v: &str,
+            ) -> ::std::result::Result<Self::Value, ::std::string::String> {
+              ::std::result::Result::Ok(#field_type::from_str(#map_if_bool).unwrap())
             }
           }
         })
@@ -145,7 +156,7 @@ pub fn parse(
               // Don't count current struct's StartElement as substruct's StartElement
               let _root = reader.next_event();
             }
-            if let Ok(XmlEvent::StartElement { .. }) = reader.peek() {
+            if let Ok(::xml::reader::XmlEvent::StartElement { .. }) = reader.peek() {
               // If substruct's start element found then deserialize substruct
               let value = #struct_name::deserialize(reader)?;
               #value_label #action;
@@ -173,10 +184,12 @@ pub fn parse(
       };
 
       match field.get_type() {
-        Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! {= value}),
-        Field::FieldOption { data_type } => visit_sub(data_type, quote! {= Some(value)}),
-        Field::FieldVec { data_type } => visit_sub(data_type, quote! {.push(value)}),
-        simple_type => visit_simple(simple_type, quote! {= value}),
+        Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! { = value }),
+        Field::FieldOption { data_type } => {
+          visit_sub(data_type, quote! { = ::std::option::Option::Some(value) })
+        }
+        Field::FieldVec { data_type } => visit_sub(data_type, quote! { .push(value) }),
+        simple_type => visit_simple(simple_type, quote! { = value }),
       }
     })
     .filter_map(|x| x)
@@ -192,11 +205,11 @@ pub fn parse(
 
       match field.get_type() {
         Field::FieldStruct { .. } => Some(quote! {
-          #value_label = yaserde::de::from_str(&unused_xml_elements)?;
+          #value_label = ::yaserde::de::from_str(&unused_xml_elements)?;
         }),
         Field::FieldOption { data_type } => match *data_type {
           Field::FieldStruct { .. } => Some(quote! {
-            #value_label = yaserde::de::from_str(&unused_xml_elements).ok();
+            #value_label = ::yaserde::de::from_str(&unused_xml_elements).ok();
           }),
           field_type => unimplemented!(r#""flatten" is not implemented for {:?}"#, field_type),
         },
@@ -216,7 +229,7 @@ pub fn parse(
       let label_name = field.renamed_label_without_namespace();
       let visitor_label = build_visitor_ident(&label_name, field.get_span(), None);
 
-      let visit = |action: &TokenStream, visitor: &TokenStream, visitor_label: &Ident| {
+      let visit = |action: &TokenStream, visitor: &Ident, visitor_label: &Ident| {
         Some(quote! {
           for attr in attributes {
             if attr.name.local_name == #label_name {
@@ -241,7 +254,7 @@ pub fn parse(
       let visit_struct = |struct_name: syn::Path, action: TokenStream| {
         visit(
           &action,
-          &quote! {visit_str},
+          &Ident::new("visit_str", Span::call_site()),
           &build_visitor_ident(&label_name, field.get_span(), Some(&struct_name)),
         )
       };
@@ -262,10 +275,12 @@ pub fn parse(
 
       match field.get_type() {
         Field::FieldString => visit_string(),
-        Field::FieldOption { data_type } => visit_sub(data_type, quote! {= Some(value)}),
+        Field::FieldOption { data_type } => {
+          visit_sub(data_type, quote! { = ::std::option::Option::Some(value) })
+        }
         Field::FieldVec { .. } => unimplemented!(),
-        Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! {= value}),
-        simple_type => visit_simple(simple_type, quote! {= value}),
+        Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! { = value }),
+        simple_type => visit_simple(simple_type, quote! { = value }),
       }
     })
     .filter_map(|x| x)
@@ -280,18 +295,18 @@ pub fn parse(
 
       let set_text = |action: &TokenStream| {
         if field.is_text_content() {
-          Some(quote! {#label = #action;})
+          Some(quote! { #label = #action; })
         } else {
           None
         }
       };
 
       match field.get_type() {
-        Field::FieldString => set_text(&quote! {text_content.to_owned()}),
+        Field::FieldString => set_text(&quote! { text_content.to_owned() }),
         Field::FieldStruct { .. } | Field::FieldOption { .. } | Field::FieldVec { .. } => None,
         simple_type => {
           let type_token: TokenStream = simple_type.into();
-          set_text(&quote! {#type_token::from_str(text_content).unwrap()})
+          set_text(&quote! { #type_token::from_str(text_content).unwrap() })
         }
       }
     })
@@ -319,24 +334,19 @@ pub fn parse(
   let flatten = root_attributes.flatten;
 
   quote! {
-    use xml::reader::{XmlEvent, EventReader};
-    use xml::writer::EventWriter;
-    use yaserde::Visitor;
-    #[allow(unknown_lints, unused_imports)]
-    use std::str::FromStr;
-    use log::{debug, trace};
-
-    impl YaDeserialize for #name {
+    impl ::yaserde::YaDeserialize for #name {
       #[allow(unused_variables)]
-      fn deserialize<R: Read>(reader: &mut yaserde::de::Deserializer<R>) -> Result<Self, std::string::String> {
+      fn deserialize<R: ::std::io::Read>(
+        reader: &mut ::yaserde::de::Deserializer<R>,
+      ) -> ::std::result::Result<Self, ::std::string::String> {
         let (named_element, struct_namespace) =
-          if let XmlEvent::StartElement{name, ..} = reader.peek()?.to_owned() {
+          if let ::xml::reader::XmlEvent::StartElement { name, .. } = reader.peek()?.to_owned() {
             (name.local_name.to_owned(), name.namespace.clone())
           } else {
-            (std::string::String::from(#root), None)
+            (::std::string::String::from(#root), ::std::option::Option::None)
           };
         let start_depth = reader.depth();
-        debug!("Struct {} @ {}: start to parse {:?}", stringify!(#name), start_depth,
+        ::log::debug!("Struct {} @ {}: start to parse {:?}", stringify!(#name), start_depth,
                named_element);
 
         if reader.depth() == 0 {
@@ -351,9 +361,12 @@ pub fn parse(
 
         loop {
           let event = reader.peek()?.to_owned();
-          trace!("Struct {} @ {}: matching {:?}", stringify!(#name), start_depth, event);
+          ::log::trace!(
+            "Struct {} @ {}: matching {:?}",
+            stringify!(#name), start_depth, event,
+          );
           match event {
-            XmlEvent::StartElement{ref name, ref attributes, ..} => {
+            ::xml::reader::XmlEvent::StartElement{ref name, ref attributes, ..} => {
               match name.local_name.as_str() {
                 #call_visitors
                 _ => {
@@ -372,7 +385,7 @@ pub fn parse(
               }
               depth += 1;
             }
-            XmlEvent::EndElement{ref name} => {
+            ::xml::reader::XmlEvent::EndElement { ref name } => {
               if name.local_name == named_element {
                 #write_unused
                 break;
@@ -381,26 +394,26 @@ pub fn parse(
               #write_unused
               depth -= 1;
             }
-            XmlEvent::EndDocument => {
+            ::xml::reader::XmlEvent::EndDocument => {
               if #flatten {
                 break;
               }
             }
-            XmlEvent::Characters(ref text_content) => {
+            ::xml::reader::XmlEvent::Characters(ref text_content) => {
               #set_text
               let event = reader.next_event()?;
               #write_unused
             }
             event => {
-              return Err(format!("unknown event {:?}", event))
+              return ::std::result::Result::Err(::std::format!("unknown event {:?}", event));
             }
           }
         }
 
         #visit_unused
 
-        debug!("Struct {} @ {}: success", stringify!(#name), start_depth);
-        Ok(#name{#struct_builder})
+        ::log::debug!("Struct {} @ {}: success", stringify!(#name), start_depth);
+        ::std::result::Result::Ok(#name{#struct_builder})
       }
     }
   }
@@ -408,7 +421,7 @@ pub fn parse(
 
 fn build_call_visitor(
   field_type: &TokenStream,
-  visitor: &TokenStream,
+  visitor: &Ident,
   action: &TokenStream,
   field: &YaSerdeField,
   root_attributes: &YaSerdeAttribute,
@@ -430,16 +443,16 @@ fn build_call_visitor(
       #namespaces_matching
 
       let result = reader.read_inner_value::<#field_type, _>(|reader| {
-        if let Ok(XmlEvent::Characters(s)) = reader.peek() {
+        if let ::std::result::Result::Ok(::xml::reader::XmlEvent::Characters(s)) = reader.peek() {
           let val = visitor.#visitor(&s);
           let _event = reader.next_event()?;
           val
         } else {
-          Err(format!("unable to parse content for {}", #label_name))
+          ::std::result::Result::Err(::std::format!("unable to parse content for {}", #label_name))
         }
       });
 
-      if let Ok(value) = result {
+      if let ::std::result::Result::Ok(value) = result {
         #value_label#action
       }
     }
@@ -477,19 +490,19 @@ fn build_code_for_unused_xml_events(
 ) {
   (
     Some(quote! {
-      let mut buf = Vec::new();
-      let mut writer = Some(EventWriter::new(&mut buf));
+      let mut buf = ::std::vec![];
+      let mut writer = ::std::option::Option::Some(::xml::writer::EventWriter::new(&mut buf));
     }),
     Some(quote! {
-      if let Some(ref mut w) = writer {
+      if let ::std::option::Option::Some(ref mut w) = writer {
         if w.write(event.as_writer_event().unwrap()).is_err() {
-          writer = None;
+          writer = ::std::option::Option::None;
         }
       }
     }),
     Some(quote! {
       if writer.is_some() {
-        let unused_xml_elements = std::string::String::from_utf8(buf).unwrap();
+        let unused_xml_elements = ::std::string::String::from_utf8(buf).unwrap();
         #call_flatten_visitors
       }
     }),

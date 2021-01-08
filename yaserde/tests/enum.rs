@@ -3,9 +3,6 @@ extern crate yaserde;
 #[macro_use]
 extern crate yaserde_derive;
 
-use std::io::{Read, Write};
-use yaserde::{YaDeserialize, YaSerialize};
-
 #[test]
 fn basic_enum() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
@@ -168,7 +165,7 @@ fn unnamed_enum() {
   pub enum Enum {
     Simple,
     Field(String),
-    FullPath(std::string::String),
+    FullPath(String),
     Integer(i32),
     UserStruct(OtherStruct),
     OptionString(Option<String>),
@@ -189,7 +186,7 @@ fn unnamed_enum() {
   }
 
   let model = XmlStruct {
-    color: Enum::Field(String::from("some_text")),
+    color: Enum::Field("some_text".to_owned()),
   };
 
   let content = "<base><color><Field>some_text</Field></color></base>";
@@ -197,7 +194,7 @@ fn unnamed_enum() {
   deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
-    color: Enum::FullPath(String::from("some_text")),
+    color: Enum::FullPath("some_text".to_owned()),
   };
 
   let content = "<base><color><FullPath>some_text</FullPath></color></base>";
@@ -221,7 +218,7 @@ fn unnamed_enum() {
   deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
-    color: Enum::OptionString(Some(String::from("some_text"))),
+    color: Enum::OptionString(Some("some_text".to_owned())),
   };
 
   let content = "<base><color><OptionString>some_text</OptionString></color></base>";
@@ -256,7 +253,7 @@ fn unnamed_enum() {
   // deserialize_and_validate!(content, model, XmlStruct);
 
   let model = XmlStruct {
-    color: Enum::Strings(vec![String::from("abc"), String::from("def")]),
+    color: Enum::Strings(vec!["abc".to_owned(), "def".to_owned()]),
   };
 
   let content = "<base><color><Strings>abc</Strings><Strings>def</Strings></color></base>";

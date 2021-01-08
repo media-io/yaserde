@@ -1,5 +1,6 @@
 use crate::common::YaSerdeField;
 use proc_macro2::TokenStream;
+use quote::quote;
 
 pub fn build_default_value(
   field: &YaSerdeField,

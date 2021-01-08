@@ -3,8 +3,8 @@ pub mod expand_enum;
 pub mod expand_struct;
 
 use crate::common::YaSerdeAttribute;
-use proc_macro2::TokenStream;
-use syn::Ident;
+use proc_macro2::{Ident, TokenStream};
+use quote::quote;
 
 pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<TokenStream, String> {
   let name = &ast.ident;
@@ -31,13 +31,13 @@ pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<TokenStream, 
 
   let dummy_const = Ident::new(&format!("_IMPL_YA_DESERIALIZE_FOR_{}", name), name.span());
 
-  let generated = quote! {
+  Ok(quote! {
     #[allow(non_upper_case_globals, unused_attributes, unused_qualifications)]
     const #dummy_const: () = {
-      extern crate yaserde as _yaserde;
+      use ::std::str::FromStr as _;
+      use ::yaserde::Visitor as _;
+
       #impl_block
     };
-  };
-
-  Ok(generated)
+  })
 }

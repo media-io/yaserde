@@ -2,6 +2,7 @@ use crate::common::attribute::YaSerdeAttribute;
 use heck::CamelCase;
 use proc_macro2::Span;
 use proc_macro2::{Ident, TokenStream};
+use quote::{format_ident, quote};
 use std::fmt;
 use syn::ext::IdentExt;
 use syn::spanned::Spanned;
@@ -184,9 +185,8 @@ pub enum Field {
 }
 
 impl Field {
-  pub fn get_simple_type_visitor(&self) -> TokenStream {
-    let ident = format_ident!("visit_{}", self.to_string());
-    quote! {#ident}
+  pub fn get_simple_type_visitor(&self) -> Ident {
+    format_ident!("visit_{}", self.to_string())
   }
 }
 
@@ -255,25 +255,25 @@ impl From<&syn::PathSegment> for Field {
 impl Into<proc_macro2::TokenStream> for Field {
   fn into(self) -> proc_macro2::TokenStream {
     match self {
-      Field::FieldString => quote! {std::string::String},
-      Field::FieldBool => quote! {bool},
-      Field::FieldI8 => quote! {i8},
-      Field::FieldU8 => quote! {u8},
-      Field::FieldI16 => quote! {i16},
-      Field::FieldU16 => quote! {u16},
-      Field::FieldI32 => quote! {i32},
-      Field::FieldU32 => quote! {u32},
-      Field::FieldI64 => quote! {i64},
-      Field::FieldU64 => quote! {u64},
-      Field::FieldF32 => quote! {f32},
-      Field::FieldF64 => quote! {f64},
+      Field::FieldString => quote! { ::std::string::String },
+      Field::FieldBool => quote! { bool },
+      Field::FieldI8 => quote! { i8 },
+      Field::FieldU8 => quote! { u8 },
+      Field::FieldI16 => quote! { i16 },
+      Field::FieldU16 => quote! { u16 },
+      Field::FieldI32 => quote! { i32 },
+      Field::FieldU32 => quote! { u32 },
+      Field::FieldI64 => quote! { i64 },
+      Field::FieldU64 => quote! { u64 },
+      Field::FieldF32 => quote! { f32 },
+      Field::FieldF64 => quote! { f64 },
       _ => panic!("Not a simple type: {:?}", self),
     }
   }
 }
 
 impl Into<String> for &Field {
-  fn into(self) -> std::string::String {
+  fn into(self) -> String {
     match self {
       Field::FieldString => "str".to_string(),
       Field::FieldBool => "bool".to_string(),
@@ -294,7 +294,7 @@ impl Into<String> for &Field {
 
 impl fmt::Display for Field {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    let string_representation: std::string::String = self.into();
+    let string_representation: String = self.into();
     write!(f, "{}", string_representation)
   }
 }

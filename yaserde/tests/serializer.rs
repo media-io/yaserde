@@ -177,8 +177,6 @@ fn ser_attributes() {
 #[test]
 fn ser_attributes_complex() {
   mod other_mod {
-    use super::*;
-
     #[derive(YaSerialize, PartialEq, Debug)]
     pub enum AttrEnum {
       #[yaserde(rename = "variant 1")]
@@ -197,7 +195,7 @@ fn ser_attributes_complex() {
   #[derive(YaSerialize, PartialEq, Debug)]
   pub struct Struct {
     #[yaserde(attribute)]
-    attr_option_string: Option<std::string::String>,
+    attr_option_string: Option<String>,
     #[yaserde(attribute)]
     attr_option_enum: Option<other_mod::AttrEnum>,
   }

@@ -1,4 +1,5 @@
 use proc_macro2::{token_stream::IntoIter, Delimiter, Ident, TokenStream, TokenTree};
+use quote::quote;
 use std::collections::BTreeMap;
 use syn::Attribute;
 
@@ -154,7 +155,8 @@ impl YaSerdeAttribute {
         match namespace.as_str() {
           #namespaces_matches
           bad_namespace => {
-            let msg = format!("bad namespace for {}, found {}", #element_name, bad_namespace);
+            let msg =
+              ::std::format!("bad namespace for {}, found {}", #element_name, bad_namespace);
             return Err(msg);
           }
         }

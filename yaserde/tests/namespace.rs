@@ -3,9 +3,6 @@ extern crate yaserde;
 #[macro_use]
 extern crate yaserde_derive;
 
-use std::io::{Read, Write};
-use yaserde::{YaDeserialize, YaSerialize};
-
 fn init() {
   let _ = env_logger::builder().is_test(true).try_init();
 }
@@ -35,8 +32,8 @@ fn struct_simple_namespace() {
   "#;
 
   let model = Book {
-    author: String::from("Antoine de Saint-Exupéry"),
-    title: String::from("Little prince"),
+    author: "Antoine de Saint-Exupéry".to_owned(),
+    title: "Little prince".to_owned(),
   };
 
   serialize_and_validate!(model, content);
@@ -69,8 +66,8 @@ fn struct_multiple_namespaces() {
   "#;
 
   let model = Book {
-    author: String::from("Antoine de Saint-Exupéry"),
-    title: String::from("Little prince"),
+    author: "Antoine de Saint-Exupéry".to_owned(),
+    title: "Little prince".to_owned(),
   };
 
   serialize_and_validate!(model, content);
@@ -101,8 +98,8 @@ fn struct_partial_namespace() {
   "#;
 
   let model = Book {
-    author: String::from("Antoine de Saint-Exupéry"),
-    title: String::from("Little prince"),
+    author: "Antoine de Saint-Exupéry".to_owned(),
+    title: "Little prince".to_owned(),
   };
 
   serialize_and_validate!(model, content);
@@ -135,8 +132,8 @@ fn struct_sub_namespace_definition() {
   "#;
 
   let model = Book {
-    author: String::from("Antoine de Saint-Exupéry"),
-    title: String::from("Little prince"),
+    author: "Antoine de Saint-Exupéry".to_owned(),
+    title: "Little prince".to_owned(),
   };
 
   // TODO support namespace for attribute to specify local namespace
