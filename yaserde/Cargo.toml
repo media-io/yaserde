@@ -1,6 +1,6 @@
 [package]
 name = "yaserde"
-version = "0.4.3"
+version = "0.5.0"
 authors = ["Marc-Antoine Arnaud <arnaud.marcantoine@gmail.com>"]
 description = "Serialization and deserialization library"
 keywords = ["Serialization", "Deserialization", "XML"]
@@ -12,7 +12,7 @@ readme = "../README.md"
 edition = "2018"
 
 [dependencies]
-yaserde_derive = { version = "0.4", path = "../yaserde_derive", optional = true }
+yaserde_derive = { version = "0.5", path = "../yaserde_derive", optional = true }
 xml-rs = "0.8.3"
 log = "0.4"
 
