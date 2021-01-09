@@ -24,9 +24,9 @@ pub fn to_string_with_config<T: YaSerialize>(model: &T, config: &Config) -> Resu
 pub fn serialize_with_writer<W: Write, T: YaSerialize>(
   model: &T,
   writer: W,
-  _config: &Config,
+  config: &Config,
 ) -> Result<W, String> {
-  let mut serializer = Serializer::new_from_writer(writer);
+  let mut serializer = Serializer::new_from_writer(writer, config);
   match model.serialize(&mut serializer) {
     Ok(()) => Ok(serializer.into_inner()),
     Err(msg) => Err(msg),
@@ -67,10 +67,20 @@ impl<'de, W: Write> Serializer<W> {
     }
   }
 
-  pub fn new_from_writer(writer: W) -> Self {
-    let config = EmitterConfig::new().cdata_to_characters(true);
+  pub fn new_from_writer(writer: W, config: &Config) -> Self {
+    let mut emitter_config = EmitterConfig::new()
+      .cdata_to_characters(true)
+      .perform_indent(config.perform_indent)
+      .write_document_declaration(config.write_document_declaration);
 
-    Self::new(EventWriter::new_with_config(writer, config))
+    match &config.indent_string {
+      Some(indent_string_value) => {
+        emitter_config = emitter_config.indent_string(indent_string_value.clone());
+      }
+      _ => (),
+    }
+
+    Self::new(EventWriter::new_with_config(writer, emitter_config))
   }
 
   pub fn new_for_inner(writer: W) -> Self {
