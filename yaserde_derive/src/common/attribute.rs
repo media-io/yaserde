@@ -42,7 +42,7 @@ impl YaSerdeAttribute {
     let mut skip_serializing_if = None;
     let mut text = false;
 
-    for attr in attrs.iter() {
+    for attr in attrs.iter().filter(|a| a.path.is_ident("yaserde")) {
       let mut attr_iter = attr.clone().tokens.into_iter();
       if let Some(token) = attr_iter.next() {
         if let TokenTree::Group(group) = token {
