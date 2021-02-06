@@ -11,7 +11,7 @@ pub fn from_str<T: YaDeserialize>(s: &str) -> Result<T, String> {
 }
 
 pub fn from_reader<R: Read, T: YaDeserialize>(reader: R) -> Result<T, String> {
-  T::deserialize(&mut Deserializer::new_from_reader(reader))
+  <T as YaDeserialize>::deserialize(&mut Deserializer::new_from_reader(reader))
 }
 
 pub struct Deserializer<R: Read> {
