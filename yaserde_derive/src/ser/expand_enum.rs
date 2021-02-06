@@ -102,7 +102,7 @@ fn inner_enum_inspector(
                         ::std::option::Option::Some(#field_label_name.to_string()),
                       );
                       writer.set_skip_start_end(false);
-                      #field_label.serialize(writer)?;
+                      ::yaserde::YaSerialize::serialize(#field_label, writer)?;
                     },
                     _ => {}
                   }
@@ -115,7 +115,7 @@ fn inner_enum_inspector(
                           ::std::option::Option::Some(#field_label_name.to_string()),
                         );
                         writer.set_skip_start_end(false);
-                        item.serialize(writer)?;
+                        ::yaserde::YaSerialize::serialize(item, writer)?;
                       }
                     },
                     _ => {}
@@ -166,7 +166,7 @@ fn inner_enum_inspector(
               let serialize = quote! {
                 writer.set_start_event_name(::std::option::Option::None);
                 writer.set_skip_start_end(true);
-                item.serialize(writer)?;
+                ::yaserde::YaSerialize::serialize(item, writer)?;
               };
 
               let write_sub_type = |data_type| {

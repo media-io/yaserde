@@ -211,7 +211,7 @@ pub fn serialize(
               if let ::std::option::Option::Some(ref item) = &self.#label {
                 writer.set_start_event_name(::std::option::Option::None);
                 writer.set_skip_start_end(true);
-                item.serialize(writer)?;
+                ::yaserde::YaSerialize::serialize(item, writer)?;
               }
             }
           } else {
@@ -219,7 +219,7 @@ pub fn serialize(
               if let ::std::option::Option::Some(ref item) = &self.#label {
                 writer.set_start_event_name(::std::option::Option::Some(#label_name.to_string()));
                 writer.set_skip_start_end(false);
-                item.serialize(writer)?;
+                ::yaserde::YaSerialize::serialize(item, writer)?;
               }
             }
           }),
@@ -238,7 +238,7 @@ pub fn serialize(
           Some(quote! {
             writer.set_start_event_name(#start_event);
             writer.set_skip_start_end(#skip_start);
-            self.#label.serialize(writer)?;
+            ::yaserde::YaSerialize::serialize(&self.#label, writer)?;
           })
         }
         Field::FieldVec { data_type } => match *data_type {
@@ -277,7 +277,7 @@ pub fn serialize(
               if let Some(value) = item {
                 writer.set_start_event_name(None);
                 writer.set_skip_start_end(false);
-                value.serialize(writer)?;
+                ::yaserde::YaSerialize::serialize(value, writer)?;
               }
             }
           }),
@@ -287,7 +287,7 @@ pub fn serialize(
                 for item in &self.#label {
                     writer.set_start_event_name(::std::option::Option::None);
                   writer.set_skip_start_end(true);
-                  item.serialize(writer)?;
+                  ::yaserde::YaSerialize::serialize(item, writer)?;
                 }
               })
             } else {
@@ -295,7 +295,7 @@ pub fn serialize(
                 for item in &self.#label {
                   writer.set_start_event_name(::std::option::Option::Some(#label_name.to_string()));
                   writer.set_skip_start_end(false);
-                  item.serialize(writer)?;
+                  ::yaserde::YaSerialize::serialize(item, writer)?;
                 }
               })
             }
@@ -308,7 +308,7 @@ pub fn serialize(
             Some(quote! {
               writer.set_start_event_name(#start_event);
               writer.set_skip_start_end(#skip_start);
-              self.#label.serialize(writer)?;
+              ::yaserde::YaSerialize::serialize(&self.#label, writer)?;
             })*/
           }
           Field::FieldVec { .. } => {
