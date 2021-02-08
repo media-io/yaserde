@@ -47,7 +47,7 @@ fn skip_serializing_if_for_struct() {
     }
 
     fn check_f32_function(&self, value: &f32) -> bool {
-      (value - 0.0).abs() < f32::EPSILON
+      (value - 0.0).abs() < std::f32::EPSILON
     }
   }
 
