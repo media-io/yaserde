@@ -34,7 +34,7 @@ fn skip_serializing_if_for_struct() {
   }
 
   impl XmlStruct {
-    fn check_string_function(&self, value: &String) -> bool {
+    fn check_string_function(&self, value: &str) -> bool {
       value == "something"
     }
 
@@ -47,7 +47,7 @@ fn skip_serializing_if_for_struct() {
     }
 
     fn check_f32_function(&self, value: &f32) -> bool {
-      value == &0.0
+      (value - 0.0).abs() < f32::EPSILON
     }
   }
 

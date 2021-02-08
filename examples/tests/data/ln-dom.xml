@@ -1,0 +1,12 @@
+<DOMSymbolItem name="dagger" last_modified="1414141442">
+  <timeline>
+    <DOMTimeline name="dagger timeline name" current_frame="7" guides="11">
+      <layers>
+        <DOMLayer name="Layer 2" name2="Lalayer 2">
+        </DOMLayer>
+        <DOMLayer name="Layer 1" name2="Lalayer 1">
+        </DOMLayer>
+      </layers>
+    </DOMTimeline>
+  </timeline>
+</DOMSymbolItem>
