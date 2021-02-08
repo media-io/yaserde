@@ -42,7 +42,7 @@ impl YaSerdeAttribute {
     let mut skip_serializing_if = None;
     let mut text = false;
 
-    for attr in attrs.iter() {
+    for attr in attrs.iter().filter(|a| a.path.is_ident("yaserde")) {
       let mut attr_iter = attr.clone().tokens.into_iter();
       if let Some(token) = attr_iter.next() {
         if let TokenTree::Group(group) = token {
@@ -222,6 +222,55 @@ fn parse_attributes() {
   assert_eq!(
     YaSerdeAttribute {
       attribute: true,
+      default: None,
+      default_namespace: None,
+      flatten: false,
+      namespaces: BTreeMap::new(),
+      prefix: None,
+      rename: None,
+      skip_serializing_if: None,
+      text: false,
+    },
+    attrs
+  );
+}
+
+#[test]
+fn only_parse_yaserde_attributes() {
+  use proc_macro2::{Span, TokenStream};
+  use std::str::FromStr;
+  use syn::punctuated::Punctuated;
+  use syn::token::Bracket;
+  use syn::token::Pound;
+  use syn::AttrStyle::Outer;
+  use syn::{Ident, Path, PathArguments, PathSegment};
+
+  let mut punctuated = Punctuated::new();
+  punctuated.push(PathSegment {
+    ident: Ident::new("serde", Span::call_site()),
+    arguments: PathArguments::None,
+  });
+
+  let attributes = vec![Attribute {
+    pound_token: Pound {
+      spans: [Span::call_site()],
+    },
+    style: Outer,
+    bracket_token: Bracket {
+      span: Span::call_site(),
+    },
+    path: Path {
+      leading_colon: None,
+      segments: punctuated,
+    },
+    tokens: TokenStream::from_str("(flatten)").unwrap(),
+  }];
+
+  let attrs = YaSerdeAttribute::parse(&attributes);
+
+  assert_eq!(
+    YaSerdeAttribute {
+      attribute: false,
       default: None,
       default_namespace: None,
       flatten: false,
