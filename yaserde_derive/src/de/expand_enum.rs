@@ -254,7 +254,7 @@ fn build_unnamed_visitor_calls(
 
       let call_struct_visitor = |struct_name, action| {
         Some(quote! {
-          match #struct_name::deserialize(reader) {
+          match <#struct_name as ::yaserde::YaDeserialize>::deserialize(reader) {
             Ok(value) => {
               #action;
               let _root = reader.next_event();

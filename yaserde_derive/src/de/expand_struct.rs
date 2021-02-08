@@ -158,7 +158,7 @@ pub fn parse(
             }
             if let Ok(::xml::reader::XmlEvent::StartElement { .. }) = reader.peek() {
               // If substruct's start element found then deserialize substruct
-              let value = #struct_name::deserialize(reader)?;
+              let value = <#struct_name as ::yaserde::YaDeserialize>::deserialize(reader)?;
               #value_label #action;
             }
           }

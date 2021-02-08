@@ -27,7 +27,7 @@ pub fn serialize_with_writer<W: Write, T: YaSerialize>(
   _config: &Config,
 ) -> Result<W, String> {
   let mut serializer = Serializer::new_from_writer(writer);
-  match model.serialize(&mut serializer) {
+  match YaSerialize::serialize(model, &mut serializer) {
     Ok(()) => Ok(serializer.into_inner()),
     Err(msg) => Err(msg),
   }
@@ -46,7 +46,7 @@ pub fn serialize_with_writer_content<W: Write, T: YaSerialize>(
 ) -> Result<W, String> {
   let mut serializer = Serializer::new_for_inner(writer);
   serializer.set_skip_start_end(true);
-  match model.serialize(&mut serializer) {
+  match YaSerialize::serialize(model, &mut serializer) {
     Ok(()) => Ok(serializer.into_inner()),
     Err(msg) => Err(msg),
   }
