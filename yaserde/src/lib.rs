@@ -2,6 +2,78 @@
 //!
 //! YaSerDe is a framework for ***ser***ializing and ***de***serializing Rust data
 //! structures efficiently and generically from and into XML.
+//!
+//! YaSerDe makes it easy to serialize XML documents given an properly annotated struct.
+//! Please refer to the `examples` directory for the complete code shown below.
+//!
+//! # Serialize
+//!
+//! For instance, let's say that one wants to generate a XML file for the 
+//! [Rust-Embedded community](https://github.com/rust-embedded/). A well known XML 
+//! file for microcontrollers is called [SVD](https://github.com/rust-embedded/svd/) 
+//! and it can be defined on YaSerDe via structs like so:
+//!
+//!```
+//! use yaserde_derive::YaSerialize;
+//!
+//! #[derive(Default, PartialEq, Debug, YaSerialize)]
+//! #[yaserde(rename = "device")]
+//! struct Device {
+//!   #[yaserde(attribute)]
+//!   schemaversion: String,
+//!   #[yaserde(attribute)]
+//!   xmlns: String,
+//!   #[yaserde(attribute)]
+//!   xsnonamespaceschemalocation: String,
+//!   #[yaserde(child)]
+//!   devattributes: DevAttrs
+//! }
+//! (...)
+//!```
+//!
+//! The interspersed `#[yaserde()]` macros give some indication of what the resulting XML
+//! Will look like, namely, a short snippet of the struct above in XML would be depending on
+//! concrete values passed to the struct (not shown):
+//!
+//!```
+//! <device schemaversion: "1.0-example", xmlns: "ns:.... example"
+//! xsnonamespaceschemalocation: "foo_bar_baz">
+//!    <devattributes>
+//!    </devattributes>
+//! (...)
+//!```
+//!
+//! Notice the important difference in **XML output representation between `attributes` vs
+//! `child`**, since SVD expects information in that particular arrangement. YaSerDe allows that
+//! serialized XML to be valid unlike other Rust XML (de)serialization crates (i.e quick-xml).
+//!
+//! Also the last `DevAttrs` struct field is indeed another struct, so one can chain several
+//! structs to compose the XML structure (again, see examples folder for the complete
+//! example).
+//!
+//! Be mindful that the **Cargo.toml** should not only include `yaserde` and
+//! `yaserde_derive`, but also a few necessary dependencies... [FIXME: THAT FOR SOME
+//! USER-UNFRIENDLY REASON ARE NOT AUTOMATICALLY PULLED IN AS ONE WOULD EXPECT ;P ;P
+//! ... I'm sure there are good reasons, just wanted to leave this like this so that the author
+//! can chip in and comment about the reasons behind that decision.](https://github.com/media-io/yaserde/issues/22) ... **I personally think that issue #22 should be reopened and fixed properly (as in only requiring yaserde as a dependency, adding yaserde_derive as a feature).**
+//!
+//! ```
+//! [dependencies]
+//! # serde = { version = "1.0.123", features = [ "derive" ] }
+//! # quick-xml = { version = "0.21.0", features = [ "serialize" ] }
+//! yaserde = "0.5.1"
+//! yaserde_derive = "0.5.1"
+//! xml-rs = "0.8.3"
+//! log = "0.4"
+//! ```
+//!
+//! Last but not least, in order to have a nice, pretty printed XML output one can do
+//!
+//! ```
+//! PLEASE LET THE USERS KNOW HOW TO DO THAT CLEARLY ON YASERDE???
+//! ```
+//!
+//! FIXME: For now I'm just resorting to online XML linters and formatters :_S
 
 #[macro_use]
 extern crate log;
