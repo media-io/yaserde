@@ -13,7 +13,7 @@
 //! file for microcontrollers is called [SVD](https://github.com/rust-embedded/svd/)
 //! and it can be defined on YaSerDe via structs like so:
 //!
-//!```
+//!```verbatim
 //! use yaserde_derive::YaSerialize;
 //!
 //! #[derive(Default, PartialEq, Debug, YaSerialize)]
@@ -28,14 +28,14 @@
 //!   #[yaserde(child)]
 //!   devattributes: DevAttrs
 //! }
-//! (...)
 //!```
 //!
 //! The interspersed `#[yaserde()]` macros give some indication of what the resulting XML
 //! Will look like, namely, a short snippet of the struct above in XML would be depending on
 //! concrete values passed to the struct (not shown):
 //!
-//!```
+//!```xml
+//! (...)
 //! <device schemaversion: "1.0-example", xmlns: "ns:.... example"
 //! xsnonamespaceschemalocation: "foo_bar_baz">
 //!    <devattributes>
@@ -57,7 +57,7 @@
 //! ... I'm sure there are good reasons, just wanted to leave this like this so that the author
 //! can chip in and comment about the reasons behind that decision.](https://github.com/media-io/yaserde/issues/22) ... **I personally think that issue #22 should be reopened and fixed properly (as in only requiring yaserde as a dependency, adding yaserde_derive as a feature).**
 //!
-//! ```
+//!```toml
 //! [dependencies]
 //! # serde = { version = "1.0.123", features = [ "derive" ] }
 //! # quick-xml = { version = "0.21.0", features = [ "serialize" ] }
@@ -69,7 +69,7 @@
 //!
 //! Last but not least, in order to have a nice, pretty printed XML output one can do
 //!
-//! ```
+//! ```shell
 //! PLEASE LET THE USERS KNOW HOW TO DO THAT CLEARLY ON YASERDE???
 //! ```
 //!
