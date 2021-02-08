@@ -2,4 +2,5 @@
 members = [
   "yaserde",
   "yaserde_derive",
+  "examples"
 ]

@@ -1,0 +1,12 @@
+[package]
+name = "yaserde-examples"
+version = "0.0.1"
+authors = ["Marc-Antoine Arnaud <maarnaud@media-io.com>"]
+license = "MIT"
+
+[dependencies]
+yaserde_derive = { version = "0.3.7" }
+yaserde = { version = "0.3.7" }
+xml-rs = "0.8.0"
+log = "0.4"
+simple_logger = "1.0"
