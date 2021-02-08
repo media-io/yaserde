@@ -1,7 +1,7 @@
 # yaserde &emsp; [![Build Status]][travis] [![Latest Version]][crates.io] [![Coverage Status]][coveralls]
 
-[Build Status]: https://travis-ci.org/media-io/yaserde.svg?branch=master
-[travis]: https://travis-ci.org/media-io/yaserde
+[Build Status]: https://travis-ci.com/media-io/yaserde.svg?branch=master
+[travis]: https://travis-ci.com/media-io/yaserde
 [Latest Version]: https://img.shields.io/crates/v/yaserde.svg
 [crates.io]: https://crates.io/crates/yaserde
 
