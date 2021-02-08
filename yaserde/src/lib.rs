@@ -8,9 +8,9 @@
 //!
 //! # Serialize
 //!
-//! For instance, let's say that one wants to generate a XML file for the 
-//! [Rust-Embedded community](https://github.com/rust-embedded/). A well known XML 
-//! file for microcontrollers is called [SVD](https://github.com/rust-embedded/svd/) 
+//! For instance, let's say that one wants to generate a XML file for the
+//! [Rust-Embedded community](https://github.com/rust-embedded/). A well known XML
+//! file for microcontrollers is called [SVD](https://github.com/rust-embedded/svd/)
 //! and it can be defined on YaSerDe via structs like so:
 //!
 //!```
