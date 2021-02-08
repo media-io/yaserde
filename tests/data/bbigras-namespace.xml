@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel">
+	<Worksheet ss:Name="some_name">
+		<Table ss:DefaultColumnWidth="60.75" ss:DefaultRowHeight="15" ss:ExpandedColumnCount="11" ss:ExpandedRowCount="195" ss:StyleID="s64" x:FullColumns="1" x:FullRows="1">
+			<Row ss:AutoFitHeight="0" ss:Height="33"/>
+		</Table>
+	</Worksheet>
+</Workbook>
