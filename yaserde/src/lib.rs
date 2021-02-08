@@ -13,7 +13,7 @@
 //! file for microcontrollers is called [SVD](https://github.com/rust-embedded/svd/)
 //! and it can be defined on YaSerDe via structs like so:
 //!
-//!```verbatim
+//!```ignore
 //! use yaserde_derive::YaSerialize;
 //!
 //! #[derive(Default, PartialEq, Debug, YaSerialize)]
