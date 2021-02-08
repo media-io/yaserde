@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<device schemaversion="foo" xmlns="http://www.w3.org/2001/XMLSchema-instance" xsnonamespaceschemalocation="CMSIS-SVD.xsd">
+  <devattributes>
+    <vendor>Renesas</vendor>
+    <vendorid>Renesas</vendorid>
+    <name>V850</name>
+    <series>E1/E2/CA2</series>
+    <version>1.2</version>
+    <description>NEC/Renesas V850 automotive grade ICs</description>
+    <licensetext>GPLv3</licensetext>
+    <cpu>
+      <name>V850</name>
+      <revision>r1</revision>
+      <endian>LE</endian>
+      <mpupresent>false</mpupresent>
+      <fpupresent>false</fpupresent>
+      <vendorsystickconfig>false</vendorsystickconfig>
+    </cpu>
+    <addressunitbits>8</addressunitbits>
+    <width>32</width>
+    <size>32</size>
+    <access>read-write</access>
+    <resetvalue>0x00000000</resetvalue>
+    <resetmask>0xFFFFFFFF</resetmask>
+    <peripherals>
+      <name>Specific Registers</name>
+      <version>1.0</version>
+      <description>Specific Registers</description>
+      <groupname>MCU</groupname>
+      <baseaddress>0xFFFFF1FC</baseaddress>
+      <size>16</size>
+      <access>read-write</access>
+      <registers>
+        <name>PRCMD</name>
+        <description>This command register (PRCMD) is to protect the registers that may have a significant influence on the application system (PSC, PSM) from an inadvertent write access, so that the system does not stop in case of a program hang-up.</description>
+        <addressoffset>0xFFFFF1FC</addressoffset>
+        <size>8</size>
+        <access>read-write</access>
+        <resetvalue>0x0000</resetvalue>
+        <resetmask>0xFFFF</resetmask>
+      </registers>
+    </peripherals>
+  </devattributes>
+</device>

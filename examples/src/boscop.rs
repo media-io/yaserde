@@ -1,6 +1,4 @@
 // related to issue https://github.com/media-io/yaserde/issues/3
-use std::io::Read;
-use yaserde::YaDeserialize;
 
 #[derive(Default, Debug, Clone, PartialEq, YaDeserialize)]
 #[yaserde(root = "layout")]
@@ -104,17 +102,13 @@ pub struct Midi {
 
 #[test]
 fn parsing_bbigras_namespace() {
-  use std::fs::File;
+  use std::fs;
   use yaserde::de::from_str;
 
   let filename = "tests/data/boscop.xml";
-  let mut f = File::open(filename).expect("file not found");
+  let content = fs::read_to_string(filename).expect("something went wrong reading the file");
 
-  let mut contents = String::new();
-  f.read_to_string(&mut contents)
-    .expect("something went wrong reading the file");
-
-  let loaded: Layout = from_str(&contents).unwrap();
+  let loaded: Layout = from_str(&content).unwrap();
 
   assert_eq!(loaded.tabpage.len(), 4);
   assert_eq!(loaded.tabpage[0].control.len(), 13);

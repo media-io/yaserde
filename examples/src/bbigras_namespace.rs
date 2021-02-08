@@ -1,14 +1,12 @@
 // related to issue https://github.com/media-io/yaserde/issues/15
-use std::io::Read;
-use yaserde::YaDeserialize;
 
 #[derive(YaDeserialize, Default, Debug, PartialEq)]
 #[yaserde(
-  prefix="ss",
-  namespace="x: urn:schemas-microsoft-com:office:excel",
-  namespace="ss: urn:schemas-microsoft-com:office:spreadsheet",
-  namespace="o: urn:schemas-microsoft-com:office:office",
-  namespace="html: http://www.w3.org/TR/REC-html40"
+  prefix = "ss",
+  namespace = "x: urn:schemas-microsoft-com:office:excel",
+  namespace = "ss: urn:schemas-microsoft-com:office:spreadsheet",
+  namespace = "o: urn:schemas-microsoft-com:office:office",
+  namespace = "html: http://www.w3.org/TR/REC-html40"
 )]
 struct Workbook {
   #[yaserde(rename = "Worksheet")]
@@ -17,11 +15,11 @@ struct Workbook {
 
 #[derive(YaDeserialize, Default, Debug, PartialEq)]
 #[yaserde(
-  prefix="ss",
-  namespace="x: urn:schemas-microsoft-com:office:excel",
-  namespace="ss: urn:schemas-microsoft-com:office:spreadsheet",
-  namespace="o: urn:schemas-microsoft-com:office:office",
-  namespace="html: http://www.w3.org/TR/REC-html40"
+  prefix = "ss",
+  namespace = "x: urn:schemas-microsoft-com:office:excel",
+  namespace = "ss: urn:schemas-microsoft-com:office:spreadsheet",
+  namespace = "o: urn:schemas-microsoft-com:office:office",
+  namespace = "html: http://www.w3.org/TR/REC-html40"
 )]
 struct Worksheet {
   #[yaserde(rename = "Table")]
@@ -32,11 +30,11 @@ struct Worksheet {
 
 #[derive(YaDeserialize, Default, Debug, PartialEq)]
 #[yaserde(
-  prefix="ss",
-  namespace="x: urn:schemas-microsoft-com:office:excel",
-  namespace="ss: urn:schemas-microsoft-com:office:spreadsheet",
-  namespace="o: urn:schemas-microsoft-com:office:office",
-  namespace="html: http://www.w3.org/TR/REC-html40"
+  prefix = "ss",
+  namespace = "x: urn:schemas-microsoft-com:office:excel",
+  namespace = "ss: urn:schemas-microsoft-com:office:spreadsheet",
+  namespace = "o: urn:schemas-microsoft-com:office:office",
+  namespace = "html: http://www.w3.org/TR/REC-html40"
 )]
 struct Table {
   #[yaserde(attribute, rename = "ExpandedColumnCount", prefix = "ss")]
@@ -55,17 +53,16 @@ struct Table {
   default_column_height: f32,
 
   #[yaserde(rename = "Row")]
-  rows: Vec<Row>
+  rows: Vec<Row>,
 }
-
 
 #[derive(YaDeserialize, Default, Debug, PartialEq)]
 #[yaserde(
-  prefix="ss",
-  namespace="x: urn:schemas-microsoft-com:office:excel",
-  namespace="ss: urn:schemas-microsoft-com:office:spreadsheet",
-  namespace="o: urn:schemas-microsoft-com:office:office",
-  namespace="html: http://www.w3.org/TR/REC-html40"
+  prefix = "ss",
+  namespace = "x: urn:schemas-microsoft-com:office:excel",
+  namespace = "ss: urn:schemas-microsoft-com:office:spreadsheet",
+  namespace = "o: urn:schemas-microsoft-com:office:office",
+  namespace = "html: http://www.w3.org/TR/REC-html40"
 )]
 struct Row {
   #[yaserde(attribute, rename = "AutoFitHeight", prefix = "ss")]
@@ -76,17 +73,14 @@ struct Row {
 
 #[test]
 fn parsing_bbigras_namespace() {
-  use std::fs::File;
+  use std::fs;
   use yaserde::de::from_str;
 
   let filename = "tests/data/bbigras-namespace.xml";
-  let mut f = File::open(filename).expect("file not found");
 
-  let mut contents = String::new();
-  f.read_to_string(&mut contents)
-    .expect("something went wrong reading the file");
+  let content = fs::read_to_string(filename).expect("something went wrong reading the file");
 
-  let loaded: Workbook = from_str(&contents).unwrap();
+  let loaded: Workbook = from_str(&content).unwrap();
   println!("{:?}", loaded);
 
   let reference = Workbook {
@@ -100,11 +94,12 @@ fn parsing_bbigras_namespace() {
         style_id: "s64".to_string(),
         default_column_width: 60.75,
         default_column_height: 15.0,
-        rows: vec![
-          Row { auto_fit_height: 0.0, height: 33.0 }
-        ]
-      }
-    }
+        rows: vec![Row {
+          auto_fit_height: 0.0,
+          height: 33.0,
+        }],
+      },
+    },
   };
 
   assert_eq!(loaded, reference);
