@@ -60,7 +60,7 @@
 //! Be mindful that the **Cargo.toml** should not only include `yaserde` and
 //! `yaserde_derive`, but also `xml-rs` and `log` as your dependencies...
 //!
-//! [FIXME: Explain better why YaSerDe does not pull `xml-rs` and `log` automatically?](https://github.com/media-io/yaserde/issues/22) 
+//! [FIXME: Explain better why YaSerDe does not pull `xml-rs` and `log` automatically?](https://github.com/media-io/yaserde/issues/22)
 //!
 //!```toml
 //! [dependencies]
