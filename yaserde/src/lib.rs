@@ -58,10 +58,9 @@
 //! example).
 //!
 //! Be mindful that the **Cargo.toml** should not only include `yaserde` and
-//! `yaserde_derive`, but also a few necessary dependencies... [FIXME: THAT FOR SOME
-//! USER-UNFRIENDLY REASON ARE NOT AUTOMATICALLY PULLED IN AS ONE WOULD EXPECT ;P ;P
-//! ... I'm sure there are good reasons, just wanted to leave this like this so that the author
-//! can chip in and comment about the reasons behind that decision.](https://github.com/media-io/yaserde/issues/22) ... **I personally think that issue #22 should be reopened and fixed properly (as in only requiring yaserde as a dependency, adding yaserde_derive as a feature).**
+//! `yaserde_derive`, but also `xml-rs` and `log` as your dependencies...
+//!
+//! [FIXME: Explain better why YaSerDe does not pull `xml-rs` and `log` automatically?](https://github.com/media-io/yaserde/issues/22)
 //!
 //!```toml
 //! [dependencies]
@@ -73,13 +72,20 @@
 //! log = "0.4"
 //! ```
 //!
-//! Last but not least, in order to have a nice, pretty printed XML output one can do
+//! Last but not least, in order to have a nice, pretty printed XML output one can do:
 //!
-//! ```shell
-//! PLEASE LET THE USERS KNOW HOW TO DO THAT CLEARLY ON YASERDE???
+//! ```ignore
+//!     // Display pretty printed XML
+//!    let yaserde_cfg = yaserde::ser::Config{
+//!        perform_indent: true,
+//!        .. Default::default()
+//!    };
+//!
+//!     println!("{}", yaserde::ser::to_string_with_config(&dev, &yaserde_cfg).ok().unwrap());
 //! ```
 //!
-//! FIXME: For now I'm just resorting to online XML linters and formatters :_S
+//! Avoid using either `{:?}` or `{:#?}` println! formatters since it'll garble the output of your
+//! XML.
 
 #[macro_use]
 extern crate log;

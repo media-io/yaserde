@@ -7,6 +7,7 @@ use std::str;
 use xml::writer::XmlEvent;
 use xml::{EmitterConfig, EventWriter};
 
+/// Serialize XML into a plain String with no formatting (EmitterConfig).
 pub fn to_string<T: YaSerialize>(model: &T) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());
   let cursor = serialize_with_writer(model, buf, &Config::default())?;
@@ -14,6 +15,7 @@ pub fn to_string<T: YaSerialize>(model: &T) -> Result<String, String> {
   Ok(data.into())
 }
 
+/// Serialize XML into a plain String with control on formatting (via EmitterConfig parameters)
 pub fn to_string_with_config<T: YaSerialize>(model: &T, config: &Config) -> Result<String, String> {
   let buf = Cursor::new(Vec::new());
   let cursor = serialize_with_writer(model, buf, config)?;
