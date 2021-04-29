@@ -145,13 +145,18 @@ impl YaSerdeField {
       .map(|builder| quote!(let yaserde_inner = #builder;))
       .unwrap_or_default();
 
+    let skip_if = self
+      .get_skip_serializing_if_function()
+      .map(|skip_if_function| quote!(!self.#skip_if_function(&self.#label)))
+      .unwrap_or(quote!(true));
+
     self
       .get_default_function()
       .map(|default_function| {
         quote! {
           #yaserde_inner_definition
           let struct_start_event =
-            if self.#label != #default_function() {
+            if #skip_if && self.#label != #default_function() {
               #setter
             } else {
               struct_start_event
@@ -160,7 +165,7 @@ impl YaSerdeField {
       })
       .unwrap_or(quote! {
         #yaserde_inner_definition
-        let struct_start_event = #setter;
+        let struct_start_event = if #skip_if { #setter } else { struct_start_event };
       })
   }
 }
