@@ -145,10 +145,17 @@ pub fn serialize(
     .map(|field| {
       let label = field.label();
       if field.is_text_content() {
-        return Some(quote!(
-          let data_event = ::xml::writer::XmlEvent::characters(&self.#label);
-          writer.write(data_event).map_err(|e| e.to_string())?;
-        ));
+        return match field.get_type() {
+          Field::FieldOption { .. } => Some(quote!(
+            let s = self.#label.as_deref().unwrap_or_default();
+            let data_event = ::xml::writer::XmlEvent::characters(s);
+            writer.write(data_event).map_err(|e| e.to_string())?;
+          )),
+          _ => Some(quote!(
+            let data_event = ::xml::writer::XmlEvent::characters(&self.#label);
+            writer.write(data_event).map_err(|e| e.to_string())?;
+          )),
+        };
       }
 
       let label_name = field.renamed_label(root_attributes);

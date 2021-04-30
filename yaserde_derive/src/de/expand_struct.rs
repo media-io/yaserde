@@ -303,7 +303,13 @@ pub fn parse(
 
       match field.get_type() {
         Field::FieldString => set_text(&quote! { text_content.to_owned() }),
-        Field::FieldStruct { .. } | Field::FieldOption { .. } | Field::FieldVec { .. } => None,
+        Field::FieldOption { data_type } => match *data_type {
+          Field::FieldString => set_text(
+            &quote! { if text_content.is_empty() { None } else { Some(text_content.to_owned()) }},
+          ),
+          _ => None,
+        },
+        Field::FieldStruct { .. } | Field::FieldVec { .. } => None,
         simple_type => {
           let type_token: TokenStream = simple_type.into();
           set_text(&quote! { #type_token::from_str(text_content).unwrap() })

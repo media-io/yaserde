@@ -441,6 +441,26 @@ fn de_text_content_with_attributes() {
 }
 
 #[test]
+fn de_text_attribute_on_optional_string() {
+  #[derive(YaDeserialize, PartialEq, Debug)]
+  #[yaserde(rename = "base")]
+  pub struct XmlStruct {
+    #[yaserde(text)]
+    text: Option<String>,
+  }
+
+  let model = XmlStruct {
+    text: Some("Testing text".to_string()),
+  };
+  let content = r#"<base>Testing text</base>"#;
+  convert_and_validate!(content, XmlStruct, model);
+
+  let model = XmlStruct { text: None };
+  let content = r#"<base></base>"#;
+  convert_and_validate!(content, XmlStruct, model);
+}
+
+#[test]
 fn de_enum() {
   init();
 

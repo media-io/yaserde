@@ -54,7 +54,7 @@ fn basic_flatten() {
     fn default() -> Self {
       DateKind::Working
     }
-  };
+  }
 
   let model = DateTime {
     date: Date {
