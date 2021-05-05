@@ -367,16 +367,23 @@ pub fn parse(
           );
           match event {
             ::xml::reader::XmlEvent::StartElement{ref name, ref attributes, ..} => {
-              match name.local_name.as_str() {
-                #call_visitors
-                _ => {
-                  let event = reader.next_event()?;
-                  #write_unused
+              if depth == 0 && name.local_name == #root {
+                // Consume root element. We must do this first. In the case it shares a name with a child element, we don't
+                // want to prematurely match the child element below.
+                let event = reader.next_event()?;
+                #write_unused
+              } else {
+                match name.local_name.as_str() {
+                  #call_visitors
+                  _ => {
+                    let event = reader.next_event()?;
+                    #write_unused
 
-                  if depth > 0 { // Don't skip root element
-                    reader.skip_element(|event| {
-                      #write_unused
-                    })?;
+                    if depth > 0 { // Don't skip root element
+                      reader.skip_element(|event| {
+                        #write_unused
+                      })?;
+                    }
                   }
                 }
               }

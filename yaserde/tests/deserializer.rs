@@ -1052,6 +1052,5 @@ fn de_same_field_name_but_some_other_fields_or_something() {
   };
 
   serialize_and_validate!(model, content);
-  // TODO fix it
-  // deserialize_and_validate!(content, model, FooOuter);
+  deserialize_and_validate!(content, model, FooOuter);
 }
