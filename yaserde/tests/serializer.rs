@@ -325,6 +325,28 @@ fn ser_text_content_with_attributes() {
 }
 
 #[test]
+fn ser_text_attribute_on_optional_string() {
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(rename = "base")]
+  pub struct XmlStruct {
+    #[yaserde(text)]
+    text: Option<String>,
+  }
+
+  let model = XmlStruct {
+    text: Some("Testing text".to_string()),
+  };
+
+  let content = r#"<base>Testing text</base>"#;
+  serialize_and_validate!(model, content);
+
+  let model = XmlStruct { text: None };
+
+  let content = r#"<base></base>"#;
+  serialize_and_validate!(model, content);
+}
+
+#[test]
 fn ser_keyword() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "base")]
