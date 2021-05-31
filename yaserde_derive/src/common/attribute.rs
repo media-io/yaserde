@@ -44,51 +44,49 @@ impl YaSerdeAttribute {
 
     for attr in attrs.iter().filter(|a| a.path.is_ident("yaserde")) {
       let mut attr_iter = attr.clone().tokens.into_iter();
-      if let Some(token) = attr_iter.next() {
-        if let TokenTree::Group(group) = token {
-          if group.delimiter() == Delimiter::Parenthesis {
-            let mut attr_iter = group.stream().into_iter();
+      if let Some(TokenTree::Group(group)) = attr_iter.next() {
+        if group.delimiter() == Delimiter::Parenthesis {
+          let mut attr_iter = group.stream().into_iter();
 
-            while let Some(item) = attr_iter.next() {
-              if let TokenTree::Ident(ident) = item {
-                match ident.to_string().as_str() {
-                  "attribute" => {
-                    attribute = true;
-                  }
-                  "default" => {
-                    default = get_value(&mut attr_iter);
-                  }
-                  "default_namespace" => {
-                    default_namespace = get_value(&mut attr_iter);
-                  }
-                  "flatten" => {
-                    flatten = true;
-                  }
-                  "namespace" => {
-                    if let Some(namespace) = get_value(&mut attr_iter) {
-                      let splitted: Vec<&str> = namespace.split(": ").collect();
-                      if splitted.len() == 2 {
-                        namespaces.insert(splitted[0].to_owned(), splitted[1].to_owned());
-                      }
-                      if splitted.len() == 1 {
-                        namespaces.insert("".to_owned(), splitted[0].to_owned());
-                      }
+          while let Some(item) = attr_iter.next() {
+            if let TokenTree::Ident(ident) = item {
+              match ident.to_string().as_str() {
+                "attribute" => {
+                  attribute = true;
+                }
+                "default" => {
+                  default = get_value(&mut attr_iter);
+                }
+                "default_namespace" => {
+                  default_namespace = get_value(&mut attr_iter);
+                }
+                "flatten" => {
+                  flatten = true;
+                }
+                "namespace" => {
+                  if let Some(namespace) = get_value(&mut attr_iter) {
+                    let splitted: Vec<&str> = namespace.split(": ").collect();
+                    if splitted.len() == 2 {
+                      namespaces.insert(splitted[0].to_owned(), splitted[1].to_owned());
+                    }
+                    if splitted.len() == 1 {
+                      namespaces.insert("".to_owned(), splitted[0].to_owned());
                     }
                   }
-                  "prefix" => {
-                    prefix = get_value(&mut attr_iter);
-                  }
-                  "rename" => {
-                    rename = get_value(&mut attr_iter);
-                  }
-                  "skip_serializing_if" => {
-                    skip_serializing_if = get_value(&mut attr_iter);
-                  }
-                  "text" => {
-                    text = true;
-                  }
-                  _ => {}
                 }
+                "prefix" => {
+                  prefix = get_value(&mut attr_iter);
+                }
+                "rename" => {
+                  rename = get_value(&mut attr_iter);
+                }
+                "skip_serializing_if" => {
+                  skip_serializing_if = get_value(&mut attr_iter);
+                }
+                "text" => {
+                  text = true;
+                }
+                _ => {}
               }
             }
           }
@@ -147,7 +145,7 @@ impl YaSerdeAttribute {
           None
         }
       })
-      .filter_map(|x| x)
+      .flatten()
       .collect();
 
     quote!(

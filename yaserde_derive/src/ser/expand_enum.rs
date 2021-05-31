@@ -124,7 +124,7 @@ fn inner_enum_inspector(
                 Field::FieldOption { .. } => None,
               }
             })
-            .filter_map(|x| x)
+            .flatten()
             .collect();
 
           Some(quote! {
@@ -211,7 +211,7 @@ fn inner_enum_inspector(
                 _simple_type => Some(match_field(&write_simple_type)),
               }
             })
-            .filter_map(|x| x)
+            .flatten()
             .collect();
 
           Some(quote! {
@@ -222,6 +222,6 @@ fn inner_enum_inspector(
         }
       }
     })
-    .filter_map(|x| x)
+    .flatten()
     .collect()
 }

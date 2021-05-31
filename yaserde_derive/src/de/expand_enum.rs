@@ -20,7 +20,7 @@ pub fn parse(
     .variants
     .iter()
     .map(|variant| parse_variant(variant, name))
-    .filter_map(|f| f)
+    .flatten()
     .collect();
 
   let flatten = root_attributes.flatten;
@@ -302,6 +302,6 @@ fn build_unnamed_visitor_calls(
         simple_type => call_simple_type_visitor(simple_type, set_val),
       }
     })
-    .filter_map(|f| f)
+    .flatten()
     .collect()
 }
