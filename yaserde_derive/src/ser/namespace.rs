@@ -18,6 +18,6 @@ pub fn generate_namespaces_definition(attributes: &YaSerdeAttribute) -> TokenStr
         .ns(#prefix, #namespace)
       ))
     })
-    .filter_map(|x| x)
+    .flatten()
     .collect()
 }

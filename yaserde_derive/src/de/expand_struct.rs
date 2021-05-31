@@ -57,7 +57,7 @@ pub fn parse(
         build_default_value(&field, Some(type_token), value_builder)
       }
     })
-    .filter_map(|x| x)
+    .flatten()
     .collect();
 
   let field_visitors: TokenStream = data_struct
@@ -94,7 +94,7 @@ pub fn parse(
       let simple_type_visitor = |simple_type: Field| {
         let visitor = simple_type.get_simple_type_visitor();
         let visitor_label = field.get_visitor_ident(None);
-        let field_type: TokenStream = simple_type.into();
+        let field_type = TokenStream::from(simple_type);
 
         let map_if_bool = if field_type.to_string() == "bool" {
           quote!(match v {
@@ -137,7 +137,7 @@ pub fn parse(
         simple_type => simple_type_visitor(simple_type),
       }
     })
-    .filter_map(|x| x)
+    .flatten()
     .collect();
 
   let call_visitors: TokenStream = data_struct
@@ -167,7 +167,7 @@ pub fn parse(
 
       let visit_simple = |simple_type: Field, action: TokenStream| {
         let field_visitor = simple_type.get_simple_type_visitor();
-        let field_type: TokenStream = simple_type.into();
+        let field_type = TokenStream::from(simple_type);
         build_call_visitor(
           &field_type,
           &field_visitor,
@@ -192,7 +192,7 @@ pub fn parse(
         simple_type => visit_simple(simple_type, quote! { = value }),
       }
     })
-    .filter_map(|x| x)
+    .flatten()
     .collect();
 
   let call_flatten_visitors: TokenStream = data_struct
@@ -216,7 +216,7 @@ pub fn parse(
         field_type => unimplemented!(r#""flatten" is not implemented for {:?}"#, field_type),
       }
     })
-    .filter_map(|x| x)
+    .flatten()
     .collect();
 
   let attributes_loading: TokenStream = data_struct
@@ -283,7 +283,7 @@ pub fn parse(
         simple_type => visit_simple(simple_type, quote! { = value }),
       }
     })
-    .filter_map(|x| x)
+    .flatten()
     .collect();
 
   let set_text: TokenStream = data_struct
@@ -311,12 +311,12 @@ pub fn parse(
         },
         Field::FieldStruct { .. } | Field::FieldVec { .. } => None,
         simple_type => {
-          let type_token: TokenStream = simple_type.into();
+          let type_token = TokenStream::from(simple_type);
           set_text(&quote! { #type_token::from_str(text_content).unwrap() })
         }
       }
     })
-    .filter_map(|x| x)
+    .flatten()
     .collect();
 
   let struct_builder: TokenStream = data_struct

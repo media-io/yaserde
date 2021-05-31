@@ -324,7 +324,7 @@ pub fn serialize(
         },
       }
     })
-    .filter_map(|x| x)
+    .flatten()
     .collect();
 
   implement_serializer(

@@ -240,21 +240,17 @@ impl From<&syn::Field> for Field {
 impl From<&syn::PathSegment> for Field {
   fn from(path_segment: &syn::PathSegment) -> Self {
     if let syn::PathArguments::AngleBracketed(ref args) = path_segment.arguments {
-      if let Some(tt) = args.args.first() {
-        if let syn::GenericArgument::Type(ref argument) = *tt {
-          if let Path(ref path) = *argument {
-            return Field::from(&path.path);
-          }
-        }
+      if let Some(syn::GenericArgument::Type(Path(ref path))) = args.args.first() {
+        return Field::from(&path.path);
       }
     }
     unimplemented!()
   }
 }
 
-impl Into<proc_macro2::TokenStream> for Field {
-  fn into(self) -> proc_macro2::TokenStream {
-    match self {
+impl From<Field> for proc_macro2::TokenStream {
+  fn from(field: Field) -> proc_macro2::TokenStream {
+    match field {
       Field::FieldString => quote! { ::std::string::String },
       Field::FieldBool => quote! { bool },
       Field::FieldI8 => quote! { i8 },
@@ -267,14 +263,14 @@ impl Into<proc_macro2::TokenStream> for Field {
       Field::FieldU64 => quote! { u64 },
       Field::FieldF32 => quote! { f32 },
       Field::FieldF64 => quote! { f64 },
-      _ => panic!("Not a simple type: {:?}", self),
+      _ => panic!("Not a simple type: {:?}", field),
     }
   }
 }
 
-impl Into<String> for &Field {
-  fn into(self) -> String {
-    match self {
+impl From<&Field> for String {
+  fn from(field: &Field) -> String {
+    match field {
       Field::FieldString => "str".to_string(),
       Field::FieldBool => "bool".to_string(),
       Field::FieldI8 => "i8".to_string(),
@@ -287,7 +283,7 @@ impl Into<String> for &Field {
       Field::FieldU64 => "u64".to_string(),
       Field::FieldF32 => "f32".to_string(),
       Field::FieldF64 => "f64".to_string(),
-      _ => panic!("Not a simple type: {:?}", self),
+      _ => panic!("Not a simple type: {:?}", field),
     }
   }
 }
