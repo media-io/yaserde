@@ -1,13 +1,13 @@
 [package]
 name = "yaserde-examples"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Marc-Antoine Arnaud <maarnaud@media-io.com>"]
 license = "MIT"
 edition = "2018"
 
 [dependencies]
-yaserde = {version = "0.6", path = "../yaserde" }
-yaserde_derive = {version = "0.6", path = "../yaserde_derive" }
+yaserde = {version = "0.7.0", path = "../yaserde" }
+yaserde_derive = {version = "0.7.0", path = "../yaserde_derive" }
 xml-rs = "0.8.3"
 log = "0.4"
 simple_logger = "1.11.0"
