@@ -57,10 +57,6 @@
 //! structs to compose the XML structure (again, see examples folder for the complete
 //! example).
 //!
-//! Be mindful that the **Cargo.toml** should not only include `yaserde` and
-//! `yaserde_derive`, but also `xml-rs` and `log` as your dependencies...
-//!
-//! [FIXME: Explain better why YaSerDe does not pull `xml-rs` and `log` automatically?](https://github.com/media-io/yaserde/issues/22)
 //!
 //!```toml
 //! [dependencies]
@@ -68,8 +64,6 @@
 //! # quick-xml = { version = "0.21.0", features = [ "serialize" ] }
 //! yaserde = "0.5.1"
 //! yaserde_derive = "0.5.1"
-//! xml-rs = "0.8.3"
-//! log = "0.4"
 //! ```
 //!
 //! Last but not least, in order to have a nice, pretty printed XML output one can do:
@@ -88,7 +82,8 @@
 //! XML.
 
 #[macro_use]
-extern crate log;
+pub extern crate log;
+pub extern crate xml;
 
 #[cfg(feature = "yaserde_derive")]
 #[allow(unused_imports)]
