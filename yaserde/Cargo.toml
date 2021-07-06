@@ -18,7 +18,7 @@ log = "0.4"
 
 [dev-dependencies]
 env_logger = "0.8.2"
-yaserde_derive = { version = "0.7.0", path = "../yaserde_derive" }
+yaserde_derive = { version = "0.7.1", path = "../yaserde_derive" }
 
 [badges]
 travis-ci = { repository = "media-io/yaserde" }
