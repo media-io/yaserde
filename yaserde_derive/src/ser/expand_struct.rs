@@ -125,7 +125,7 @@ pub fn serialize(
             quote!(
               let (attributes, namespace) = self.#label.serialize_attributes(
                 ::std::vec![],
-                ::yaserde::xml::namespace::Namespace::empty(),
+                ::yaserde::__xml::namespace::Namespace::empty(),
               )?;
               child_attributes_namespace.extend(&namespace);
               child_attributes.extend(attributes);
@@ -148,11 +148,11 @@ pub fn serialize(
         return match field.get_type() {
           Field::FieldOption { .. } => Some(quote!(
             let s = self.#label.as_deref().unwrap_or_default();
-            let data_event = ::yaserde::xml::writer::XmlEvent::characters(s);
+            let data_event = ::yaserde::__xml::writer::XmlEvent::characters(s);
             writer.write(data_event).map_err(|e| e.to_string())?;
           )),
           _ => Some(quote!(
-            let data_event = ::yaserde::xml::writer::XmlEvent::characters(&self.#label);
+            let data_event = ::yaserde::__xml::writer::XmlEvent::characters(&self.#label);
             writer.write(data_event).map_err(|e| e.to_string())?;
           )),
         };
