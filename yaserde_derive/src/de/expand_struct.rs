@@ -352,7 +352,7 @@ pub fn parse(
             (::std::string::String::from(#root), ::std::option::Option::None)
           };
         let start_depth = reader.depth();
-        ::yaserde::log::debug!("Struct {} @ {}: start to parse {:?}", stringify!(#name), start_depth,
+        ::yaserde::__derive_debug!("Struct {} @ {}: start to parse {:?}", stringify!(#name), start_depth,
                named_element);
 
         if reader.depth() == 0 {
@@ -367,7 +367,7 @@ pub fn parse(
 
         loop {
           let event = reader.peek()?.to_owned();
-          ::yaserde::log::trace!(
+          ::yaserde::__derive_trace!(
             "Struct {} @ {}: matching {:?}",
             stringify!(#name), start_depth, event,
           );
@@ -425,7 +425,7 @@ pub fn parse(
 
         #visit_unused
 
-        ::yaserde::log::debug!("Struct {} @ {}: success", stringify!(#name), start_depth);
+        ::yaserde::__derive_debug!("Struct {} @ {}: success", stringify!(#name), start_depth);
         ::std::result::Result::Ok(#name{#struct_builder})
       }
     }

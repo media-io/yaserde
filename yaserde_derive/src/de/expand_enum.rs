@@ -39,7 +39,7 @@ pub fn parse(
           };
 
         let start_depth = reader.depth();
-        ::yaserde::log::debug!("Enum {} @ {}: start to parse {:?}", stringify!(#name), start_depth, named_element);
+        ::yaserde::__derive_debug!("Enum {} @ {}: start to parse {:?}", stringify!(#name), start_depth, named_element);
 
         #namespaces_matching
 
@@ -48,7 +48,7 @@ pub fn parse(
 
         loop {
           let event = reader.peek()?.to_owned();
-          ::yaserde::log::trace!("Enum {} @ {}: matching {:?}", stringify!(#name), start_depth, event);
+          ::yaserde::__derive_trace!("Enum {} @ {}: matching {:?}", stringify!(#name), start_depth, event);
           match event {
             ::yaserde::xml::reader::XmlEvent::StartElement { ref name, ref attributes, .. } => {
               match name.local_name.as_str() {
@@ -89,7 +89,7 @@ pub fn parse(
           }
         }
 
-        ::yaserde::log::debug!("Enum {} @ {}: success", stringify!(#name), start_depth);
+        ::yaserde::__derive_debug!("Enum {} @ {}: success", stringify!(#name), start_depth);
         match enum_value {
           ::std::option::Option::Some(value) => ::std::result::Result::Ok(value),
           ::std::option::Option::None => {
