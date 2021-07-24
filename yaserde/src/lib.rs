@@ -244,72 +244,73 @@ fn default_visitor() {
 }
 
 #[doc(hidden)]
-mod testing {
-  #[macro_export]
-  macro_rules! test_for_type {
-    ($type:ty, $value:expr, $content:expr) => {{
-      #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-      #[yaserde(rename = "data")]
-      pub struct Data {
-        item: $type,
-      }
+#[macro_export]
+macro_rules! test_for_type {
+  ($type:ty, $value:expr, $content:expr) => {{
+    #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+    #[yaserde(rename = "data")]
+    pub struct Data {
+      item: $type,
+    }
 
-      let model = Data { item: $value };
+    let model = Data { item: $value };
 
-      let content = if let Some(str_value) = $content {
-        let str_value: &str = str_value;
-        format!("<data><item>{}</item></data>", str_value)
-      } else {
-        "<data />".to_owned()
-      };
-
-      serialize_and_validate!(model, content);
-      deserialize_and_validate!(&content, model, Data);
-    }};
-  }
-
-  #[macro_export]
-  macro_rules! test_for_attribute_type {
-    ($type: ty, $value: expr, $content: expr) => {{
-      #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-      #[yaserde(rename = "data")]
-      pub struct Data {
-        #[yaserde(attribute)]
-        item: $type,
-      }
-      let model = Data { item: $value };
-
-      let content = if let Some(str_value) = $content {
-        "<data item=\"".to_string() + str_value + "\" />"
-      } else {
-        "<data />".to_string()
-      };
-
-      serialize_and_validate!(model, content);
-      deserialize_and_validate!(&content, model, Data);
-    }};
-  }
-
-  #[macro_export]
-  macro_rules! deserialize_and_validate {
-    ($content: expr, $model: expr, $struct: tt) => {
-      log::debug!("deserialize_and_validate @ {}:{}", file!(), line!());
-      let loaded: Result<$struct, String> = yaserde::de::from_str($content);
-      assert_eq!(loaded, Ok($model));
+    let content = if let Some(str_value) = $content {
+      let str_value: &str = str_value;
+      format!("<data><item>{}</item></data>", str_value)
+    } else {
+      "<data />".to_owned()
     };
-  }
 
-  #[macro_export]
-  macro_rules! serialize_and_validate {
-    ($model: expr, $content: expr) => {
-      log::debug!("serialize_and_validate @ {}:{}", file!(), line!());
-      let data: Result<String, String> = yaserde::ser::to_string(&$model);
+    serialize_and_validate!(model, content);
+    deserialize_and_validate!(&content, model, Data);
+  }};
+}
 
-      let content = format!(r#"<?xml version="1.0" encoding="utf-8"?>{}"#, $content);
-      assert_eq!(
-        data,
-        Ok(content.split("\n").map(|s| s.trim()).collect::<String>())
-      );
+#[doc(hidden)]
+#[macro_export]
+macro_rules! test_for_attribute_type {
+  ($type: ty, $value: expr, $content: expr) => {{
+    #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+    #[yaserde(rename = "data")]
+    pub struct Data {
+      #[yaserde(attribute)]
+      item: $type,
+    }
+    let model = Data { item: $value };
+
+    let content = if let Some(str_value) = $content {
+      "<data item=\"".to_string() + str_value + "\" />"
+    } else {
+      "<data />".to_string()
     };
-  }
+
+    serialize_and_validate!(model, content);
+    deserialize_and_validate!(&content, model, Data);
+  }};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! deserialize_and_validate {
+  ($content: expr, $model: expr, $struct: tt) => {
+    log::debug!("deserialize_and_validate @ {}:{}", file!(), line!());
+    let loaded: Result<$struct, String> = yaserde::de::from_str($content);
+    assert_eq!(loaded, Ok($model));
+  };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! serialize_and_validate {
+  ($model: expr, $content: expr) => {
+    log::debug!("serialize_and_validate @ {}:{}", file!(), line!());
+    let data: Result<String, String> = yaserde::ser::to_string(&$model);
+
+    let content = format!(r#"<?xml version="1.0" encoding="utf-8"?>{}"#, $content);
+    assert_eq!(
+      data,
+      Ok(content.split("\n").map(|s| s.trim()).collect::<String>())
+    );
+  };
 }
