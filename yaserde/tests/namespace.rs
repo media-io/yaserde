@@ -468,3 +468,33 @@ fn struct_bad_namespace() {
     Err("bad namespace for book, found http://www.sample.com/ns/domain2".to_string())
   );
 }
+
+#[test]
+fn struct_default_namespace_no_prefix() {
+  init();
+
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+  #[yaserde(
+  rename = "book",
+  namespace = "http://www.sample.com/ns/domain"
+  )]
+  pub struct Book {
+    author: String,
+    title: String,
+  }
+
+  let content = r#"
+    <book xmlns="http://www.sample.com/ns/domain">
+      <author>Antoine de Saint-Exupéry</author>
+      <title>Little prince</title>
+    </book>
+  "#;
+
+  let model = Book {
+    author: "Antoine de Saint-Exupéry".to_owned(),
+    title: "Little prince".to_owned(),
+  };
+
+  serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, Book);
+}
