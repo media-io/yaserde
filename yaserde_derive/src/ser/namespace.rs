@@ -7,12 +7,10 @@ pub fn generate_namespaces_definition(attributes: &YaSerdeAttribute) -> TokenStr
     .namespaces
     .iter()
     .map(|(prefix, namespace)| {
-      if let Some(dn) = &attributes.default_namespace {
-        if dn == prefix {
+      if attributes.default_namespace.eq(prefix) {
           return Some(quote!(
             .default_ns(#namespace)
           ));
-        }
       }
       Some(quote!(
         .ns(#prefix, #namespace)

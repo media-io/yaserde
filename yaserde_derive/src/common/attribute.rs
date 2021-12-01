@@ -9,7 +9,7 @@ pub struct YaSerdeAttribute {
   pub default: Option<String>,
   pub default_namespace: Option<String>,
   pub flatten: bool,
-  pub namespaces: BTreeMap<String, String>,
+  pub namespaces: BTreeMap<Option<String>, String>,
   pub prefix: Option<String>,
   pub rename: Option<String>,
   pub skip_serializing_if: Option<String>,
@@ -67,10 +67,10 @@ impl YaSerdeAttribute {
                   if let Some(namespace) = get_value(&mut attr_iter) {
                     let splitted: Vec<&str> = namespace.split(": ").collect();
                     if splitted.len() == 2 {
-                      namespaces.insert(splitted[0].to_owned(), splitted[1].to_owned());
+                      namespaces.insert(Some(splitted[0].to_owned()), splitted[1].to_owned());
                     }
                     if splitted.len() == 1 {
-                      namespaces.insert("".to_owned(), splitted[0].to_owned());
+                      namespaces.insert(None, splitted[0].to_owned());
                     }
                   }
                 }
@@ -139,7 +139,7 @@ impl YaSerdeAttribute {
       .namespaces
       .iter()
       .map(|(prefix, namespace)| {
-        if configured_prefix == Some(prefix.to_string()) {
+        if configured_prefix.eq(prefix) {
           Some(quote!(#namespace => {}))
         } else {
           None
@@ -316,7 +316,7 @@ fn parse_attributes_with_values() {
   let attrs = YaSerdeAttribute::parse(&attributes);
 
   let mut namespaces = BTreeMap::new();
-  namespaces.insert("example".to_string(), "http://example.org".to_string());
+  namespaces.insert(Some("example".to_string()), "http://example.org".to_string());
 
   assert_eq!(
     YaSerdeAttribute {
