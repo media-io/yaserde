@@ -231,3 +231,49 @@ fn flatten_attribute_and_child() {
   serialize_and_validate!(model, content);
   deserialize_and_validate!(content, model, Node);
 }
+
+#[test]
+fn flatten_name_in_unknown_child() {
+  init();
+
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  pub struct Node {
+    #[yaserde(flatten)]
+    base: Base,
+    #[yaserde(child)]
+    value: Value,
+  }
+
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  struct Base {
+    #[yaserde(attribute)]
+    id: String,
+  }
+
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
+  enum Value {
+    Foo(FooStruct),
+  }
+
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  struct FooStruct {}
+
+  impl Default for Value {
+    fn default() -> Self {
+      Self::Foo(FooStruct::default())
+    }
+  }
+
+  let model = Node {
+    base: Base {
+      id: "Foo".to_owned(),
+    },
+    value: Value::default(),
+  };
+
+  let content = r#"<Node id="Foo"><value><Foo /></value></Node>"#;
+  serialize_and_validate!(model, content);
+
+  let content = r#"<Node id="Foo"><value><SomethingThatDoesntExist><value></value></SomethingThatDoesntExist></value></Node>"#;
+  deserialize_and_validate!(content, model, Node);
+}

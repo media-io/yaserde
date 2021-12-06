@@ -401,7 +401,7 @@ pub fn parse(
               depth += 1;
             }
             ::yaserde::__xml::reader::XmlEvent::EndElement { ref name } => {
-              if name.local_name == named_element {
+              if name.local_name == named_element && reader.depth() == start_depth + 1 {
                 #write_unused
                 break;
               }
