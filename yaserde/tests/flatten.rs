@@ -192,3 +192,42 @@ fn flatten_attribute() {
   serialize_and_validate!(model, content);
   deserialize_and_validate!(content, model, HtmlText);
 }
+
+#[test]
+fn flatten_attribute_and_child() {
+  init();
+
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  struct Node {
+    #[yaserde(flatten)]
+    base: Base,
+    #[yaserde(child)]
+    value: StringValue,
+  }
+
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  struct Base {
+    #[yaserde(attribute)]
+    id: String,
+  }
+
+  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  struct StringValue {
+    #[yaserde(text)]
+    string: String,
+  }
+
+  let model = Node {
+    base: Base {
+      id: "Foo".to_owned(),
+    },
+    value: StringValue {
+      string: "Bar".to_owned(),
+    },
+  };
+
+  let content = r#"<Node id="Foo"><value>Bar</value></Node>"#;
+
+  serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, Node);
+}

@@ -160,6 +160,8 @@ pub fn parse(
               // If substruct's start element found then deserialize substruct
               let value = <#struct_name as ::yaserde::YaDeserialize>::deserialize(reader)?;
               #value_label #action;
+              // read EndElement
+              let _event = reader.next_event()?;
             }
           }
         })
