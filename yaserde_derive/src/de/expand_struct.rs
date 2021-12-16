@@ -160,6 +160,8 @@ pub fn parse(
               // If substruct's start element found then deserialize substruct
               let value = <#struct_name as ::yaserde::YaDeserialize>::deserialize(reader)?;
               #value_label #action;
+              // read EndElement
+              let _event = reader.next_event()?;
             }
           }
         })
@@ -399,7 +401,7 @@ pub fn parse(
               depth += 1;
             }
             ::yaserde::__xml::reader::XmlEvent::EndElement { ref name } => {
-              if name.local_name == named_element {
+              if name.local_name == named_element && reader.depth() == start_depth + 1 {
                 #write_unused
                 break;
               }
