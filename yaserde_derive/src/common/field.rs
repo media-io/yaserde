@@ -1,5 +1,5 @@
 use crate::common::attribute::YaSerdeAttribute;
-use heck::CamelCase;
+use heck::ToUpperCamelCase;
 use proc_macro2::Span;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
@@ -89,7 +89,7 @@ impl YaSerdeField {
     Ident::new(
       &format!(
         "__Visitor_{}_{}",
-        label.replace(".", "_").to_camel_case(),
+        label.replace(".", "_").to_upper_camel_case(),
         struct_id
       ),
       self.get_span(),

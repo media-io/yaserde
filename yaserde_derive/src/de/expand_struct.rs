@@ -1,6 +1,6 @@
 use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use crate::de::build_default_value::build_default_value;
-use heck::CamelCase;
+use heck::ToUpperCamelCase;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{DataStruct, Ident};
@@ -489,7 +489,7 @@ fn build_visitor_ident(label: &str, span: Span, struct_name: Option<&syn::Path>)
   Ident::new(
     &format!(
       "__Visitor_{}_{}",
-      label.replace(".", "_").to_camel_case(),
+      label.replace(".", "_").to_upper_camel_case(),
       struct_id
     ),
     span,
