@@ -47,18 +47,20 @@ pub fn condition_generator(label: &Option<Ident>, field: &YaSerdeField) -> Token
     .get_default_function()
     .map(|default_function| quote!(self.#label != #default_function()));
 
+  let skip_serializing = field.is_skip_serializing();
+
   field
     .get_skip_serializing_if_function()
     .map(|skip_if_function| {
       if let Some(prev_conditions) = &default_condition {
-        quote!(if !self.#skip_if_function(&self.#label) && #prev_conditions)
+        quote!(if !#skip_serializing && !self.#skip_if_function(&self.#label) && #prev_conditions)
       } else {
-        quote!(if !self.#skip_if_function(&self.#label))
+        quote!(if !#skip_serializing && !self.#skip_if_function(&self.#label))
       }
     })
     .unwrap_or_else(|| {
       default_condition
-        .map(|condition| quote!(if #condition))
-        .unwrap_or_default()
+        .map(|condition| quote!(if !#skip_serializing && #condition))
+        .unwrap_or(quote!(if !#skip_serializing))
     })
 }

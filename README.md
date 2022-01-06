@@ -32,6 +32,7 @@ This library will support XML de/ser-ializing with all specific features.
 - [x] **namespace**: defines the namespace of the field
 - [x] **rename**: be able to rename a field
 - [x] **root**: rename the based element. Used only at the XML root.
+- [x] **skip_serializing**: Exclude this field from the serialized output
 - [x] **skip_serializing_if**: Skip the serialisation for this field if the condition is true
 - [x] **text**: this field match to the text content
 
