@@ -21,7 +21,7 @@ fn get_value(iter: &mut IntoIter) -> Option<String> {
     (iter.next(), iter.next())
   {
     if operator.as_char() == '=' {
-      Some(value.to_string().replace("\"", ""))
+      Some(value.to_string().replace('"', ""))
     } else {
       None
     }
@@ -138,14 +138,13 @@ impl YaSerdeAttribute {
     let namespaces_matches: TokenStream = self
       .namespaces
       .iter()
-      .map(|(prefix, namespace)| {
+      .filter_map(|(prefix, namespace)| {
         if configured_prefix.eq(prefix) {
           Some(quote!(#namespace => {}))
         } else {
           None
         }
       })
-      .flatten()
       .collect();
 
     quote!(
@@ -316,7 +315,10 @@ fn parse_attributes_with_values() {
   let attrs = YaSerdeAttribute::parse(&attributes);
 
   let mut namespaces = BTreeMap::new();
-  namespaces.insert(Some("example".to_string()), "http://example.org".to_string());
+  namespaces.insert(
+    Some("example".to_string()),
+    "http://example.org".to_string(),
+  );
 
   assert_eq!(
     YaSerdeAttribute {

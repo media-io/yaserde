@@ -8,14 +8,14 @@ pub fn generate_namespaces_definition(attributes: &YaSerdeAttribute) -> TokenStr
     .iter()
     .map(|(prefix, namespace)| {
       if attributes.default_namespace.eq(prefix) {
-          return Some(quote!(
-            .default_ns(#namespace)
-          ));
+        quote!(
+          .default_ns(#namespace)
+        )
+      } else {
+        quote!(
+          .ns(#prefix, #namespace)
+        )
       }
-      Some(quote!(
-        .ns(#prefix, #namespace)
-      ))
     })
-    .flatten()
     .collect()
 }

@@ -1,5 +1,5 @@
 use crate::common::attribute::YaSerdeAttribute;
-use heck::CamelCase;
+use heck::ToUpperCamelCase;
 use proc_macro2::Span;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
@@ -89,7 +89,7 @@ impl YaSerdeField {
     Ident::new(
       &format!(
         "__Visitor_{}_{}",
-        label.replace(".", "_").to_camel_case(),
+        label.replace('.', "_").to_upper_camel_case(),
         struct_id
       ),
       self.get_span(),
@@ -109,7 +109,7 @@ impl YaSerdeField {
       .attributes
       .default
       .as_ref()
-      .map(|default| Ident::new(&default, self.get_span()))
+      .map(|default| Ident::new(default, self.get_span()))
   }
 
   pub fn get_skip_serializing_if_function(&self) -> Option<Ident> {
@@ -117,7 +117,7 @@ impl YaSerdeField {
       .attributes
       .skip_serializing_if
       .as_ref()
-      .map(|skip_serializing_if| Ident::new(&skip_serializing_if, self.get_span()))
+      .map(|skip_serializing_if| Ident::new(skip_serializing_if, self.get_span()))
   }
 
   pub fn get_namespace_matching(

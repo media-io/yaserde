@@ -37,22 +37,22 @@ fn inner_enum_inspector(
       let variant_attrs = YaSerdeAttribute::parse(&variant.attrs);
 
       let label = &variant.ident;
-      let label_name = build_label_name(&label, &variant_attrs, &root_attributes.default_namespace);
+      let label_name = build_label_name(label, &variant_attrs, &root_attributes.default_namespace);
 
       match variant.fields {
-        Fields::Unit => Some(quote! {
+        Fields::Unit => quote! {
           &#name::#label => {
             let data_event = ::yaserde::__xml::writer::XmlEvent::characters(#label_name);
             writer.write(data_event).map_err(|e| e.to_string())?;
           }
-        }),
+        },
         Fields::Named(ref fields) => {
           let enum_fields: TokenStream = fields
             .named
             .iter()
             .map(|field| YaSerdeField::new(field.clone()))
             .filter(|field| !field.is_attribute())
-            .map(|field| {
+            .filter_map(|field| {
               let field_label = field.label();
 
               if field.is_text_content() {
@@ -124,14 +124,13 @@ fn inner_enum_inspector(
                 Field::FieldOption { .. } => None,
               }
             })
-            .flatten()
             .collect();
 
-          Some(quote! {
+          quote! {
             &#name::#label{..} => {
               #enum_fields
             }
-          })
+          }
         }
         Fields::Unnamed(ref fields) => {
           let enum_fields: TokenStream = fields
@@ -191,37 +190,35 @@ fn inner_enum_inspector(
                 Field::FieldOption { data_type } => {
                   let write = write_sub_type(*data_type);
 
-                  Some(match_field(&quote! {
+                  match_field(&quote! {
                     if let ::std::option::Option::Some(item) = item {
                       #write
                     }
-                  }))
+                  })
                 }
                 Field::FieldVec { data_type } => {
                   let write = write_sub_type(*data_type);
 
-                  Some(match_field(&quote! {
+                  match_field(&quote! {
                     for item in item {
                       #write
                     }
-                  }))
+                  })
                 }
-                Field::FieldStruct { .. } => Some(write_element(&match_field(&serialize))),
-                Field::FieldString => Some(match_field(&write_element(&write_string_chars))),
-                _simple_type => Some(match_field(&write_simple_type)),
+                Field::FieldStruct { .. } => write_element(&match_field(&serialize)),
+                Field::FieldString => match_field(&write_element(&write_string_chars)),
+                _simple_type => match_field(&write_simple_type),
               }
             })
-            .flatten()
             .collect();
 
-          Some(quote! {
+          quote! {
             &#name::#label{..} => {
               #enum_fields
             }
-          })
+          }
         }
       }
     })
-    .flatten()
     .collect()
 }

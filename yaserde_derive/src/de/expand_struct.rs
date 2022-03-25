@@ -1,6 +1,6 @@
 use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use crate::de::build_default_value::build_default_value;
-use heck::CamelCase;
+use heck::ToUpperCamelCase;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{DataStruct, Ident};
@@ -22,7 +22,7 @@ pub fn parse(
     .fields
     .iter()
     .map(|field| YaSerdeField::new(field.clone()))
-    .map(|field| match field.get_type() {
+    .filter_map(|field| match field.get_type() {
       Field::FieldStruct { struct_name } => build_default_value(
         &field,
         Some(quote!(#struct_name)),
@@ -57,14 +57,13 @@ pub fn parse(
         build_default_value(&field, Some(type_token), value_builder)
       }
     })
-    .flatten()
     .collect();
 
   let field_visitors: TokenStream = data_struct
     .fields
     .iter()
     .map(|field| YaSerdeField::new(field.clone()))
-    .map(|field| {
+    .filter_map(|field| {
       let struct_visitor = |struct_name: syn::Path| {
         let struct_id: String = struct_name
           .segments
@@ -137,7 +136,6 @@ pub fn parse(
         simple_type => simple_type_visitor(simple_type),
       }
     })
-    .flatten()
     .collect();
 
   let call_visitors: TokenStream = data_struct
@@ -145,7 +143,7 @@ pub fn parse(
     .iter()
     .map(|field| YaSerdeField::new(field.clone()))
     .filter(|field| !field.is_attribute() || !field.is_flatten())
-    .map(|field| {
+    .filter_map(|field| {
       let value_label = field.get_value_label();
       let label_name = field.renamed_label_without_namespace();
 
@@ -175,7 +173,7 @@ pub fn parse(
           &field_visitor,
           &action,
           &field,
-          &root_attributes,
+          root_attributes,
         )
       };
 
@@ -194,7 +192,6 @@ pub fn parse(
         simple_type => visit_simple(simple_type, quote! { = value }),
       }
     })
-    .flatten()
     .collect();
 
   let call_flatten_visitors: TokenStream = data_struct
@@ -202,7 +199,7 @@ pub fn parse(
     .iter()
     .map(|field| YaSerdeField::new(field.clone()))
     .filter(|field| !field.is_attribute() && field.is_flatten())
-    .map(|field| {
+    .filter_map(|field| {
       let value_label = field.get_value_label();
 
       match field.get_type() {
@@ -218,7 +215,6 @@ pub fn parse(
         field_type => unimplemented!(r#""flatten" is not implemented for {:?}"#, field_type),
       }
     })
-    .flatten()
     .collect();
 
   let attributes_loading: TokenStream = data_struct
@@ -226,7 +222,7 @@ pub fn parse(
     .iter()
     .map(|field| YaSerdeField::new(field.clone()))
     .filter(|field| field.is_attribute())
-    .map(|field| {
+    .filter_map(|field| {
       let label = field.get_value_label();
       let label_name = field.renamed_label_without_namespace();
       let visitor_label = build_visitor_ident(&label_name, field.get_span(), None);
@@ -285,14 +281,13 @@ pub fn parse(
         simple_type => visit_simple(simple_type, quote! { = value }),
       }
     })
-    .flatten()
     .collect();
 
   let set_text: TokenStream = data_struct
     .fields
     .iter()
     .map(|field| YaSerdeField::new(field.clone()))
-    .map(|field| {
+    .filter_map(|field| {
       let label = field.get_value_label();
 
       let set_text = |action: &TokenStream| {
@@ -318,7 +313,6 @@ pub fn parse(
         }
       }
     })
-    .flatten()
     .collect();
 
   let struct_builder: TokenStream = data_struct
@@ -489,7 +483,7 @@ fn build_visitor_ident(label: &str, span: Span, struct_name: Option<&syn::Path>)
   Ident::new(
     &format!(
       "__Visitor_{}_{}",
-      label.replace(".", "_").to_camel_case(),
+      label.replace('.', "_").to_upper_camel_case(),
       struct_id
     ),
     span,

@@ -19,8 +19,7 @@ pub fn parse(
   let match_to_enum: TokenStream = data_enum
     .variants
     .iter()
-    .map(|variant| parse_variant(variant, name))
-    .flatten()
+    .filter_map(|variant| parse_variant(variant, name))
     .collect();
 
   let flatten = root_attributes.flatten;
@@ -218,7 +217,7 @@ fn build_unnamed_visitor_calls(
     .iter()
     .map(|field| YaSerdeField::new(field.clone()))
     .enumerate()
-    .map(|(idx, field)| {
+    .filter_map(|(idx, field)| {
       let visitor_label = Ident::new(&format!("__Visitor_{}", idx), field.get_span());
 
       let call_simple_type_visitor = |simple_type: Field, action| {
@@ -302,6 +301,5 @@ fn build_unnamed_visitor_calls(
         simple_type => call_simple_type_visitor(simple_type, set_val),
       }
     })
-    .flatten()
     .collect()
 }

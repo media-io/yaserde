@@ -474,10 +474,7 @@ fn struct_default_namespace_no_prefix() {
   init();
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(
-  rename = "book",
-  namespace = "http://www.sample.com/ns/domain"
-  )]
+  #[yaserde(rename = "book", namespace = "http://www.sample.com/ns/domain")]
   pub struct Book {
     author: String,
     title: String,
