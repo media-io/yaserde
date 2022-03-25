@@ -40,6 +40,10 @@ impl YaSerdeField {
     self.syn_field.ident.clone()
   }
 
+  pub fn is_skip_serializing(&self) -> bool {
+    self.attributes.skip_serializing
+  }
+
   pub fn get_value_label(&self) -> Option<syn::Ident> {
     self
       .syn_field
