@@ -116,7 +116,7 @@ pub fn parse(
               self,
               v: &str,
             ) -> ::std::result::Result<Self::Value, ::std::string::String> {
-              ::std::result::Result::Ok(#field_type::from_str(#map_if_bool).unwrap())
+              #field_type::from_str(#map_if_bool).map_err(|e| e.to_string())
             }
           }
         })

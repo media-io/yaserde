@@ -107,3 +107,30 @@ fn option_struct() {
   );
   test_for_type!(Option::<Test>, None, None);
 }
+
+#[test]
+fn option_bool_no_crash_on_bad_input() {
+  init();
+
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+  struct Test {
+    field: SubTest,
+  }
+
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+  struct SubTest {
+    #[yaserde(attribute)]
+    content: Option<bool>,
+  }
+
+  impl Default for SubTest {
+    fn default() -> Self {
+      SubTest { content: None }
+    }
+  }
+
+  let content = "<field><content>/<R/";
+  let result: Result<Test, String> = yaserde::de::from_str(content);
+
+  assert!(result.is_err());
+}
