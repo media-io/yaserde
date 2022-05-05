@@ -149,38 +149,72 @@ fn attribute_enum() {
 
 #[test]
 fn attribute_enum2() {
-  #[derive(YaSerialize)]
+  #[derive(Debug, PartialEq, YaSerialize, YaDeserialize)]
   #[yaserde(rename = "child1")]
   struct Child1 {
     #[yaserde(attribute, rename = "val")]
     pub val: String,
   }
 
-  #[derive(YaSerialize)]
+  impl Default for Child1 {
+    fn default() -> Child1 {
+      Child1{val: "hello world".into()}
+    }
+  }
+
+  #[derive(Debug, PartialEq, YaSerialize, YaDeserialize)]
   #[yaserde(rename = "child2")]
   struct Child2 {
     #[yaserde(attribute)]
     pub num: u8,
   }
 
-  #[derive(YaSerialize)]
+  impl Default for Child2 {
+    fn default() -> Child2 {
+      Child2{num: 0}
+    }
+  }
+
+  #[derive(Debug, PartialEq, YaSerialize, YaDeserialize)]
   #[yaserde(flatten)]
   enum Base {
-    #[yaserde(flatten)]
+    #[yaserde(flatten, rename="child1")]
     C1(Child1),
+    #[yaserde(flatten, rename="child2")]
+    C2(Child2),
+  }
+
+  impl Default for Base {
+    fn default() -> Base {
+      Base::C1(Child1{val: "hello world".into()})
+    }
   }
 
   let content = r#"<child1 val="hello world" />"#;
   let model = Base::C1(Child1 {
     val: "hello world".into(),
   });
-  serialize_and_validate!(model, content);
 
-  #[derive(YaSerialize)]
+  serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, Base);
+
+  let content = r#"<child2 num="7" />"#;
+  let model = Base::C2(Child2{ num: 7 });
+  
+  serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, Base);
+
+  #[derive(Debug, PartialEq, YaSerialize, YaDeserialize)]
   #[yaserde(rename = "base")]
   enum Base2 {
     #[yaserde(flatten)]
     C1(Child1),
+  }
+
+  impl Default for Base2 {
+    fn default() -> Base2 {
+      Base2::C1(Child1{val: "hello world".into()})
+    }
   }
 
   let content = r#"<base><child1 val="hello world" /></base>"#;
@@ -188,6 +222,8 @@ fn attribute_enum2() {
     val: "hello world".into(),
   });
   serialize_and_validate!(model, content);
+  println!("{:?}", yaserde::de::from_str::<Base2>(content));
+  deserialize_and_validate!(content, model, Base2);
 }
 
 #[test]
