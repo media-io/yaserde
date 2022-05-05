@@ -14,11 +14,81 @@ pub fn serialize(
 ) -> TokenStream {
   let inner_enum_inspector = inner_enum_inspector(data_enum, name, root_attributes);
 
+  let get_id = |field: &YaSerdeField| {
+    field
+      .label()
+      .unwrap_or(field.get_type().get_simple_type_visitor())
+  };
+
+  let variant_matches: TokenStream = data_enum
+    .variants
+    .iter()
+    .map(|variant| -> TokenStream {
+      let _attrs = crate::common::YaSerdeAttribute::parse(&variant.attrs);
+
+      let all_fields = variant
+        .fields
+        .iter()
+        .map(|field| YaSerdeField::new(field.clone()));
+
+      let attribute_fields: Vec<_> = all_fields
+        .clone()
+        .into_iter()
+        .filter(|field| {
+          field.is_attribute()
+            || (field.is_flatten() && matches!(field.get_type(), Field::FieldStruct { .. }))
+        })
+        .collect();
+
+      attribute_fields
+        .iter()
+        .map(|field| {
+          let label = variant.ident.clone();
+          let var = get_id(field);
+          let name = name.clone();
+
+          let destructure = if field.get_value_label().is_some() {
+            quote! {{#var, ..}}
+          } else {
+            quote! {(#var, ..)}
+          };
+
+          if field.is_attribute() {
+            quote! { #name::#label { .. } => { }, }
+          } else {
+            match field.get_type() {
+              Field::FieldStruct { .. } => {
+                if root_attributes.flatten {
+                  quote! {
+                    match self {
+                      #name::#label #destructure => {
+                        let (attributes, namespace) = #var.serialize_attributes(
+                          child_attributes,
+                          child_attributes_namespace,
+                        )?;
+                        child_attributes_namespace.extend(&namespace);
+                        child_attributes.extend(attributes);
+                      },
+                      _ => {}
+                    }
+                  }
+                } else {
+                  quote! {}
+                }
+              }
+              _ => quote! { #name::#label { .. } => { },},
+            }
+          }
+        })
+        .collect()
+    })
+    .collect();
+
   implement_serializer(
     name,
     root,
     root_attributes,
-    quote!(),
+    quote!(#variant_matches),
     quote!(match self {
       #inner_enum_inspector
     }),
@@ -38,7 +108,7 @@ fn inner_enum_inspector(
 
       let label = &variant.ident;
       let label_name = build_label_name(label, &variant_attrs, &root_attributes.default_namespace);
-
+      
       match variant.fields {
         Fields::Unit => quote! {
           &#name::#label => {
@@ -205,7 +275,13 @@ fn inner_enum_inspector(
                     }
                   })
                 }
-                Field::FieldStruct { .. } => write_element(&match_field(&serialize)),
+                Field::FieldStruct { .. } => {
+                  if variant_attrs.flatten || field.is_flatten() {
+                     match_field(&quote!{ ::yaserde::YaSerialize::serialize(item, writer)?})
+                   } else {
+                     write_element(&match_field(&serialize))
+                   }
+                }
                 Field::FieldString => match_field(&write_element(&write_string_chars)),
                 _simple_type => match_field(&write_simple_type),
               }

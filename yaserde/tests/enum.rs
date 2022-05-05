@@ -148,6 +148,49 @@ fn attribute_enum() {
 }
 
 #[test]
+fn attribute_enum2() {
+  #[derive(YaSerialize)]
+  #[yaserde(rename = "child1")]
+  struct Child1 {
+    #[yaserde(attribute, rename = "val")]
+    pub val: String,
+  }
+
+  #[derive(YaSerialize)]
+  #[yaserde(rename = "child2")]
+  struct Child2 {
+    #[yaserde(attribute)]
+    pub num: u8,
+  }
+
+  #[derive(YaSerialize)]
+  #[yaserde(flatten)]
+  enum Base {
+    #[yaserde(flatten)]
+    C1(Child1),
+  }
+
+  let content = r#"<child1 val="hello world" />"#;
+  let model = Base::C1(Child1 {
+    val: "hello world".into(),
+  });
+  serialize_and_validate!(model, content);
+
+  #[derive(YaSerialize)]
+  #[yaserde(rename = "base")]
+  enum Base2 {
+    #[yaserde(flatten)]
+    C1(Child1),
+  }
+
+  let content = r#"<base><child1 val="hello world" /></base>"#;
+  let model = Base2::C1(Child1 {
+    val: "hello world".into(),
+  });
+  serialize_and_validate!(model, content);
+}
+
+#[test]
 fn unnamed_enum() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(rename = "base")]
