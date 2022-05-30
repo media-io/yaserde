@@ -108,12 +108,15 @@ impl YaSerdeField {
     self.syn_field.span()
   }
 
-  pub fn get_default_function(&self) -> Option<Ident> {
-    self
-      .attributes
-      .default
-      .as_ref()
-      .map(|default| Ident::new(default, self.get_span()))
+  pub fn get_default_function(&self) -> Option<TokenStream> {
+    self.attributes.default.as_ref().map(|default| {
+      if default != "" {
+        let f = Ident::new(default, self.get_span());
+        quote!( #f )
+      } else {
+        quote!(std::default::Default::default)
+      }
+    })
   }
 
   pub fn get_skip_serializing_if_function(&self) -> Option<Ident> {

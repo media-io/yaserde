@@ -27,7 +27,7 @@ fn get_value(iter: &mut IntoIter) -> Option<String> {
       None
     }
   } else {
-    None
+    Some(String::new())
   }
 }
 

@@ -1,5 +1,5 @@
 use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
-use crate::de::build_default_value::build_default_value;
+use crate::de::build_default_value::{build_default_value, build_value};
 use heck::ToUpperCamelCase;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
@@ -23,11 +23,7 @@ pub fn parse(
     .iter()
     .map(|field| YaSerdeField::new(field.clone()))
     .filter_map(|field| match field.get_type() {
-      Field::FieldStruct { struct_name } => build_default_value(
-        &field,
-        Some(quote!(#struct_name)),
-        quote!(<#struct_name as ::std::default::Default>::default()),
-      ),
+      Field::FieldStruct { struct_name } => build_value(&field, Some(quote!(#struct_name))),
       Field::FieldOption { .. } => {
         build_default_value(&field, None, quote!(::std::option::Option::None))
       }
@@ -50,11 +46,17 @@ pub fn parse(
           )
         }
       },
+      string_type @ Field::FieldString if field.is_text_content() => {
+        let type_token: TokenStream = string_type.into();
+        build_default_value(
+          &field,
+          Some(type_token),
+          quote!(::std::string::String::new()),
+        )
+      }
       simple_type => {
         let type_token: TokenStream = simple_type.into();
-        let value_builder = quote!(<#type_token as ::std::default::Default>::default());
-
-        build_default_value(&field, Some(type_token), value_builder)
+        build_value(&field, Some(type_token))
       }
     })
     .collect();
@@ -184,12 +186,17 @@ pub fn parse(
       };
 
       match field.get_type() {
-        Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! { = value }),
+        Field::FieldStruct { struct_name } => {
+          visit_struct(struct_name, quote! { = ::std::option::Option::Some(value) })
+        }
         Field::FieldOption { data_type } => {
           visit_sub(data_type, quote! { = ::std::option::Option::Some(value) })
         }
         Field::FieldVec { data_type } => visit_sub(data_type, quote! { .push(value) }),
-        simple_type => visit_simple(simple_type, quote! { = value }),
+        string_type @ Field::FieldString if field.is_text_content() => {
+          visit_simple(string_type, quote! { = value })
+        }
+        simple_type => visit_simple(simple_type, quote! { = ::std::option::Option::Some(value) }),
       }
     })
     .collect();
@@ -204,7 +211,7 @@ pub fn parse(
 
       match field.get_type() {
         Field::FieldStruct { .. } => Some(quote! {
-          #value_label = ::yaserde::de::from_str(&unused_xml_elements)?;
+          #value_label = Some(::yaserde::de::from_str(&unused_xml_elements)?);
         }),
         Field::FieldOption { data_type } => match *data_type {
           Field::FieldStruct { .. } => Some(quote! {
@@ -243,7 +250,7 @@ pub fn parse(
         Some(quote! {
           for attr in attributes {
             if attr.name.local_name == #label_name {
-              #label = attr.value.to_owned();
+              #label = Some(attr.value.to_owned());
             }
           }
         })
@@ -277,8 +284,10 @@ pub fn parse(
           visit_sub(data_type, quote! { = ::std::option::Option::Some(value) })
         }
         Field::FieldVec { .. } => unimplemented!(),
-        Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! { = value }),
-        simple_type => visit_simple(simple_type, quote! { = value }),
+        Field::FieldStruct { struct_name } => {
+          visit_struct(struct_name, quote! { = ::std::option::Option::Some(value) })
+        }
+        simple_type => visit_simple(simple_type, quote! { = ::std::option::Option::Some(value) }),
       }
     })
     .collect();
@@ -323,7 +332,12 @@ pub fn parse(
       let label = &field.label();
       let value_label = field.get_value_label();
 
-      quote! { #label: #value_label, }
+      match field.get_type() {
+        Field::FieldVec {..} => quote! { #label: #value_label, },
+        Field::FieldOption {..} => quote! { #label: #value_label, },
+        Field::FieldString if field.is_text_content() => quote! { #label: #value_label, },
+        _ => quote! { #label: #value_label.ok_or_else(|| "Missing field '".to_string() + stringify!(#label) + "'")?, }
+      }
     })
     .collect();
 

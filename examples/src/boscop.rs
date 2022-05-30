@@ -61,24 +61,24 @@ pub struct Control {
   pub h: u32,
   #[yaserde(attribute)]
   pub color: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute, default)]
   pub scalef: f32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute, default)]
   pub scalet: f32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute, default)]
   pub local_off: bool,
-  #[yaserde(attribute)]
+  #[yaserde(attribute, default)]
   pub sp: bool,
-  #[yaserde(attribute)]
+  #[yaserde(attribute, default)]
   pub sr: bool,
   pub midi: Vec<Midi>,
-  #[yaserde(attribute)]
+  #[yaserde(attribute, default)]
   pub response: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute, default)]
   pub inverted: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute, default)]
   pub centered: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute, default)]
   pub norollover: String,
 }
 
