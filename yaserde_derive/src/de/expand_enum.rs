@@ -24,6 +24,18 @@ pub fn parse(
 
   let flatten = root_attributes.flatten;
 
+  let variant_not_detected = if let Some(default_function) = &root_attributes.default {
+    if default_function == "" {
+      quote!(::std::result::Result::Ok(<#name as ::std::default::Default>::default()))
+    } else {
+      quote!(#default_function())
+    }
+  } else {
+    quote!(::std::result::Result::Err(
+      "Failed to match variant in '".to_string() + stringify!(#name) + "'"
+    ))
+  };
+
   quote! {
     impl ::yaserde::YaDeserialize for #name {
       #[allow(unused_variables)]
@@ -91,9 +103,7 @@ pub fn parse(
         ::yaserde::__derive_debug!("Enum {} @ {}: success", stringify!(#name), start_depth);
         match enum_value {
           ::std::option::Option::Some(value) => ::std::result::Result::Ok(value),
-          ::std::option::Option::None => {
-            ::std::result::Result::Ok(<#name as ::std::default::Default>::default())
-          },
+          ::std::option::Option::None => #variant_not_detected,
         }
       }
     }

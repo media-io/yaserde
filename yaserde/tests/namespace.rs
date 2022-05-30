@@ -330,7 +330,8 @@ fn enum_namespace() {
   #[yaserde(
     rename = "root",
     prefix = "ns",
-    namespace = "ns: http://www.sample.com/ns/domain"
+    namespace = "ns: http://www.sample.com/ns/domain",
+    default
   )]
   pub enum XmlStruct {
     #[yaserde(prefix = "ns")]
@@ -362,7 +363,8 @@ fn enum_multi_namespaces() {
   #[yaserde(
     rename = "root",
     namespace = "ns1: http://www.sample.com/ns/domain1",
-    namespace = "ns2: http://www.sample.com/ns/domain2"
+    namespace = "ns2: http://www.sample.com/ns/domain2",
+    default
   )]
   pub enum XmlStruct {
     #[yaserde(prefix = "ns1")]
@@ -405,7 +407,8 @@ fn enum_attribute_namespace() {
   #[yaserde(
     rename = "rootA",
     prefix = "ns",
-    namespace = "ns: http://www.sample.com/ns/domain"
+    namespace = "ns: http://www.sample.com/ns/domain",
+    default
   )]
   pub enum XmlStruct {
     #[yaserde(prefix = "ns")]
