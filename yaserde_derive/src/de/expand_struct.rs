@@ -318,7 +318,7 @@ pub fn parse(
         Field::FieldStruct { .. } | Field::FieldVec { .. } => None,
         simple_type => {
           let type_token = TokenStream::from(simple_type);
-          set_text(&quote! { #type_token::from_str(text_content).unwrap() })
+          set_text(&quote! { Some(#type_token::from_str(text_content).unwrap()) })
         }
       }
     })
