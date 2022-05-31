@@ -152,7 +152,8 @@ pub fn serialize(
             writer.write(data_event).map_err(|e| e.to_string())?;
           )),
           _ => Some(quote!(
-            let data_event = ::yaserde::__xml::writer::XmlEvent::characters(&self.#label);
+            let s = self.#label.to_string();
+            let data_event = ::yaserde::__xml::writer::XmlEvent::characters(&s);
             writer.write(data_event).map_err(|e| e.to_string())?;
           )),
         };
