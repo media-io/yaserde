@@ -114,7 +114,8 @@ impl YaSerdeField {
         let f = Ident::new(default, self.get_span());
         quote!( #f )
       } else {
-        quote!(std::default::Default::default)
+        let field_type = &self.syn_field.ty;
+        quote!(<#field_type as std::default::Default>::default)
       }
     })
   }
