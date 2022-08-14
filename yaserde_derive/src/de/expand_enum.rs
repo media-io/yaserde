@@ -112,6 +112,7 @@ fn parse_variant(variant: &syn::Variant, name: &Ident) -> Option<TokenStream> {
     Fields::Unit => Some(quote! {
       #xml_element_name => {
         enum_value = ::std::option::Option::Some(#variant_name);
+        break;
       }
     }),
     Fields::Unnamed(ref fields) => {
