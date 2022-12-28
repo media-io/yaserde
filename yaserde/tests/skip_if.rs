@@ -119,3 +119,89 @@ fn skip_serializing_if_for_struct_attributes() {
   let content = "<base />";
   serialize_and_validate!(model, content);
 }
+
+#[test]
+fn skip_serializing_if_for_nested_struct() {
+  init();
+
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(rename = "base")]
+  pub struct XmlStruct {
+    #[yaserde(skip_serializing_if="check_child")]
+    skipped_serializing: XmlStructChild,
+  }
+  impl XmlStruct
+  {
+    fn check_child(&self, _child:&XmlStructChild)->bool
+    {
+      true
+    }
+  }
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(rename = "child")]
+  pub struct XmlStructChild {
+  }
+
+  let model = XmlStruct {
+    skipped_serializing: XmlStructChild{},
+  };
+
+  let content = "<base />";
+  serialize_and_validate!(model, content);
+}
+
+#[test]
+fn skip_serializing_if_for_enum() {
+  init();
+
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(rename = "base")]
+  pub struct XmlStruct {
+    #[yaserde(skip_serializing_if="check_enum")]
+    skipped_serializing: XmlEnum,
+  }
+  impl XmlStruct
+  {
+    fn check_enum(&self, _child:&XmlEnum)->bool
+    {
+      true
+    }
+  }
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(rename = "child")]
+  pub enum XmlEnum {
+    Ok
+  }
+
+  let model = XmlStruct {
+    skipped_serializing: XmlEnum::Ok,
+  };
+
+  let content = "<base />";
+  serialize_and_validate!(model, content);
+}
+
+#[test]
+fn skip_serializing_if_for_vec() {
+  init();
+
+  #[derive(YaSerialize, PartialEq, Debug)]
+  #[yaserde(rename = "base")]
+  pub struct XmlStruct {
+    #[yaserde(skip_serializing_if="check_vec")]
+    skipped_serializing: Vec<i8>,
+  }
+  impl XmlStruct
+  {
+    fn check_vec(&self, _child:&Vec<i8>)->bool
+    {
+      true
+    }
+  }
+  let model = XmlStruct {
+    skipped_serializing: vec![1,2,3],
+  };
+
+  let content = "<base />";
+  serialize_and_validate!(model, content);
+}
