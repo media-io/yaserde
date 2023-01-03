@@ -215,18 +215,22 @@ pub fn serialize(
           }
           Field::FieldStruct { .. } => Some(if field.is_flatten() {
             quote! {
-              if let ::std::option::Option::Some(ref item) = &self.#label {
-                writer.set_start_event_name(::std::option::Option::None);
-                writer.set_skip_start_end(true);
-                ::yaserde::YaSerialize::serialize(item, writer)?;
+              #conditions {
+                if let ::std::option::Option::Some(ref item) = &self.#label {
+                  writer.set_start_event_name(::std::option::Option::None);
+                  writer.set_skip_start_end(true);
+                  ::yaserde::YaSerialize::serialize(item, writer)?;
+                }
               }
             }
           } else {
             quote! {
-              if let ::std::option::Option::Some(ref item) = &self.#label {
-                writer.set_start_event_name(::std::option::Option::Some(#label_name.to_string()));
-                writer.set_skip_start_end(false);
-                ::yaserde::YaSerialize::serialize(item, writer)?;
+              #conditions {
+                if let ::std::option::Option::Some(ref item) = &self.#label {
+                  writer.set_start_event_name(::std::option::Option::Some(#label_name.to_string()));
+                  writer.set_skip_start_end(false);
+                  ::yaserde::YaSerialize::serialize(item, writer)?;
+                }
               }
             }
           }),
@@ -243,9 +247,11 @@ pub fn serialize(
           };
 
           Some(quote! {
-            writer.set_start_event_name(#start_event);
-            writer.set_skip_start_end(#skip_start);
-            ::yaserde::YaSerialize::serialize(&self.#label, writer)?;
+            #conditions {
+              writer.set_start_event_name(#start_event);
+              writer.set_skip_start_end(#skip_start);
+              ::yaserde::YaSerialize::serialize(&self.#label, writer)?;
+            }
           })
         }
         Field::FieldVec { data_type } => match *data_type {
@@ -254,8 +260,10 @@ pub fn serialize(
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
             Some(quote! {
-              for yaserde_item in &self.#label {
-                #inner
+              #conditions {
+                for yaserde_item in &self.#label {
+                  #inner
+                }
               }
             })
           }
@@ -274,35 +282,43 @@ pub fn serialize(
             let inner = enclose_formatted_characters_for_value(&item_ident, label_name);
 
             Some(quote! {
-              for yaserde_item in &self.#label {
-                #inner
+              #conditions {
+                for yaserde_item in &self.#label {
+                  #inner
+                }
               }
             })
           }
           Field::FieldOption { .. } => Some(quote! {
-            for item in &self.#label {
-              if let Some(value) = item {
-                writer.set_start_event_name(None);
-                writer.set_skip_start_end(false);
-                ::yaserde::YaSerialize::serialize(value, writer)?;
+            #conditions {
+              for item in &self.#label {
+                if let Some(value) = item {
+                  writer.set_start_event_name(None);
+                  writer.set_skip_start_end(false);
+                  ::yaserde::YaSerialize::serialize(value, writer)?;
+                }
               }
             }
           }),
           Field::FieldStruct { .. } => {
             if field.is_flatten() {
               Some(quote! {
-                for item in &self.#label {
-                    writer.set_start_event_name(::std::option::Option::None);
-                  writer.set_skip_start_end(true);
-                  ::yaserde::YaSerialize::serialize(item, writer)?;
+                #conditions {
+                  for item in &self.#label {
+                      writer.set_start_event_name(::std::option::Option::None);
+                    writer.set_skip_start_end(true);
+                    ::yaserde::YaSerialize::serialize(item, writer)?;
+                  }
                 }
               })
             } else {
               Some(quote! {
-                for item in &self.#label {
-                  writer.set_start_event_name(::std::option::Option::Some(#label_name.to_string()));
-                  writer.set_skip_start_end(false);
-                  ::yaserde::YaSerialize::serialize(item, writer)?;
+                #conditions {
+                  for item in &self.#label {
+                    writer.set_start_event_name(::std::option::Option::Some(#label_name.to_string()));
+                    writer.set_skip_start_end(false);
+                    ::yaserde::YaSerialize::serialize(item, writer)?;
+                 }
                 }
               })
             }
