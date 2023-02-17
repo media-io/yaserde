@@ -2,7 +2,7 @@
 
 ## skip_serializing
 
-Attribute `skip_serializing_if` will skip the serialisation of the field if it is set to `true`. Default value is `false`. 
+Attribute `skip_serializing` will skip the serialisation of the field if it is set to `true`. Default value is `false`. 
 
 - `#[yaserde(skip_serializing = true)]` - Skip serialization of the field.
 - `#[yaserde(skip_serializing = false)]` - The field will be serialized. Default value.
