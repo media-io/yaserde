@@ -1,4 +1,4 @@
-use yaserde_derive::YaSerialize;
+use yaserde::YaSerialize;
 
 #[derive(Default, PartialEq, Debug, YaSerialize)]
 struct CpuDef {
