@@ -86,6 +86,10 @@
 #[macro_use]
 extern crate yaserde_derive;
 
+#[cfg(feature = "yaserde_derive")]
+#[doc(hidden)]
+pub use yaserde_derive::*;
+
 use std::io::{Read, Write};
 use xml::writer::XmlEvent;
 

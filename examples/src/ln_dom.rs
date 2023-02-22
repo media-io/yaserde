@@ -1,4 +1,5 @@
 // related to issue https://github.com/media-io/yaserde/issues/11
+use yaserde::*;
 
 #[derive(YaDeserialize, Default, Debug, PartialEq)]
 #[yaserde(root = "DOMSymbolItem")]

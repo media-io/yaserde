@@ -1,4 +1,5 @@
 // related to issue https://github.com/media-io/yaserde/issues/15
+use yaserde::*;
 
 #[derive(YaDeserialize, Default, Debug, PartialEq)]
 #[yaserde(
