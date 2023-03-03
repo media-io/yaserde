@@ -31,6 +31,18 @@ fn get_value(iter: &mut IntoIter) -> Option<String> {
   }
 }
 
+fn get_value_or_default(iter: &mut IntoIter) -> Option<String> {
+  match (iter.next(), iter.next()) {
+    (Some(TokenTree::Punct(operator)), Some(TokenTree::Literal(value))) => if operator.as_char() == '=' {
+      Some(value.to_string().replace('"', ""))
+    } else {
+      None
+    },
+    (None, None) => Some(String::new()),
+    _ => None
+  }
+}
+
 impl YaSerdeAttribute {
   pub fn parse(attrs: &[Attribute]) -> YaSerdeAttribute {
     let mut attribute = false;
@@ -57,7 +69,7 @@ impl YaSerdeAttribute {
                   attribute = true;
                 }
                 "default" => {
-                  default = get_value(&mut attr_iter);
+                  default = get_value_or_default(&mut attr_iter);
                 }
                 "default_namespace" => {
                   default_namespace = get_value(&mut attr_iter);

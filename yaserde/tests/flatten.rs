@@ -251,6 +251,7 @@ fn flatten_name_in_unknown_child() {
   }
 
   #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[yaserde(default)]
   enum Value {
     Foo(FooStruct),
   }
