@@ -41,6 +41,6 @@ fn de_wrong_end_balise() {
   let loaded: Result<Book, String> = from_str(content);
   assert_eq!(
     loaded,
-    Err("Unexpected closing tag: book, expected author".to_owned())
+    Err("Unexpected closing tag: book != author".to_owned())
   );
 }
