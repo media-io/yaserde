@@ -374,3 +374,40 @@ fn unnamed_enum() {
   serialize_and_validate!(model, content);
   deserialize_and_validate!(content, model, XmlStruct);
 }
+
+
+#[test]
+fn enum_attribs() {
+  #[derive(Default, YaSerialize)]
+  struct A {
+    #[yaserde(attribute)]
+    val: u8,
+  }
+  #[derive(Default, YaSerialize)]
+  struct B {
+    val: u8,
+  }
+  #[derive(YaSerialize)]
+  #[yaserde(flatten)]
+  enum MainNode {
+  #[yaserde(flatten)]
+  A(A),
+  #[yaserde(flatten)]
+    B(B),
+  }
+  
+  #[derive(Default, YaSerialize)]
+  struct Main {
+    #[yaserde(child, flatten)]
+    m: Vec<MainNode>,
+  }
+
+  const XML: &str =
+  r##"<?xml version="1.0" encoding="utf-8"?><Main><A val="1" /><B><val>2</val></B></Main>"##;
+  let node = Main {
+    m: vec![MainNode::A(A { val: 1 }), MainNode::B(B { val: 2 })],
+  };
+  let data = yaserde::ser::to_string(&node).unwrap();
+  assert_eq!(data, XML);
+
+}

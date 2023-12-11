@@ -305,8 +305,8 @@ pub fn serialize(
               Some(quote! {
                 #conditions {
                   for item in &self.#label {
-                      writer.set_start_event_name(::std::option::Option::None);
-                    writer.set_skip_start_end(true);
+                    writer.set_start_event_name(::std::option::Option::None);
+                    writer.set_skip_start_end(false);
                     ::yaserde::YaSerialize::serialize(item, writer)?;
                   }
                 }

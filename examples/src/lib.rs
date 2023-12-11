@@ -1,3 +1,4 @@
+mod enum_attribs;
 mod bbigras_namespace;
 mod boscop;
 mod ln_dom;
