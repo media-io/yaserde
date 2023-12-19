@@ -4,6 +4,8 @@ version = "0.8.0"
 authors = ["Marc-Antoine Arnaud <maarnaud@media-io.com>"]
 license = "MIT"
 edition = "2018"
+description = "Examples for YaSerDe project"
+documentation = "https://docs.rs/yaserde"
 
 [dependencies]
 yaserde = {version = "0.8.0", path = "../yaserde", features = ["yaserde_derive"] }
