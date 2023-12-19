@@ -108,7 +108,7 @@ fn inner_enum_inspector(
 
       let label = &variant.ident;
       let label_name = build_label_name(label, &variant_attrs, &root_attributes.default_namespace);
-      
+
       match variant.fields {
         Fields::Unit => quote! {
           &#name::#label => {

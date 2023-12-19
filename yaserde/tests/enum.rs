@@ -158,7 +158,9 @@ fn attribute_enum2() {
 
   impl Default for Child1 {
     fn default() -> Child1 {
-      Child1{val: "hello world".into()}
+      Child1 {
+        val: "hello world".into(),
+      }
     }
   }
 
@@ -171,22 +173,24 @@ fn attribute_enum2() {
 
   impl Default for Child2 {
     fn default() -> Child2 {
-      Child2{num: 0}
+      Child2 { num: 0 }
     }
   }
 
   #[derive(Debug, PartialEq, YaSerialize, YaDeserialize)]
   #[yaserde(flatten)]
   enum Base {
-    #[yaserde(flatten, rename="child1")]
+    #[yaserde(flatten, rename = "child1")]
     C1(Child1),
-    #[yaserde(flatten, rename="child2")]
+    #[yaserde(flatten, rename = "child2")]
     C2(Child2),
   }
 
   impl Default for Base {
     fn default() -> Base {
-      Base::C1(Child1{val: "hello world".into()})
+      Base::C1(Child1 {
+        val: "hello world".into(),
+      })
     }
   }
 
@@ -199,8 +203,8 @@ fn attribute_enum2() {
   deserialize_and_validate!(content, model, Base);
 
   let content = r#"<child2 num="7" />"#;
-  let model = Base::C2(Child2{ num: 7 });
-  
+  let model = Base::C2(Child2 { num: 7 });
+
   serialize_and_validate!(model, content);
   deserialize_and_validate!(content, model, Base);
 
@@ -213,7 +217,9 @@ fn attribute_enum2() {
 
   impl Default for Base2 {
     fn default() -> Base2 {
-      Base2::C1(Child1{val: "hello world".into()})
+      Base2::C1(Child1 {
+        val: "hello world".into(),
+      })
     }
   }
 

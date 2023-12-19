@@ -39,11 +39,10 @@ fn skip_serializing_for_nested_struct() {
 
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "child")]
-  pub struct XmlStructChild {
-  }
+  pub struct XmlStructChild {}
 
   let model = XmlStruct {
-    skipped_serializing: XmlStructChild{},
+    skipped_serializing: XmlStructChild {},
   };
 
   let content = "<base />";
@@ -64,7 +63,7 @@ fn skip_serializing_for_enum() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "child")]
   pub enum XmlEnum {
-    Ok
+    Ok,
   }
 
   let model = XmlStruct {
@@ -87,10 +86,9 @@ fn skip_serializing_for_vec() {
   }
 
   let model = XmlStruct {
-    skipped_serializing: vec![1,2,3],
+    skipped_serializing: vec![1, 2, 3],
   };
 
   let content = "<base />";
   serialize_and_validate!(model, content);
 }
-
