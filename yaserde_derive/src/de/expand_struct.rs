@@ -199,17 +199,17 @@ pub fn parse(
     .iter()
     .map(|field| YaSerdeField::new(field.clone()))
     .filter(|field| !field.is_attribute() && field.is_flatten())
-    .filter_map(|field| {
+    .map(|field| {
       let value_label = field.get_value_label();
 
       match field.get_type() {
-        Field::FieldStruct { .. } => Some(quote! {
+        Field::FieldStruct { .. } => quote! {
           #value_label = ::yaserde::de::from_str(&unused_xml_elements)?;
-        }),
+        },
         Field::FieldOption { data_type } => match *data_type {
-          Field::FieldStruct { .. } => Some(quote! {
+          Field::FieldStruct { .. } => quote! {
             #value_label = ::yaserde::de::from_str(&unused_xml_elements).ok();
-          }),
+          },
           field_type => unimplemented!(r#""flatten" is not implemented for {:?}"#, field_type),
         },
         field_type => unimplemented!(r#""flatten" is not implemented for {:?}"#, field_type),

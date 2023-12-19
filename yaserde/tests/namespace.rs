@@ -332,15 +332,11 @@ fn enum_namespace() {
     prefix = "ns",
     namespace = "ns: http://www.sample.com/ns/domain"
   )]
+  #[derive(Default)]
   pub enum XmlStruct {
     #[yaserde(prefix = "ns")]
+    #[default]
     Item,
-  }
-
-  impl Default for XmlStruct {
-    fn default() -> XmlStruct {
-      XmlStruct::Item
-    }
   }
 
   let content = r#"
@@ -364,17 +360,13 @@ fn enum_multi_namespaces() {
     namespace = "ns1: http://www.sample.com/ns/domain1",
     namespace = "ns2: http://www.sample.com/ns/domain2"
   )]
+  #[derive(Default)]
   pub enum XmlStruct {
     #[yaserde(prefix = "ns1")]
+    #[default]
     Item1,
     #[yaserde(prefix = "ns2")]
     Item2,
-  }
-
-  impl Default for XmlStruct {
-    fn default() -> XmlStruct {
-      XmlStruct::Item1
-    }
   }
 
   let model = XmlStruct::Item1;
@@ -407,17 +399,13 @@ fn enum_attribute_namespace() {
     prefix = "ns",
     namespace = "ns: http://www.sample.com/ns/domain"
   )]
+  #[derive(Default)]
   pub enum XmlStruct {
     #[yaserde(prefix = "ns")]
+    #[default]
     Item,
     #[yaserde(prefix = "ns")]
     ItemWithField(String),
-  }
-
-  impl Default for XmlStruct {
-    fn default() -> XmlStruct {
-      XmlStruct::Item
-    }
   }
 
   let content = r#"

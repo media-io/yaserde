@@ -187,7 +187,7 @@ fn skip_serializing_if_for_vec() {
     skipped_serializing: Vec<i8>,
   }
   impl XmlStruct {
-    fn check_vec(&self, _child: &Vec<i8>) -> bool {
+    fn check_vec(&self, _child: &[i8]) -> bool {
       true
     }
   }

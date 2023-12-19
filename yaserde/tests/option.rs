@@ -85,15 +85,9 @@ fn option_struct() {
     field: SubTest,
   }
 
-  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+  #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
   struct SubTest {
     content: Option<String>,
-  }
-
-  impl Default for SubTest {
-    fn default() -> Self {
-      SubTest { content: None }
-    }
   }
 
   test_for_type!(
@@ -117,16 +111,10 @@ fn option_bool_no_crash_on_bad_input() {
     field: SubTest,
   }
 
-  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+  #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
   struct SubTest {
     #[yaserde(attribute)]
     content: Option<bool>,
-  }
-
-  impl Default for SubTest {
-    fn default() -> Self {
-      SubTest { content: None }
-    }
   }
 
   let content = "<field><content>/<R/";

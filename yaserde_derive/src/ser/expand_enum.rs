@@ -33,7 +33,6 @@ pub fn serialize(
 
       let attribute_fields: Vec<_> = all_fields
         .clone()
-        .into_iter()
         .filter(|field| {
           field.is_attribute()
             || (field.is_flatten() && matches!(field.get_type(), Field::FieldStruct { .. }))

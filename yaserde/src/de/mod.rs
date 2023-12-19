@@ -20,7 +20,7 @@ pub struct Deserializer<R: Read> {
   peeked: Option<XmlEvent>,
 }
 
-impl<'de, R: Read> Deserializer<R> {
+impl<R: Read> Deserializer<R> {
   pub fn new(reader: EventReader<R>) -> Self {
     Deserializer {
       depth: 0,

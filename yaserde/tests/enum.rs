@@ -13,7 +13,9 @@ fn basic_enum() {
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(rename = "color")]
+  #[derive(Default)]
   pub enum Color {
+    #[default]
     White,
     Black,
     #[yaserde(rename = "custom")]
@@ -35,12 +37,6 @@ fn basic_enum() {
     },
   }
 
-  impl Default for Color {
-    fn default() -> Color {
-      Color::White
-    }
-  }
-
   assert_eq!(Color::default(), Color::White);
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
@@ -50,16 +46,11 @@ fn basic_enum() {
     blue: String,
   }
 
-  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize, Default)]
   pub enum Alpha {
+    #[default]
     Transparent,
     Opaque,
-  }
-
-  impl Default for Alpha {
-    fn default() -> Alpha {
-      Alpha::Transparent
-    }
   }
 
   let model = XmlStruct {
@@ -129,15 +120,11 @@ fn attribute_enum() {
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(rename = "color")]
+  #[derive(Default)]
   pub enum Color {
     #[yaserde(rename = "pink")]
+    #[default]
     Pink,
-  }
-
-  impl Default for Color {
-    fn default() -> Color {
-      Color::Pink
-    }
   }
 
   let model = XmlStruct { color: Color::Pink };
@@ -166,15 +153,10 @@ fn attribute_enum2() {
 
   #[derive(Debug, PartialEq, YaSerialize, YaDeserialize)]
   #[yaserde(rename = "child2")]
+  #[derive(Default)]
   struct Child2 {
     #[yaserde(attribute)]
     pub num: u8,
-  }
-
-  impl Default for Child2 {
-    fn default() -> Child2 {
-      Child2 { num: 0 }
-    }
   }
 
   #[derive(Debug, PartialEq, YaSerialize, YaDeserialize)]
@@ -246,8 +228,9 @@ fn unnamed_enum() {
     se: i32,
   }
 
-  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize, Default)]
   pub enum Enum {
+    #[default]
     Simple,
     Field(String),
     FullPath(String),
@@ -262,12 +245,6 @@ fn unnamed_enum() {
     ToRename(u32),
     #[yaserde(rename = "renamed.with.dots")]
     ToRenameDots(u32),
-  }
-
-  impl Default for Enum {
-    fn default() -> Enum {
-      Enum::Simple
-    }
   }
 
   let model = XmlStruct {

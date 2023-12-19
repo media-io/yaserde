@@ -42,18 +42,13 @@ fn basic_flatten() {
     lunar_day: i32,
   }
 
-  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize, Default)]
   pub enum DateKind {
     #[yaserde(rename = "holidays")]
     Holidays(Vec<String>),
     #[yaserde(rename = "working")]
+    #[default]
     Working,
-  }
-
-  impl Default for DateKind {
-    fn default() -> Self {
-      DateKind::Working
-    }
   }
 
   let model = DateTime {
