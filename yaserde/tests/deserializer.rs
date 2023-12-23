@@ -4,8 +4,10 @@ extern crate yaserde;
 extern crate yaserde_derive;
 
 use log::debug;
+use std::default;
 use std::io::Read;
-use yaserde::de::from_str;
+use std::str::FromStr;
+use yaserde::de::{self, from_str};
 use yaserde::YaDeserialize;
 
 fn init() {
@@ -1049,4 +1051,38 @@ fn de_same_field_name_but_some_other_fields_or_something() {
 
   serialize_and_validate!(model, content);
   deserialize_and_validate!(content, model, FooOuter);
+}
+
+#[test]
+fn de_attribute_sequence() {
+  init();
+
+  #[derive(Default, Debug, YaDeserialize, PartialEq)]
+  pub enum Inner {
+    #[default]
+    #[yaserde(rename = "foo")]
+    Foo,
+    #[yaserde(rename = "bar")]
+    Bar,
+  }
+
+  #[derive(Default, Debug, PartialEq, YaDeserialize)]
+  pub struct Outer {
+    #[yaserde(attribute, rename = "seq1")]
+    seq1: Vec<i32>,
+    #[yaserde(child, attribute, rename = "seq2")]
+    seq2: Vec<Inner>,
+    #[yaserde(attribute, rename = "seq3")]
+    seq3: Vec<String>,
+  }
+
+  let content = r#"<Outer seq1="1 2 3 4" seq2="foo foo bar" seq3="one two" />"#;
+  let model = Outer {
+    seq1: vec![1, 2, 3, 4],
+    seq2: vec![Inner::Foo, Inner::Foo, Inner::Bar],
+    seq3: vec!["one".to_string(), "two".to_string()],
+  };
+
+  //serialize_and_validate!(model, content);
+  deserialize_and_validate!(content, model, Outer);
 }
