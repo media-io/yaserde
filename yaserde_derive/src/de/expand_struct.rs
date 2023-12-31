@@ -38,7 +38,7 @@ pub fn parse(
           quote!(::std::vec![]),
         ),
         Field::FieldOption { .. } | Field::FieldVec { .. } => {
-          unimplemented!();
+          unimplemented!("Option or Vec nested in  Vec<>");
         }
         simple_type => {
           let type_token: TokenStream = simple_type.into();
@@ -239,6 +239,20 @@ pub fn parse(
         })
       };
 
+      let visit_vec = |action: &TokenStream, visitor: &Ident, visitor_label: &Ident| {
+        Some(quote! {
+          for attr in attributes {
+            if attr.name.local_name == #label_name {
+              for value in attr.value.split_whitespace() {
+                let visitor = #visitor_label{};
+                let value = visitor.#visitor(value)?;
+                #label #action;
+              }
+            }
+          }
+        })
+      };
+
       let visit_string = || {
         Some(quote! {
           for attr in attributes {
@@ -276,7 +290,19 @@ pub fn parse(
         Field::FieldOption { data_type } => {
           visit_sub(data_type, quote! { = ::std::option::Option::Some(value) })
         }
-        Field::FieldVec { .. } => unimplemented!(),
+        Field::FieldVec { data_type } => match data_type.as_ref() {
+          Field::FieldStruct { struct_name } => visit_vec(
+            &quote! { .push(value) },
+            &Ident::new("visit_str", field.get_span()),
+            &build_visitor_ident(&label_name, field.get_span(), Some(&struct_name)),
+          ),
+          Field::FieldOption { .. } | Field::FieldVec { .. } => unimplemented!("Not supported"),
+          simple_type => visit_vec(
+            &quote! { .push(value) },
+            &simple_type.get_simple_type_visitor(),
+            &visitor_label,
+          ),
+        },
         Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! { = value }),
         simple_type => visit_simple(simple_type, quote! { = value }),
       }
