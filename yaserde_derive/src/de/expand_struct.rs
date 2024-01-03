@@ -294,7 +294,7 @@ pub fn parse(
           Field::FieldStruct { struct_name } => visit_vec(
             &quote! { .push(value) },
             &Ident::new("visit_str", field.get_span()),
-            &build_visitor_ident(&label_name, field.get_span(), Some(&struct_name)),
+            &build_visitor_ident(&label_name, field.get_span(), Some(struct_name)),
           ),
           Field::FieldOption { .. } | Field::FieldVec { .. } => unimplemented!("Not supported"),
           simple_type => visit_vec(

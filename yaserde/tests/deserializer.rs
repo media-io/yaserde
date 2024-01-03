@@ -4,10 +4,8 @@ extern crate yaserde;
 extern crate yaserde_derive;
 
 use log::debug;
-use std::default;
 use std::io::Read;
-use std::str::FromStr;
-use yaserde::de::{self, from_str};
+use yaserde::de::from_str;
 use yaserde::YaDeserialize;
 
 fn init() {
