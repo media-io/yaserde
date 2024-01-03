@@ -1084,3 +1084,20 @@ fn de_attribute_sequence() {
   //serialize_and_validate!(model, content);
   deserialize_and_validate!(content, model, Outer);
 }
+
+#[test]
+fn de_nested_macro_rules() {
+  init!();
+
+  macro_rules! float_attrs {
+    ($type:ty) => {
+      #[derive(Default, PartialEq, Debug, YaDeserialize)]
+      pub struct Outer{
+        #[yaserde(attribute)]
+        pub inner: Option<$type>,
+      }
+    };
+  }
+
+  float_attrs!(f32);
+}

@@ -250,11 +250,20 @@ impl From<&syn::Field> for Field {
 impl From<&syn::PathSegment> for Field {
   fn from(path_segment: &syn::PathSegment) -> Self {
     if let syn::PathArguments::AngleBracketed(ref args) = path_segment.arguments {
-      if let Some(syn::GenericArgument::Type(Path(ref path))) = args.args.first() {
-        return Field::from(&path.path);
+      match args.args.first() {
+        Some(syn::GenericArgument::Type(Path(ref path))) => {
+          return Field::from(&path.path);
+        },
+        Some(syn::GenericArgument::Type(syn::Type::Group(syn::TypeGroup { elem, ..}))) => {
+          if let syn::Type::Path(ref group) = elem.as_ref() {
+            return Field::from(&group.path);
+          }
+        },
+        _ => unimplemented!("unable to match '{:?}'", args.args.first()),
       }
     }
-    unimplemented!()
+
+    unimplemented!("unable to match '{}'", quote!{#path_segment})
   }
 }
 
