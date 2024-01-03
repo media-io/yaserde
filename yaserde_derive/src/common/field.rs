@@ -253,17 +253,17 @@ impl From<&syn::PathSegment> for Field {
       match args.args.first() {
         Some(syn::GenericArgument::Type(Path(ref path))) => {
           return Field::from(&path.path);
-        },
-        Some(syn::GenericArgument::Type(syn::Type::Group(syn::TypeGroup { elem, ..}))) => {
+        }
+        Some(syn::GenericArgument::Type(syn::Type::Group(syn::TypeGroup { elem, .. }))) => {
           if let syn::Type::Path(ref group) = elem.as_ref() {
             return Field::from(&group.path);
           }
-        },
+        }
         _ => unimplemented!("unable to match '{:?}'", args.args.first()),
       }
     }
 
-    unimplemented!("unable to match '{}'", quote!{#path_segment})
+    unimplemented!("unable to match '{}'", quote! {#path_segment})
   }
 }
 

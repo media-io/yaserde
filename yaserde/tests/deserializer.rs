@@ -1087,12 +1087,12 @@ fn de_attribute_sequence() {
 
 #[test]
 fn de_nested_macro_rules() {
-  init!();
+  init();
 
   macro_rules! float_attrs {
     ($type:ty) => {
       #[derive(Default, PartialEq, Debug, YaDeserialize)]
-      pub struct Outer{
+      pub struct Outer {
         #[yaserde(attribute)]
         pub inner: Option<$type>,
       }
