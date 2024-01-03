@@ -293,7 +293,7 @@ impl From<&Field> for String {
       Field::FieldU64 => "u64".to_string(),
       Field::FieldF32 => "f32".to_string(),
       Field::FieldF64 => "f64".to_string(),
-      Field::FieldStruct { struct_name } => quote!{#struct_name}.to_string(),
+      Field::FieldStruct { struct_name } => quote! {#struct_name}.to_string(),
       _ => panic!("Not a simple type: {:?}", field),
     }
   }
