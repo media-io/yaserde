@@ -346,6 +346,45 @@ fn de_attributes_complex() {
 }
 
 #[test]
+fn de_attributes_with_same_name_field() {
+  init();
+
+  #[derive(Default, YaDeserialize, PartialEq, Debug)]
+  pub struct Struct {
+    #[yaserde(attribute, rename = "content")]
+    attribute: Option<String>,
+    content: Option<String>,
+  }
+
+  convert_and_validate!(
+    r#"<Struct />"#,
+    Struct,
+    Struct {
+      attribute: None,
+      content: None
+    }
+  );
+
+  convert_and_validate!(
+    r#"<Struct content="attribute" />"#,
+    Struct,
+    Struct {
+      attribute: Some("attribute".to_string()),
+      content: None
+    }
+  );
+
+  convert_and_validate!(
+    r#"<Struct content="attribute"><content>Field</content></Struct>"#,
+    Struct,
+    Struct {
+      attribute: Some("attribute".to_string()),
+      content: Some("Field".to_string())
+    }
+  );
+}
+
+#[test]
 fn de_rename() {
   init();
 

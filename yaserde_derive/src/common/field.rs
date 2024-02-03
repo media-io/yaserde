@@ -90,9 +90,15 @@ impl YaSerdeField {
       },
     );
 
+    let attribute = self
+      .attributes
+      .attribute
+      .then_some("Attribute_".to_string())
+      .unwrap_or_default();
+
     Ident::new(
       &format!(
-        "__Visitor_{}_{}",
+        "__Visitor_{attribute}{}_{}",
         label.replace('.', "_").to_upper_camel_case(),
         struct_id
       ),

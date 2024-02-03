@@ -1,6 +1,7 @@
-use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
-use crate::de::build_default_value::build_default_value;
-use heck::ToUpperCamelCase;
+use crate::{
+  common::{Field, YaSerdeAttribute, YaSerdeField},
+  de::build_default_value::build_default_value,
+};
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{DataStruct, Ident};
@@ -142,7 +143,7 @@ pub fn parse(
     .fields
     .iter()
     .map(|field| YaSerdeField::new(field.clone()))
-    .filter(|field| !field.is_attribute() || !field.is_flatten())
+    .filter(|field| !field.is_attribute() && !field.is_flatten())
     .filter_map(|field| {
       let value_label = field.get_value_label();
       let label_name = field.renamed_label_without_namespace();
@@ -225,7 +226,7 @@ pub fn parse(
     .filter_map(|field| {
       let label = field.get_value_label();
       let label_name = field.renamed_label_without_namespace();
-      let visitor_label = build_visitor_ident(&label_name, field.get_span(), None);
+      let visitor_label = field.get_visitor_ident(None);
 
       let visit = |action: &TokenStream, visitor: &Ident, visitor_label: &Ident| {
         Some(quote! {
@@ -267,7 +268,7 @@ pub fn parse(
         visit(
           &action,
           &Ident::new("visit_str", Span::call_site()),
-          &build_visitor_ident(&label_name, field.get_span(), Some(&struct_name)),
+          &field.get_visitor_ident(Some(&struct_name)),
         )
       };
 
@@ -294,7 +295,7 @@ pub fn parse(
           Field::FieldStruct { struct_name } => visit_vec(
             &quote! { .push(value) },
             &Ident::new("visit_str", field.get_span()),
-            &build_visitor_ident(&label_name, field.get_span(), Some(struct_name)),
+            &field.get_visitor_ident(Some(struct_name)),
           ),
           Field::FieldOption { .. } | Field::FieldVec { .. } => unimplemented!("Not supported"),
           simple_type => visit_vec(
@@ -463,7 +464,7 @@ fn build_call_visitor(
 ) -> Option<TokenStream> {
   let value_label = field.get_value_label();
   let label_name = field.renamed_label_without_namespace();
-  let visitor_label = build_visitor_ident(&label_name, field.get_span(), None);
+  let visitor_label = field.get_visitor_ident(None);
 
   let namespaces_matching = field.get_namespace_matching(
     root_attributes,
@@ -492,28 +493,6 @@ fn build_call_visitor(
       }
     }
   })
-}
-
-fn build_visitor_ident(label: &str, span: Span, struct_name: Option<&syn::Path>) -> Ident {
-  let struct_id = struct_name.map_or_else(
-    || "".to_string(),
-    |struct_name| {
-      struct_name
-        .segments
-        .iter()
-        .map(|s| s.ident.to_string())
-        .collect()
-    },
-  );
-
-  Ident::new(
-    &format!(
-      "__Visitor_{}_{}",
-      label.replace('.', "_").to_upper_camel_case(),
-      struct_id
-    ),
-    span,
-  )
 }
 
 fn build_code_for_unused_xml_events(
