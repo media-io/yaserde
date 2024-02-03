@@ -1,6 +1,6 @@
 [package]
 name = "yaserde-examples"
-version = "0.9.1"
+version = "0.9.2"
 authors = ["Marc-Antoine Arnaud <maarnaud@media-io.com>"]
 license = "MIT"
 edition = "2018"
@@ -8,4 +8,4 @@ description = "Examples for YaSerDe project"
 documentation = "https://docs.rs/yaserde"
 
 [dependencies]
-yaserde = {version = "0.9.1", path = "../yaserde", features = ["yaserde_derive"] }
+yaserde = {version = "0.9.2", path = "../yaserde", features = ["yaserde_derive"] }
