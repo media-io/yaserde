@@ -196,7 +196,6 @@ fn flatten_attribute_and_child() {
   struct Node {
     #[yaserde(flatten)]
     base: Base,
-    #[yaserde(child)]
     value: StringValue,
   }
 
@@ -235,7 +234,6 @@ fn flatten_name_in_unknown_child() {
   pub struct Node {
     #[yaserde(flatten)]
     base: Base,
-    #[yaserde(child)]
     value: Value,
   }
 
