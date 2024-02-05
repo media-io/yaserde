@@ -85,7 +85,7 @@ fn option_struct() {
     field: SubTest,
   }
 
-  #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   struct SubTest {
     content: Option<String>,
   }
@@ -111,7 +111,7 @@ fn option_bool_no_crash_on_bad_input() {
     field: SubTest,
   }
 
-  #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   struct SubTest {
     #[yaserde(attribute)]
     content: Option<bool>,
@@ -121,4 +121,42 @@ fn option_bool_no_crash_on_bad_input() {
   let result: Result<Test, String> = yaserde::de::from_str(content);
 
   assert!(result.is_err());
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use yaserde::de::from_str;
+
+  #[derive(Debug, YaDeserialize, YaSerialize)]
+  pub struct Car {
+    #[yaserde(rename = "CarColor")]
+    color: String,
+    #[yaserde(rename = "CarBrand")]
+    brand: String,
+  }
+
+  #[derive(Debug, YaDeserialize, YaSerialize)]
+  pub struct Person {
+    #[yaserde(flatten)]
+    pub car: Option<Car>,
+  }
+
+  #[test]
+  fn deserialize_without_car() {
+    let person = r#"<?xml version="1.0" encoding="utf-8"?>
+      <Person>
+          <EyeColor>brown</EyeColor>
+          <Age>25</Age>
+          <HasHome>true</HasHome>
+          <HasGarden>false</HasGarden>
+      </Person>
+    "#;
+
+    let person: Person = from_str(person).unwrap();
+
+    let expected_person = Person { car: None };
+
+    assert_eq!(person.car.is_none(), expected_person.car.is_none());
+  }
 }

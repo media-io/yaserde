@@ -125,7 +125,7 @@ fn module_inclusion() {
   init();
 
   mod module {
-    #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
+    #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
     #[yaserde(rename = "module")]
     pub struct Module {
       #[yaserde(attribute)]

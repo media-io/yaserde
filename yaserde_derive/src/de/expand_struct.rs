@@ -1,7 +1,5 @@
-use crate::{
-  common::{Field, YaSerdeAttribute, YaSerdeField},
-  de::build_default_value::build_default_value,
-};
+use super::build_default_value::{build_default_value, build_default_vec_value};
+use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{DataStruct, Ident};
@@ -24,38 +22,25 @@ pub fn parse(
     .iter()
     .map(|field| YaSerdeField::new(field.clone()))
     .filter_map(|field| match field.get_type() {
-      Field::FieldStruct { struct_name } => build_default_value(
-        &field,
-        Some(quote!(#struct_name)),
-        quote!(<#struct_name as ::std::default::Default>::default()),
-      ),
-      Field::FieldOption { .. } => {
-        build_default_value(&field, None, quote!(::std::option::Option::None))
-      }
+      Field::FieldStruct { struct_name } => build_default_value(&field, Some(quote!(#struct_name))),
+      Field::FieldOption { .. } => build_default_value(&field, None),
       Field::FieldVec { data_type } => match *data_type {
-        Field::FieldStruct { ref struct_name } => build_default_value(
-          &field,
-          Some(quote!(::std::vec::Vec<#struct_name>)),
-          quote!(::std::vec![]),
-        ),
+        Field::FieldStruct { ref struct_name } => {
+          build_default_vec_value(&field, Some(quote!(::std::vec::Vec<#struct_name>)))
+        }
         Field::FieldOption { .. } | Field::FieldVec { .. } => {
-          unimplemented!("Option or Vec nested in  Vec<>");
+          unimplemented!("Option or Vec nested in Vec<>");
         }
         simple_type => {
           let type_token: TokenStream = simple_type.into();
 
-          build_default_value(
-            &field,
-            Some(quote!(::std::vec::Vec<#type_token>)),
-            quote!(::std::vec![]),
-          )
+          build_default_vec_value(&field, Some(quote!(::std::vec::Vec<#type_token>)))
         }
       },
       simple_type => {
         let type_token: TokenStream = simple_type.into();
-        let value_builder = quote!(<#type_token as ::std::default::Default>::default());
 
-        build_default_value(&field, Some(type_token), value_builder)
+        build_default_value(&field, Some(type_token))
       }
     })
     .collect();
@@ -74,6 +59,9 @@ pub fn parse(
 
         let visitor_label = field.get_visitor_ident(Some(&struct_name));
 
+        let xml_opening = format!("<{struct_id}>");
+        let xml_closing = format!("</{struct_id}>");
+
         Some(quote! {
           #[allow(non_snake_case, non_camel_case_types)]
           struct #visitor_label;
@@ -84,7 +72,7 @@ pub fn parse(
               self,
               v: &str,
             ) -> ::std::result::Result<Self::Value, ::std::string::String> {
-              let content = "<".to_string() + #struct_id + ">" + v + "</" + #struct_id + ">";
+              let content = format!("{}{}{}", #xml_opening, v, #xml_closing);
               ::yaserde::de::from_str(&content)
             }
           }
@@ -185,12 +173,14 @@ pub fn parse(
       };
 
       match field.get_type() {
-        Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! { = value }),
+        Field::FieldStruct { struct_name } => {
+          visit_struct(struct_name, quote! { = ::std::option::Option::Some(value) })
+        }
         Field::FieldOption { data_type } => {
           visit_sub(data_type, quote! { = ::std::option::Option::Some(value) })
         }
         Field::FieldVec { data_type } => visit_sub(data_type, quote! { .push(value) }),
-        simple_type => visit_simple(simple_type, quote! { = value }),
+        simple_type => visit_simple(simple_type, quote! { = ::std::option::Option::Some(value) }),
       }
     })
     .collect();
@@ -205,7 +195,7 @@ pub fn parse(
 
       match field.get_type() {
         Field::FieldStruct { .. } => quote! {
-          #value_label = ::yaserde::de::from_str(&unused_xml_elements)?;
+          #value_label = Some(::yaserde::de::from_str(&unused_xml_elements)?);
         },
         Field::FieldOption { data_type } => match *data_type {
           Field::FieldStruct { .. } => quote! {
@@ -258,7 +248,7 @@ pub fn parse(
         Some(quote! {
           for attr in attributes {
             if attr.name.local_name == #label_name {
-              #label = attr.value.to_owned();
+              #label = Some(attr.value.to_owned());
             }
           }
         })
@@ -304,8 +294,8 @@ pub fn parse(
             &visitor_label,
           ),
         },
-        Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! { = value }),
-        simple_type => visit_simple(simple_type, quote! { = value }),
+        Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! { = Some(value) }),
+        simple_type => visit_simple(simple_type, quote! { = Some(value) }),
       }
     })
     .collect();
@@ -318,15 +308,13 @@ pub fn parse(
       let label = field.get_value_label();
 
       let set_text = |action: &TokenStream| {
-        if field.is_text_content() {
-          Some(quote! { #label = #action; })
-        } else {
-          None
-        }
+        field
+          .is_text_content()
+          .then_some(quote! { #label = #action; })
       };
 
       match field.get_type() {
-        Field::FieldString => set_text(&quote! { text_content.to_owned() }),
+        Field::FieldString => set_text(&quote! { Some(text_content.to_owned()) }),
         Field::FieldOption { data_type } => match *data_type {
           Field::FieldString => set_text(
             &quote! { if text_content.is_empty() { None } else { Some(text_content.to_owned()) }},
@@ -350,7 +338,26 @@ pub fn parse(
       let label = &field.label();
       let value_label = field.get_value_label();
 
-      quote! { #label: #value_label, }
+      match field.get_type() {
+        Field::FieldOption { .. } | Field::FieldVec { .. } => {
+          quote! { #label: #value_label, }
+        }
+        _ => {
+          if let Some(default_function) = field.get_default_function() {
+            quote! { #label: #value_label.unwrap_or_else(|| #default_function()), }
+          } else {
+            let error = format!(
+              "{} is a required field",
+              label
+                .as_ref()
+                .map(|label| label.to_string())
+                .unwrap_or_default()
+            );
+
+            quote! { #label: #value_label.ok_or_else(|| #error.to_string())?, }
+          }
+        }
+      }
     })
     .collect();
 

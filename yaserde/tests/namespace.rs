@@ -145,7 +145,7 @@ fn struct_sub_namespace_definition() {
 fn struct_namespace_nested() {
   init();
 
-  #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(prefix = "nsa", namespace = "nsa: http://www.sample.com/ns/a")]
   struct A {
     #[yaserde(prefix = "nsa")]
@@ -180,7 +180,7 @@ fn struct_namespace_nested() {
 fn struct_namespace_nested_defined_at_root() {
   init();
 
-  #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
+  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(prefix = "nsa", namespace = "nsa: http://www.sample.com/ns/a")]
   struct A {
     #[yaserde(prefix = "nsa")]
@@ -326,13 +326,12 @@ fn struct_default_namespace_via_attribute_with_prefix() {
 fn enum_namespace() {
   init();
 
-  #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
+  #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "root",
     prefix = "ns",
     namespace = "ns: http://www.sample.com/ns/domain"
   )]
-  #[derive(Default)]
   pub enum XmlStruct {
     #[yaserde(prefix = "ns")]
     #[default]

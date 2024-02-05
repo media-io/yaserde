@@ -16,7 +16,7 @@
 //!```rust
 //! use yaserde_derive::YaSerialize;
 //!
-//! #[derive(Default, PartialEq, Debug, YaSerialize)]
+//! #[derive(PartialEq, Debug, YaSerialize)]
 //! #[yaserde(rename = "device")]
 //! struct Device {
 //!   #[yaserde(attribute)]
@@ -29,7 +29,7 @@
 //!   attributes: DeviceAttributes
 //! }
 //!
-//! #[derive(Default, PartialEq, Debug, YaSerialize)]
+//! #[derive(PartialEq, Debug, YaSerialize)]
 //! struct DeviceAttributes {
 //!   #[yaserde(child)]
 //!   vendor: String,

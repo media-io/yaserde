@@ -115,7 +115,7 @@ fn de_multiple_segments() {
   init();
 
   mod other_mod {
-    #[derive(YaDeserialize, PartialEq, Debug, Default)]
+    #[derive(YaDeserialize, PartialEq, Debug)]
     pub struct Page {
       pub number: i32,
       pub text: String,
@@ -216,14 +216,6 @@ fn de_attributes() {
     subitem: String,
   }
 
-  impl Default for SubStruct {
-    fn default() -> SubStruct {
-      SubStruct {
-        subitem: "".to_string(),
-      }
-    }
-  }
-
   let content = "<base item=\"something\"><sub subitem=\"sub-something\"></sub></base>";
   convert_and_validate!(
     content,
@@ -246,7 +238,7 @@ fn de_attributes_custom_deserializer() {
 
     use xml::reader::XmlEvent;
 
-    #[derive(Debug, Default, PartialEq)]
+    #[derive(Debug, PartialEq)]
     pub struct Attributes {
       pub items: Vec<String>,
     }
@@ -274,7 +266,7 @@ fn de_attributes_custom_deserializer() {
     }
   }
 
-  #[derive(Default, YaDeserialize, PartialEq, Debug)]
+  #[derive(YaDeserialize, PartialEq, Debug)]
   pub struct Struct {
     #[yaserde(attribute)]
     attr_option_string: Option<String>,
@@ -318,7 +310,7 @@ fn de_attributes_complex() {
     }
   }
 
-  #[derive(Default, YaDeserialize, PartialEq, Debug)]
+  #[derive(YaDeserialize, PartialEq, Debug)]
   pub struct Struct {
     #[yaserde(attribute)]
     attr_option_string: Option<String>,
@@ -349,7 +341,7 @@ fn de_attributes_complex() {
 fn de_attributes_with_same_name_field() {
   init();
 
-  #[derive(Default, YaDeserialize, PartialEq, Debug)]
+  #[derive(YaDeserialize, PartialEq, Debug)]
   pub struct Struct {
     #[yaserde(attribute, rename = "content")]
     attribute: Option<String>,
@@ -406,14 +398,6 @@ fn de_rename() {
     subitem: String,
   }
 
-  impl Default for SubStruct {
-    fn default() -> SubStruct {
-      SubStruct {
-        subitem: "".to_string(),
-      }
-    }
-  }
-
   let content = "<base Item=\"something\"><sub sub_item=\"sub_something\"></sub><maj.min.bug>2.0.1</maj.min.bug></base>";
   convert_and_validate!(
     content,
@@ -448,15 +432,6 @@ fn de_text_content_with_attributes() {
     subitem: String,
     #[yaserde(text)]
     text: String,
-  }
-
-  impl Default for SubStruct {
-    fn default() -> SubStruct {
-      SubStruct {
-        subitem: "".to_string(),
-        text: "".to_string(),
-      }
-    }
   }
 
   let content =
@@ -525,16 +500,6 @@ fn de_enum() {
     blue: String,
   }
 
-  impl Default for RGBColor {
-    fn default() -> RGBColor {
-      RGBColor {
-        red: "0".to_string(),
-        green: "0".to_string(),
-        blue: "0".to_string(),
-      }
-    }
-  }
-
   let content =
     "<?xml version=\"1.0\" encoding=\"utf-8\"?><base><background>Black</background></base>";
   convert_and_validate!(
@@ -593,7 +558,7 @@ fn de_complex_enum() {
     background: Color,
   }
 
-  #[derive(YaDeserialize, PartialEq, Debug, Default)]
+  #[derive(YaDeserialize, PartialEq, Debug)]
   pub struct OtherStruct {
     fi: i32,
     se: i32,
@@ -824,7 +789,7 @@ fn de_name_issue_21() {
 fn de_custom() {
   init();
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  #[derive(PartialEq, Debug, YaDeserialize)]
   struct Date {
     #[yaserde(rename = "Year")]
     year: i32,
@@ -834,7 +799,7 @@ fn de_custom() {
     day: Day,
   }
 
-  #[derive(Default, PartialEq, Debug)]
+  #[derive(PartialEq, Debug)]
   struct Day {
     value: i32,
   }
@@ -883,7 +848,7 @@ fn de_custom() {
 fn de_subitem_issue_12() {
   init();
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  #[derive(PartialEq, Debug, YaDeserialize)]
   pub struct Struct {
     id: i32,
   }
@@ -906,12 +871,12 @@ fn de_subitem_issue_12() {
 fn de_subitem_issue_12_with_sub() {
   init();
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  #[derive(PartialEq, Debug, YaDeserialize)]
   pub struct SubStruct {
     id: i32,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  #[derive(PartialEq, Debug, YaDeserialize)]
   pub struct Struct {
     id: i32,
     #[yaserde(rename = "SubStruct")]
@@ -939,7 +904,7 @@ fn de_subitem_issue_12_with_sub() {
 fn de_subitem_issue_12_attributes() {
   init();
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  #[derive(PartialEq, Debug, YaDeserialize)]
   pub struct Struct {
     #[yaserde(attribute)]
     id: i32,
@@ -960,13 +925,13 @@ fn de_subitem_issue_12_attributes() {
 fn de_subitem_issue_12_attributes_with_sub() {
   init();
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  #[derive(PartialEq, Debug, YaDeserialize)]
   pub struct SubStruct {
     #[yaserde(attribute)]
     id: i32,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  #[derive(PartialEq, Debug, YaDeserialize)]
   pub struct Struct {
     #[yaserde(attribute)]
     id: i32,
@@ -994,17 +959,23 @@ fn de_subitem_issue_12_attributes_with_sub() {
 fn de_same_field_name_sub() {
   init();
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  #[derive(PartialEq, Debug, YaDeserialize)]
   pub struct SubStruct {
     sub: Option<i32>,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  #[derive(PartialEq, Debug, YaDeserialize)]
   pub struct Struct {
     sub: SubStruct,
   }
 
-  convert_and_validate!("<Struct><sub /></Struct>", Struct, Struct::default());
+  convert_and_validate!(
+    "<Struct><sub /></Struct>",
+    Struct,
+    Struct {
+      sub: SubStruct { sub: None }
+    }
+  );
 
   convert_and_validate!(
     "<Struct><sub><sub>42</sub></sub></Struct>",
@@ -1019,22 +990,28 @@ fn de_same_field_name_sub() {
 fn de_same_field_name_sub_sub() {
   init();
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  #[derive(PartialEq, Debug, YaDeserialize)]
   pub struct SubSubStruct {
     sub: i32,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  #[derive(PartialEq, Debug, YaDeserialize)]
   pub struct SubStruct {
     sub: Option<SubSubStruct>,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize)]
+  #[derive(PartialEq, Debug, YaDeserialize)]
   pub struct Struct {
     sub: SubStruct,
   }
 
-  convert_and_validate!("<Struct><sub /></Struct>", Struct, Struct::default());
+  convert_and_validate!(
+    "<Struct><sub /></Struct>",
+    Struct,
+    Struct {
+      sub: SubStruct { sub: None }
+    }
+  );
 
   convert_and_validate!(
     "<Struct>
@@ -1059,7 +1036,7 @@ fn de_same_field_name_sub_sub() {
 fn de_same_field_name_but_some_other_fields_or_something() {
   init();
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   #[yaserde(rename = "foo")]
   pub struct FooOuter {
     pub other: bool,
@@ -1067,7 +1044,7 @@ fn de_same_field_name_but_some_other_fields_or_something() {
     pub foo: Option<FooInner>,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   pub struct FooInner {
     pub blah: bool,
   }
@@ -1103,7 +1080,7 @@ fn de_attribute_sequence() {
     Bar,
   }
 
-  #[derive(Default, Debug, PartialEq, YaDeserialize)]
+  #[derive(Debug, PartialEq, YaDeserialize)]
   pub struct Outer {
     #[yaserde(attribute, rename = "seq1")]
     seq1: Vec<i32>,
@@ -1130,7 +1107,7 @@ fn de_nested_macro_rules() {
 
   macro_rules! float_attrs {
     ($type:ty) => {
-      #[derive(Default, PartialEq, Debug, YaDeserialize)]
+      #[derive(PartialEq, Debug, YaDeserialize)]
       pub struct Outer {
         #[yaserde(attribute)]
         pub inner: Option<$type>,

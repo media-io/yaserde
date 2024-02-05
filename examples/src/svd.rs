@@ -1,6 +1,6 @@
 use yaserde::YaSerialize;
 
-#[derive(Default, PartialEq, Debug, YaSerialize)]
+#[derive(PartialEq, Debug, YaSerialize)]
 struct CpuDef {
   #[yaserde(child)]
   name: String,
@@ -18,7 +18,7 @@ struct CpuDef {
   vendorsystickconfig: bool,
 }
 
-#[derive(Default, PartialEq, Debug, YaSerialize)]
+#[derive(PartialEq, Debug, YaSerialize)]
 struct Field {
   name: String,
   #[yaserde(child)]
@@ -29,7 +29,7 @@ struct Field {
   access: String,
 }
 
-#[derive(Default, PartialEq, Debug, YaSerialize)]
+#[derive(PartialEq, Debug, YaSerialize)]
 struct Register {
   #[yaserde(child)]
   name: String,
@@ -49,7 +49,7 @@ struct Register {
   fields: Vec<Field>,
 }
 
-#[derive(Default, PartialEq, Debug, YaSerialize)]
+#[derive(PartialEq, Debug, YaSerialize)]
 struct Peripheral {
   #[yaserde(child)]
   name: String,
@@ -69,7 +69,7 @@ struct Peripheral {
   registers: Vec<Register>,
 }
 
-#[derive(Default, PartialEq, Debug, YaSerialize)]
+#[derive(PartialEq, Debug, YaSerialize)]
 struct DevAttrs {
   #[yaserde(child)]
   vendor: String,
@@ -103,7 +103,7 @@ struct DevAttrs {
   peripherals: Vec<Peripheral>,
 }
 
-#[derive(Default, PartialEq, Debug, YaSerialize)]
+#[derive(PartialEq, Debug, YaSerialize)]
 #[yaserde(rename = "device")]
 struct Device {
   #[yaserde(attribute)]

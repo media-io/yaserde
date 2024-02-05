@@ -1,7 +1,7 @@
 // related to issue https://github.com/media-io/yaserde/issues/3
 use yaserde::*;
 
-#[derive(Default, Debug, Clone, PartialEq, YaDeserialize)]
+#[derive(Debug, Clone, PartialEq, YaDeserialize)]
 #[yaserde(root = "layout")]
 pub struct Layout {
   #[yaserde(attribute)]
@@ -17,7 +17,7 @@ pub struct Layout {
   pub tabpage: Vec<Tabpage>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, YaDeserialize)]
+#[derive(Debug, Clone, PartialEq, YaDeserialize)]
 pub struct Tabpage {
   #[yaserde(attribute, rename = "name")]
   pub named: String,
@@ -48,7 +48,7 @@ pub struct Tabpage {
   pub control: Vec<Control>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, YaDeserialize)]
+#[derive(Debug, Clone, PartialEq, YaDeserialize)]
 pub struct Control {
   #[yaserde(attribute, rename = "name")]
   pub named: String,
@@ -63,27 +63,27 @@ pub struct Control {
   #[yaserde(attribute)]
   pub color: String,
   #[yaserde(attribute)]
-  pub scalef: f32,
+  pub scalef: Option<f32>,
   #[yaserde(attribute)]
-  pub scalet: f32,
+  pub scalet: Option<f32>,
   #[yaserde(attribute)]
-  pub local_off: bool,
+  pub local_off: Option<bool>,
   #[yaserde(attribute)]
-  pub sp: bool,
+  pub sp: Option<bool>,
   #[yaserde(attribute)]
-  pub sr: bool,
+  pub sr: Option<bool>,
   pub midi: Vec<Midi>,
   #[yaserde(attribute)]
-  pub response: String,
+  pub response: Option<String>,
   #[yaserde(attribute)]
-  pub inverted: String,
+  pub inverted: Option<String>,
   #[yaserde(attribute)]
-  pub centered: String,
+  pub centered: Option<String>,
   #[yaserde(attribute)]
-  pub norollover: String,
+  pub norollover: Option<String>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, YaDeserialize)]
+#[derive(Debug, Clone, PartialEq, YaDeserialize)]
 pub struct Midi {
   #[yaserde(attribute)]
   pub var: String,

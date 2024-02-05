@@ -11,7 +11,7 @@ fn init() {
 fn basic_flatten() {
   init();
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct DateTime {
     #[yaserde(flatten)]
     date: Date,
@@ -20,7 +20,7 @@ fn basic_flatten() {
     kind: DateKind,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct Date {
     year: i32,
     month: i32,
@@ -31,18 +31,18 @@ fn basic_flatten() {
     optional_extra: Option<OptionalExtra>,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   pub struct Extra {
     week: i32,
     century: i32,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   pub struct OptionalExtra {
     lunar_day: i32,
   }
 
-  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize, Default)]
+  #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
   pub enum DateKind {
     #[yaserde(rename = "holidays")]
     Holidays(Vec<String>),
@@ -150,7 +150,7 @@ fn root_flatten_enum() {
 fn flatten_attribute() {
   init();
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct HtmlText {
     #[yaserde(flatten)]
     text_attributes: TextAttributes,
@@ -158,7 +158,7 @@ fn flatten_attribute() {
     display: String,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct TextAttributes {
     #[yaserde(attribute)]
     bold: bool,
@@ -166,7 +166,7 @@ fn flatten_attribute() {
     font: FontAttributes,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   #[yaserde(namespace = "ns: http://www.sample.com/ns/domain")]
   pub struct FontAttributes {
     #[yaserde(attribute, prefix = "ns")]
@@ -192,20 +192,20 @@ fn flatten_attribute() {
 fn flatten_attribute_and_child() {
   init();
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct Node {
     #[yaserde(flatten)]
     base: Base,
     value: StringValue,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct Base {
     #[yaserde(attribute)]
     id: String,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct StringValue {
     #[yaserde(text)]
     string: String,
@@ -230,14 +230,14 @@ fn flatten_attribute_and_child() {
 fn flatten_name_in_unknown_child() {
   init();
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   pub struct Node {
     #[yaserde(flatten)]
     base: Base,
     value: Value,
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct Base {
     #[yaserde(attribute)]
     id: String,
@@ -248,14 +248,14 @@ fn flatten_name_in_unknown_child() {
     Foo(FooStruct),
   }
 
-  #[derive(Default, PartialEq, Debug, YaDeserialize, YaSerialize)]
-  struct FooStruct {}
-
   impl Default for Value {
     fn default() -> Self {
-      Self::Foo(FooStruct::default())
+      Self::Foo(FooStruct {})
     }
   }
+
+  #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
+  struct FooStruct {}
 
   let model = Node {
     base: Base {
