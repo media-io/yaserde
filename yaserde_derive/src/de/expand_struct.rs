@@ -347,11 +347,12 @@ pub fn parse(
             quote! { #label: #value_label.unwrap_or_else(|| #default_function()), }
           } else {
             let error = format!(
-              "{} is a required field",
+              "{} is a required field of {}",
               label
                 .as_ref()
                 .map(|label| label.to_string())
-                .unwrap_or_default()
+                .unwrap_or_default(),
+              name
             );
 
             quote! { #label: #value_label.ok_or_else(|| #error.to_string())?, }
