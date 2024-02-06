@@ -89,12 +89,7 @@ pub fn parse(
         }
 
         ::yaserde::__derive_debug!("Enum {} @ {}: success", stringify!(#name), start_depth);
-        match enum_value {
-          ::std::option::Option::Some(value) => ::std::result::Result::Ok(value),
-          ::std::option::Option::None => {
-            ::std::result::Result::Ok(<#name as ::std::default::Default>::default())
-          },
-        }
+        ::std::result::Result::Ok(enum_value.unwrap_or(<#name as ::std::default::Default>::default()))
       }
     }
   }
