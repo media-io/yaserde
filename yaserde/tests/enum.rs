@@ -362,6 +362,7 @@ fn unnamed_enum() {
 fn tagged_enum() {
   #[derive(Debug, PartialEq, YaSerialize, YaDeserialize, Default)]
   #[yaserde(tag = "type")]
+  #[yaserde(rename = "foobar")]
   enum XmlEnum {
     #[default]
     #[yaserde(rename = "foo")]
@@ -371,25 +372,26 @@ fn tagged_enum() {
   }
 
   #[derive(Debug, PartialEq, YaSerialize, YaDeserialize, Default)]
+  #[yaserde(rename = "base")]
   struct XmlStruct {
     #[yaserde(rename = "foobar")]
     foo_bar: XmlEnum,
   }
 
   let model = XmlEnum::Foo;
-  let content = "<base type=\"foo\"/>";
-  // serialize_and_validate!(model, content);
+  let content = "<foobar type=\"foo\" />";
+  serialize_and_validate!(model, content);
   deserialize_and_validate!(content, model, XmlEnum);
 
   let model = XmlEnum::Bar;
-  let content = "<base type=\"bar\"/>";
-  // serialize_and_validate!(model, content);
+  let content = "<foobar type=\"bar\" />";
+  serialize_and_validate!(model, content);
   deserialize_and_validate!(content, model, XmlEnum);
 
   let model = XmlStruct {
     foo_bar: XmlEnum::Foo,
   };
-  let content = "<base><foobar type=\"foo\"/></base>";
-  // serialize_and_validate!(model, content);
+  let content = "<base><foobar type=\"foo\" /></base>";
+  serialize_and_validate!(model, content);
   deserialize_and_validate!(content, model, XmlStruct);
 }
