@@ -8,4 +8,5 @@ description = "Examples for YaSerDe project"
 documentation = "https://docs.rs/yaserde"
 
 [dependencies]
+xml = "0.8.20"
 yaserde = {version = "0.10.0", path = "../yaserde", features = ["yaserde_derive"] }

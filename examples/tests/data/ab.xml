@@ -1,0 +1,18 @@
+<!--
+Description: Example serializing mixed A,B elements
+             The elements must be in sequence [A,B,A,B,A,B,B,B,B,A,B]
+ -->
+
+<RootElem>
+<A attr="hello 1"/>
+<B/>
+<A attr="hello 2"/>
+<B/>
+<A attr="hello 3"/>
+<B/>
+<B/>
+<B/>
+<B/>
+<A attr="hello 4"/>
+<B/>
+</RootElem>
