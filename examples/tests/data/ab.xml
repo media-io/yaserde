@@ -4,15 +4,15 @@ Description: Example serializing mixed A,B elements
  -->
 
 <RootElem>
-<A attr="hello 1"/>
-<B/>
-<A attr="hello 2"/>
-<B/>
-<A attr="hello 3"/>
-<B/>
-<B/>
-<B/>
-<B/>
-<A attr="hello 4"/>
-<B/>
+    <A attr="hello 1"/>
+    <B/>
+    <A attr="hello 2"/>
+    <B/>
+    <A attr="hello 3"/>
+    <B/>
+    <B/>
+    <B/>
+    <B/>
+    <A attr="hello 4"/>
+    <B/>
 </RootElem>

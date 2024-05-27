@@ -2,13 +2,13 @@ use yaserde::{YaDeserialize, YaSerialize};
 
 #[derive(Debug, YaDeserialize)]
 struct RootElem {
-  #[yaserde()]
+  #[yaserde(child)]
   children: Vec<AB>,
   // children are filtered by A and B
   // this is usually not desired
-  #[yaserde()]
+  #[yaserde(rename = "A")]
   a_children: Vec<A>,
-  #[yaserde()]
+  #[yaserde(rename = "B")]
   b_children: Vec<B>,
 }
 impl YaSerialize for RootElem {
@@ -17,6 +17,7 @@ impl YaSerialize for RootElem {
     writer: &mut yaserde::ser::Serializer<W>,
   ) -> Result<(), String> {
     writer.write("Root {\n").unwrap();
+    writer.write("/* A|B elements */\n").unwrap();
     for e in &self.children {
       e.serialize(writer).unwrap();
     }
@@ -110,10 +111,11 @@ impl YaSerialize for B {
 enum AB {
   #[default]
   None,
+  #[yaserde(rename = "A")]
   A(A),
+  #[yaserde(rename = "B")]
   B(B),
 }
-
 impl YaSerialize for AB {
   fn serialize<W: std::io::prelude::Write>(
     &self,
@@ -122,11 +124,11 @@ impl YaSerialize for AB {
     writer.write("/* serialized AB */\n").unwrap();
     match self {
       Self::None => (),
-      Self::A(_a) => {
-        writer.write("A {").unwrap();
+      Self::A(a) => {
+        a.serialize(writer).unwrap();
       }
-      Self::B(_b) => {
-        writer.write("B {").unwrap();
+      Self::B(b) => {
+        b.serialize(writer).unwrap();
       }
     }
     writer.write("}\n").unwrap();
@@ -164,8 +166,9 @@ fn serialize_ab() {
   let result = yaserde::ser::to_string_with_config(&loaded, &yaserde_conf).unwrap();
   println!("\n\nSerialized output:\n{:?}", &result);
   assert_eq!(
-    result,
+    &result,
     r##"Root {
+/* A|B elements */
 A{}
 B{}
 A{}
@@ -182,7 +185,7 @@ A{}
 A{}
 A{}
 A{}
-/* only B elements */ 
+/* only B elements */
 B{}
 B{}
 B{}
