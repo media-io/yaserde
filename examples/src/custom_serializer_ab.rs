@@ -1,6 +1,6 @@
 use yaserde::{YaDeserialize, YaSerialize};
 
-#[derive(Debug, YaDeserialize)]
+#[derive(Debug, PartialEq, YaDeserialize)]
 struct RootElem {
   #[yaserde(child)]
   children: Vec<AB>,
@@ -48,7 +48,7 @@ impl YaSerialize for RootElem {
   }
 }
 
-#[derive(Debug, YaDeserialize)]
+#[derive(Debug, PartialEq, YaDeserialize)]
 struct A {
   #[yaserde(attribute)]
   attr: String,
@@ -81,7 +81,7 @@ impl YaSerialize for A {
   }
 }
 
-#[derive(Debug, YaDeserialize)]
+#[derive(Debug, PartialEq, YaDeserialize)]
 struct B {}
 impl YaSerialize for B {
   fn serialize<W: std::io::prelude::Write>(
@@ -107,7 +107,7 @@ impl YaSerialize for B {
   }
 }
 
-#[derive(Debug, Default, YaDeserialize)]
+#[derive(Debug, Default, PartialEq, YaDeserialize)]
 enum AB {
   #[default]
   None,
@@ -165,26 +165,67 @@ fn serialize_ab() {
   };
   let result = yaserde::ser::to_string_with_config(&loaded, &yaserde_conf).unwrap();
   println!("\n\nSerialized output:\n{:?}", &result);
+
+  let reference = RootElem {
+    children: vec![
+      AB::A(A {
+        attr: "hallo 1".to_string(),
+      }),
+      AB::B(B {}),
+      AB::A(A {
+        attr: "hallo 2".to_string(),
+      }),
+      AB::B(B {}),
+      AB::A(A {
+        attr: "hallo 3".to_string(),
+      }),
+      AB::B(B {}),
+      AB::B(B {}),
+      AB::B(B {}),
+      AB::B(B {}),
+      AB::A(A {
+        attr: "hallo 4".to_string(),
+      }),
+      AB::B(B {}),
+    ],
+    a_children: vec![
+      A {
+        attr: "hallo 1".to_string(),
+      },
+      A {
+        attr: "hallo 2".to_string(),
+      },
+      A {
+        attr: "hallo 3".to_string(),
+      },
+      A {
+        attr: "hallo 4".to_string(),
+      },
+    ],
+    b_children: vec![B {}, B {}, B {}, B {}, B {}, B {}, B {}],
+  };
+  assert_eq!(&loaded, &reference);
+
   assert_eq!(
     &result,
     r##"Root {
 /* A|B elements */
-A{}
+A{attr = "hallo 1"}
 B{}
-A{}
+A{attr = "hallo 2"}
 B{}
-A{}
-B{}
-B{}
+A{attr = "hallo 3"}
 B{}
 B{}
-A{}
+B{}
+B{}
+A{attr = "hallo 4"}
 B{}
 /* only A elements */
-A{}
-A{}
-A{}
-A{}
+A{attr = "hallo 1"}
+A{attr = "hallo 2"}
+A{attr = "hallo 3"}
+A{attr = "hallo 4"}
 /* only B elements */
 B{}
 B{}
