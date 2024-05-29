@@ -13,6 +13,7 @@ pub fn expand_derive_serialize(ast: &syn::DeriveInput) -> Result<TokenStream, St
   let name = &ast.ident;
   let attrs = &ast.attrs;
   let data = &ast.data;
+  let generics = &ast.generics;
 
   let root_attributes = YaSerdeAttribute::parse(attrs);
 
@@ -24,7 +25,7 @@ pub fn expand_derive_serialize(ast: &syn::DeriveInput) -> Result<TokenStream, St
 
   let impl_block = match *data {
     syn::Data::Struct(ref data_struct) => {
-      expand_struct::serialize(data_struct, name, &root_name, &root_attributes)
+      expand_struct::serialize(data_struct, name, &root_name, &root_attributes, generics)
     }
     syn::Data::Enum(ref data_enum) => {
       expand_enum::serialize(data_enum, name, &root_name, &root_attributes)

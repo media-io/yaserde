@@ -2,7 +2,7 @@ use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use crate::ser::{implement_serializer::implement_serializer, label::build_label_name};
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::DataEnum;
+use syn::{DataEnum, Generics};
 use syn::Fields;
 use syn::Ident;
 
@@ -104,6 +104,7 @@ pub fn serialize(
     name,
     root,
     root_attributes,
+    &Generics::default(),
     quote!(#variant_matches),
     quote!(match self {
       #inner_enum_inspector
