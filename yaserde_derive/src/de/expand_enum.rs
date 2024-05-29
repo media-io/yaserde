@@ -24,6 +24,20 @@ pub fn parse(
 
   let flatten = root_attributes.flatten;
 
+  let element_name = if let Some(tag) = &root_attributes.tag {
+    quote! {
+      attributes
+        .iter()
+        .find(|attr| attr.name.local_name.as_str() == #tag)
+        .ok_or(format!("Expected enum tagged with {}, found {:?}", #tag, event))?
+        .value.as_str()
+    }
+  } else {
+    quote! {
+      name.local_name.as_str()
+    }
+  };
+
   quote! {
     impl ::yaserde::YaDeserialize for #name {
       #[allow(unused_variables)]
@@ -50,7 +64,7 @@ pub fn parse(
           ::yaserde::__derive_trace!("Enum {} @ {}: matching {:?}", stringify!(#name), start_depth, event);
           match event {
             ::yaserde::__xml::reader::XmlEvent::StartElement { ref name, ref attributes, .. } => {
-              match name.local_name.as_str() {
+              match #element_name {
                 #match_to_enum
                 _named_element => {
                   let _root = reader.next_event();
