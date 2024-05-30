@@ -2,7 +2,7 @@ use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use crate::ser::{implement_serializer::implement_serializer, label::build_label_name};
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::DataEnum;
+use syn::{DataEnum, Generics};
 use syn::Fields;
 use syn::Ident;
 
@@ -11,6 +11,7 @@ pub fn serialize(
   name: &Ident,
   root: &str,
   root_attributes: &YaSerdeAttribute,
+  generics: &Generics,
 ) -> TokenStream {
   let inner_enum_inspector = inner_enum_inspector(data_enum, name, root_attributes);
 
@@ -108,6 +109,7 @@ pub fn serialize(
     quote!(match self {
       #inner_enum_inspector
     }),
+    generics,
   )
 }
 

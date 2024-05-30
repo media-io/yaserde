@@ -2,13 +2,14 @@ use super::build_default_value::{build_default_value, build_default_vec_value};
 use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::{DataStruct, Ident};
+use syn::{DataStruct, Generics, Ident};
 
 pub fn parse(
   data_struct: &DataStruct,
   name: &Ident,
   root: &str,
   root_attributes: &YaSerdeAttribute,
+  generics: &Generics,
 ) -> TokenStream {
   let namespaces_matching = root_attributes.get_namespace_matching(
     &None,
@@ -49,6 +50,17 @@ pub fn parse(
     .fields
     .iter()
     .map(|field| YaSerdeField::new(field.clone()))
+    .filter(|field| {
+      if field.is_attribute() {
+        return true;
+      };
+      match field.get_type() {
+        Field::FieldVec { data_type } => !matches!(*data_type, Field::FieldStruct { .. }),
+        Field::FieldOption { data_type } => !matches!(*data_type, Field::FieldStruct { .. }),
+        Field::FieldStruct { .. } => false,
+        _ => true,
+      }
+    })
     .filter_map(|field| {
       let struct_visitor = |struct_name: syn::Path| {
         let struct_id: String = struct_name
@@ -369,9 +381,10 @@ pub fn parse(
   };
 
   let flatten = root_attributes.flatten;
+  let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
   quote! {
-    impl ::yaserde::YaDeserialize for #name {
+    impl #impl_generics ::yaserde::YaDeserialize for #name #ty_generics #where_clause {
       #[allow(unused_variables)]
       fn deserialize<R: ::std::io::Read>(
         reader: &mut ::yaserde::de::Deserializer<R>,
