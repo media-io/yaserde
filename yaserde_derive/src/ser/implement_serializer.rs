@@ -3,6 +3,7 @@ use crate::ser::namespace::generate_namespaces_definition;
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::Generics;
 
 pub fn implement_serializer(
   name: &Ident,
@@ -10,12 +11,15 @@ pub fn implement_serializer(
   attributes: &YaSerdeAttribute,
   append_attributes: TokenStream,
   inner_inspector: TokenStream,
+  generics: &Generics,
 ) -> TokenStream {
   let namespaces_definition = generate_namespaces_definition(attributes);
   let flatten = attributes.flatten;
 
+  let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
   quote! {
-    impl ::yaserde::YaSerialize for #name {
+    impl #impl_generics ::yaserde::YaSerialize for #name #ty_generics #where_clause {
       #[allow(unused_variables)]
       fn serialize<W: ::std::io::Write>(
         &self,
