@@ -94,6 +94,7 @@ use std::io::{Read, Write};
 use xml::writer::XmlEvent;
 
 pub mod de;
+pub mod primitives;
 pub mod ser;
 
 /// A **data structure** that can be deserialized from any data format supported by YaSerDe.

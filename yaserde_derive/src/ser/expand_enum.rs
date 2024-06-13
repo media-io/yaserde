@@ -2,15 +2,16 @@ use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use crate::ser::{implement_serializer::implement_serializer, label::build_label_name};
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::DataEnum;
 use syn::Fields;
 use syn::Ident;
+use syn::{DataEnum, Generics};
 
 pub fn serialize(
   data_enum: &DataEnum,
   name: &Ident,
   root: &str,
   root_attributes: &YaSerdeAttribute,
+  generics: &Generics,
 ) -> TokenStream {
   let inner_enum_inspector = inner_enum_inspector(data_enum, name, root_attributes);
 
@@ -26,6 +27,21 @@ pub fn serialize(
     .map(|variant| -> TokenStream {
       let _attrs = crate::common::YaSerdeAttribute::parse(&variant.attrs);
 
+      let add_tag = if let Some(tag) = &root_attributes.tag {
+        let attrs = crate::common::YaSerdeAttribute::parse(&variant.attrs);
+        let label = variant.ident.clone();
+        let element_name = attrs.xml_element_name(&variant.ident);
+        quote! {
+          match self {
+            #name::#label { .. } => {
+              let tag = ::yaserde::__xml::name::OwnedName::local(#tag);
+              child_attributes.push(::yaserde::__xml::attribute::OwnedAttribute::new(tag, #element_name));
+            }
+            _ => {}
+          }
+        }
+      } else { quote!() };
+
       let all_fields = variant
         .fields
         .iter()
@@ -39,7 +55,7 @@ pub fn serialize(
         })
         .collect();
 
-      attribute_fields
+      let add_attributes : TokenStream = attribute_fields
         .iter()
         .map(|field| {
           let label = variant.ident.clone();
@@ -79,7 +95,9 @@ pub fn serialize(
             }
           }
         })
-        .collect()
+        .collect();
+
+        quote!( #add_attributes #add_tag)
     })
     .collect();
 
@@ -91,6 +109,7 @@ pub fn serialize(
     quote!(match self {
       #inner_enum_inspector
     }),
+    generics,
   )
 }
 
@@ -109,10 +128,16 @@ fn inner_enum_inspector(
       let label_name = build_label_name(label, &variant_attrs, &root_attributes.default_namespace);
 
       match variant.fields {
-        Fields::Unit => quote! {
-          &#name::#label => {
-            let data_event = ::yaserde::__xml::writer::XmlEvent::characters(#label_name);
-            writer.write(data_event).map_err(|e| e.to_string())?;
+        Fields::Unit => {
+          if let Some(_tag) = &root_attributes.tag {
+            quote! { #name::#label => {} }
+          } else {
+            quote! {
+              #name::#label => {
+                let data_event = ::yaserde::__xml::writer::XmlEvent::characters(#label_name);
+                writer.write(data_event).map_err(|e| e.to_string())?;
+              }
+            }
           }
         },
         Fields::Named(ref fields) => {

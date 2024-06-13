@@ -1,13 +1,14 @@
 use crate::common::{Field, YaSerdeAttribute, YaSerdeField};
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::{DataEnum, Fields, Ident};
+use syn::{DataEnum, Fields, Generics, Ident};
 
 pub fn parse(
   data_enum: &DataEnum,
   name: &Ident,
   root: &str,
   root_attributes: &YaSerdeAttribute,
+  generics: &Generics,
 ) -> TokenStream {
   let namespaces_matching = root_attributes.get_namespace_matching(
     &None,
@@ -23,9 +24,24 @@ pub fn parse(
     .collect();
 
   let flatten = root_attributes.flatten;
+  let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
+  let element_name = if let Some(tag) = &root_attributes.tag {
+    quote! {
+      attributes
+        .iter()
+        .find(|attr| attr.name.local_name.as_str() == #tag)
+        .ok_or(format!("Expected enum tagged with {}, found {:?}", #tag, event))?
+        .value.as_str()
+    }
+  } else {
+    quote! {
+      name.local_name.as_str()
+    }
+  };
 
   quote! {
-    impl ::yaserde::YaDeserialize for #name {
+    impl #impl_generics ::yaserde::YaDeserialize for #name #ty_generics #where_clause {
       #[allow(unused_variables)]
       fn deserialize<R: ::std::io::Read>(
         reader: &mut ::yaserde::de::Deserializer<R>,
@@ -50,7 +66,7 @@ pub fn parse(
           ::yaserde::__derive_trace!("Enum {} @ {}: matching {:?}", stringify!(#name), start_depth, event);
           match event {
             ::yaserde::__xml::reader::XmlEvent::StartElement { ref name, ref attributes, .. } => {
-              match name.local_name.as_str() {
+              match #element_name {
                 #match_to_enum
                 _named_element => {
                   let _root = reader.next_event();
