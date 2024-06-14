@@ -2,14 +2,7 @@ use yaserde::{YaDeserialize, YaSerialize};
 
 #[derive(Debug, PartialEq, YaDeserialize)]
 struct RootElem {
-  #[yaserde(child)]
   children: Vec<AB>,
-  // children are filtered by A and B
-  // this is usually not desired
-  #[yaserde(rename = "A")]
-  a_children: Vec<A>,
-  #[yaserde(rename = "B")]
-  b_children: Vec<B>,
 }
 impl YaSerialize for RootElem {
   fn serialize<W: std::io::prelude::Write>(
@@ -19,14 +12,6 @@ impl YaSerialize for RootElem {
     writer.write("Root {\n").unwrap();
     writer.write("/* A|B elements */\n").unwrap();
     for e in &self.children {
-      e.serialize(writer).unwrap();
-    }
-    writer.write("/* only A elements */\n").unwrap();
-    for e in &self.a_children {
-      e.serialize(writer).unwrap();
-    }
-    writer.write("/* only B elements */\n").unwrap();
-    for e in &self.b_children {
       e.serialize(writer).unwrap();
     }
     writer.write("}\n").unwrap();
@@ -48,9 +33,11 @@ impl YaSerialize for RootElem {
   }
 }
 
-#[derive(Debug, PartialEq, YaDeserialize)]
+#[derive(Debug, PartialEq)]
+// #[derive(YaDeserialize)]
+// #[yaserde(rename = "a")]
 struct A {
-  #[yaserde(attribute)]
+  // #[yaserde(attribute)]
   attr: String,
 }
 impl YaSerialize for A {
@@ -81,7 +68,9 @@ impl YaSerialize for A {
   }
 }
 
-#[derive(Debug, PartialEq, YaDeserialize)]
+#[derive(Debug, PartialEq)]
+// #[derive(YaDeserialize)]
+// #[yaserde(rename = "b")]
 struct B {}
 impl YaSerialize for B {
   fn serialize<W: std::io::prelude::Write>(
@@ -107,14 +96,43 @@ impl YaSerialize for B {
   }
 }
 
-#[derive(Debug, Default, PartialEq, YaDeserialize)]
+#[derive(Debug, PartialEq)]
+// #[derive(Default)]
 enum AB {
-  #[default]
-  None,
-  #[yaserde(rename = "A")]
+  // #[default]
+  // None,
   A(A),
-  #[yaserde(rename = "B")]
   B(B),
+}
+impl Default for AB {
+  fn default() -> Self {
+    // NOTE: for debugging only; will be None
+    Self::A(A {
+      attr: String::from("undefined"),
+    })
+  }
+}
+impl YaDeserialize for AB {
+  fn deserialize<R: std::io::Read>(
+    reader: &mut yaserde::de::Deserializer<R>,
+  ) -> Result<Self, String> {
+    // dispatch to YaDeserialize for element
+    print!(" - - - - -DISPATCHING");
+    if let xml::reader::XmlEvent::StartElement { name, .. } = reader.peek()?.to_owned() {
+      match name.local_name.as_str() {
+        "a" => {
+          let deserialized = A { attr: String::from("NOT DESERIALIZED")}; // TODO: A::deserialize(reader)?;
+          return Ok(Self::A(deserialized));
+        }
+        "b" => {
+          let deserialized = B {}; // TODO: B::deserialize(reader)?;
+          return Ok(Self::B(deserialized));
+        }
+        _ => (),
+      }
+    }
+    Err(format!("Expected a StartElement"))
+  }
 }
 impl YaSerialize for AB {
   fn serialize<W: std::io::prelude::Write>(
@@ -123,7 +141,10 @@ impl YaSerialize for AB {
   ) -> Result<(), String> {
     writer.write("/* serialized AB */\n").unwrap();
     match self {
-      Self::None => (),
+      // Self::None => {
+      //   writer.write("UndefinedAB").unwrap();
+      //   // return Err(format!("None element cannot be serialized"));
+      // }
       Self::A(a) => {
         a.serialize(writer).unwrap();
       }
@@ -167,42 +188,43 @@ fn serialize_ab() {
   println!("\n\nSerialized output:\n{:?}", &result);
 
   let reference = RootElem {
+    // ab: AB::default(),
     children: vec![
       AB::A(A {
-        attr: "hallo 1".to_string(),
+        attr: String::from("hallo 1"),
       }),
       AB::B(B {}),
       AB::A(A {
-        attr: "hallo 2".to_string(),
+        attr: String::from("hallo 2"),
       }),
       AB::B(B {}),
       AB::A(A {
-        attr: "hallo 3".to_string(),
+        attr: String::from("hallo 3"),
       }),
       AB::B(B {}),
       AB::B(B {}),
       AB::B(B {}),
       AB::B(B {}),
       AB::A(A {
-        attr: "hallo 4".to_string(),
+        attr: String::from("hallo 4"),
       }),
       AB::B(B {}),
     ],
-    a_children: vec![
-      A {
-        attr: "hallo 1".to_string(),
-      },
-      A {
-        attr: "hallo 2".to_string(),
-      },
-      A {
-        attr: "hallo 3".to_string(),
-      },
-      A {
-        attr: "hallo 4".to_string(),
-      },
-    ],
-    b_children: vec![B {}, B {}, B {}, B {}, B {}, B {}, B {}],
+    // a_children: vec![
+    //   A {
+    //     attr: String::from("hallo 1"),
+    //   },
+    //   A {
+    //     attr: String::from("hallo 2"),
+    //   },
+    //   A {
+    //     attr: String::from("hallo 3"),
+    //   },
+    //   A {
+    //     attr: String::from("hallo 4"),
+    //   },
+    // ],
+    // b_children: vec![B {}, B {}, B {}, B {}, B {}, B {}, B {}],
   };
   assert_eq!(&loaded, &reference);
 
