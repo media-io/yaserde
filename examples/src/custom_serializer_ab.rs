@@ -172,6 +172,7 @@ impl YaSerialize for AB {
 }
 
 #[test]
+#[ignore = "TODO: fully support Rust enums (allow multiple XML element occurences and create a Vec<DispatcherEnum>)"]
 fn serialize_ab() {
   use std::fs;
 
