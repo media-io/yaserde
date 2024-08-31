@@ -28,6 +28,7 @@ where
 }
 
 #[derive(YaSerialize, YaDeserialize, Debug, Default, Clone, Eq, PartialEq)]
+#[yaserde(namespace = "u: urn:schemas-upnp-org:service:AVTransport:1")]
 pub struct SoapPlay {
   #[yaserde(rename = "Play", prefix = "u", default)]
   pub body: Play,
@@ -93,6 +94,7 @@ fn test_for_generic_nested_struct() {
   };
 
   let s = ser::to_string(&a).unwrap();
+  println!("{s}");
   let b: SoapEnvelope<SoapPlay> = de::from_str(&s).unwrap();
 
   assert_eq!(a, b);

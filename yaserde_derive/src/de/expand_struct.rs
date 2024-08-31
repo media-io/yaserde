@@ -148,9 +148,11 @@ pub fn parse(
       let value_label = field.get_value_label();
       let label_name = field.renamed_label_without_namespace();
 
+      let namespace = field.prefix_namespace(root_attributes);
+
       let visit_struct = |struct_name: syn::Path, action: TokenStream| {
         Some(quote! {
-          #label_name => {
+          (#namespace, #label_name) => {
             if depth == 0 {
               // Don't count current struct's StartElement as substruct's StartElement
               let _root = reader.next_event();
@@ -423,7 +425,9 @@ pub fn parse(
                 let event = reader.next_event()?;
                 #write_unused
               } else {
-                match name.local_name.as_str() {
+                let namespace = name.namespace.clone().unwrap_or_default();
+
+                match (namespace.as_str(), name.local_name.as_str()) {
                   #call_visitors
                   _ => {
                     let event = reader.next_event()?;
@@ -493,8 +497,10 @@ fn build_call_visitor(
     quote!(name.local_name.as_str()),
   );
 
+  let namespace = field.prefix_namespace(root_attributes);
+
   Some(quote! {
-    #label_name => {
+    (#namespace, #label_name) => {
       let visitor = #visitor_label{};
 
       #namespaces_matching

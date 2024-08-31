@@ -10,7 +10,7 @@ use yaserde::*;
   namespace = "html: http://www.w3.org/TR/REC-html40"
 )]
 struct Workbook {
-  #[yaserde(rename = "Worksheet")]
+  #[yaserde(rename = "Worksheet", prefix = "ss")]
   worksheet: Worksheet,
 }
 
@@ -23,7 +23,7 @@ struct Workbook {
   namespace = "html: http://www.w3.org/TR/REC-html40"
 )]
 struct Worksheet {
-  #[yaserde(rename = "Table")]
+  #[yaserde(rename = "Table", prefix = "ss")]
   table: Table,
   #[yaserde(attribute, rename = "Name", prefix = "ss")]
   ws_name: String,
@@ -53,7 +53,7 @@ struct Table {
   #[yaserde(attribute, rename = "DefaultRowHeight", prefix = "ss")]
   default_column_height: f32,
 
-  #[yaserde(rename = "Row")]
+  #[yaserde(rename = "Row", prefix = "ss")]
   rows: Vec<Row>,
 }
 

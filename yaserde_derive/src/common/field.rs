@@ -90,6 +90,13 @@ impl YaSerdeField {
       },
     );
 
+    let prefix = self
+      .attributes
+      .prefix
+      .clone()
+      .map(|p| format!("{}_", p.to_upper_camel_case()))
+      .unwrap_or_default();
+
     let attribute = self
       .attributes
       .attribute
@@ -98,7 +105,8 @@ impl YaSerdeField {
 
     Ident::new(
       &format!(
-        "__Visitor_{attribute}{}_{}",
+        "__Visitor_{attribute}{}{}_{}",
+        prefix,
         label.replace('.', "_").to_upper_camel_case(),
         struct_id
       ),
@@ -128,6 +136,20 @@ impl YaSerdeField {
       .skip_serializing_if
       .as_ref()
       .map(|skip_serializing_if| Ident::new(skip_serializing_if, self.get_span()))
+  }
+
+  pub fn prefix_namespace(&self, root_attributes: &YaSerdeAttribute) -> String {
+    root_attributes
+      .namespaces
+      .iter()
+      .find_map(|(prefix, namespace)| {
+        if self.attributes.prefix.eq(prefix) {
+          Some(namespace.clone())
+        } else {
+          None
+        }
+      })
+      .unwrap_or_default()
   }
 
   pub fn get_namespace_matching(
@@ -261,7 +283,7 @@ impl From<&syn::PathSegment> for Field {
           return Field::from(&path.path);
         }
         Some(syn::GenericArgument::Type(syn::Type::Group(syn::TypeGroup { elem, .. }))) => {
-          if let syn::Type::Path(ref group) = elem.as_ref() {
+          if let Path(ref group) = elem.as_ref() {
             return Field::from(&group.path);
           }
         }
