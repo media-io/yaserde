@@ -7,6 +7,7 @@ use syn::{DataStruct, Generics, Ident};
 pub fn parse(
   data_struct: &DataStruct,
   name: &Ident,
+  root_namespace: &str,
   root: &str,
   root_attributes: &YaSerdeAttribute,
   generics: &Generics,
@@ -419,13 +420,13 @@ pub fn parse(
           );
           match event {
             ::yaserde::__xml::reader::XmlEvent::StartElement{ref name, ref attributes, ..} => {
-              if depth == 0 && name.local_name == #root {
+              let namespace = name.namespace.clone().unwrap_or_default();
+              if depth == 0 && name.local_name == #root && namespace.as_str() == #root_namespace {
                 // Consume root element. We must do this first. In the case it shares a name with a child element, we don't
                 // want to prematurely match the child element below.
                 let event = reader.next_event()?;
                 #write_unused
               } else {
-                let namespace = name.namespace.clone().unwrap_or_default();
 
                 match (namespace.as_str(), name.local_name.as_str()) {
                   #call_visitors
