@@ -16,6 +16,7 @@ pub struct YaSerdeAttribute {
   pub skip_serializing: bool,
   pub skip_serializing_if: Option<String>,
   pub text: bool,
+  pub cdata: bool,
 }
 
 fn get_value(iter: &mut IntoIter) -> Option<String> {
@@ -45,6 +46,7 @@ impl YaSerdeAttribute {
     let mut skip_serializing = false;
     let mut skip_serializing_if = None;
     let mut text = false;
+    let mut cdata = false;
 
     for attr in attrs.iter().filter(|a| a.path.is_ident("yaserde")) {
       let mut attr_iter = attr.clone().tokens.into_iter();
@@ -96,6 +98,9 @@ impl YaSerdeAttribute {
                 "text" => {
                   text = true;
                 }
+                "cdata" => {
+                  cdata = true;
+                }
                 _ => {}
               }
             }
@@ -116,6 +121,7 @@ impl YaSerdeAttribute {
       skip_serializing,
       skip_serializing_if,
       text,
+      cdata,
     }
   }
 
@@ -192,6 +198,7 @@ fn parse_empty_attributes() {
       skip_serializing: false,
       skip_serializing_if: None,
       text: false,
+      cdata: false,
     },
     attrs
   );
@@ -243,6 +250,7 @@ fn parse_attributes() {
       skip_serializing: false,
       skip_serializing_if: None,
       text: false,
+      cdata: false
     },
     attrs
   );
@@ -294,6 +302,7 @@ fn only_parse_yaserde_attributes() {
       skip_serializing: false,
       skip_serializing_if: None,
       text: false,
+      cdata: false,
     },
     attrs
   );
@@ -351,6 +360,7 @@ fn parse_attributes_with_values() {
       skip_serializing: false,
       skip_serializing_if: None,
       text: false,
+      cdata: false,
     },
     attrs
   );
