@@ -1,6 +1,6 @@
 [package]
 name = "yaserde"
-version = "0.11.1"
+version = "0.11.2"
 authors = ["Marc-Antoine Arnaud <arnaud.marcantoine@gmail.com>"]
 description = "Serialization and deserialization library"
 keywords = ["Serialization", "Deserialization", "XML"]
@@ -12,13 +12,13 @@ readme = "../README.md"
 edition = "2018"
 
 [dependencies]
-yaserde_derive = { version = "0.11.1", path = "../yaserde_derive", optional = true }
+yaserde_derive = { version = "0.11.2", path = "../yaserde_derive", optional = true }
 xml-rs = "0.8.3"
 log = "0.4"
 
 [dev-dependencies]
 env_logger = "0.11.0"
-yaserde_derive = { version = "0.11.1", path = "../yaserde_derive" }
+yaserde_derive = { version = "0.11.2", path = "../yaserde_derive" }
 
 [badges]
 travis-ci = { repository = "media-io/yaserde" }
