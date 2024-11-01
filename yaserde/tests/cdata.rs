@@ -21,3 +21,14 @@ fn test_cdata_serialization() {
   let expected_output = r#"<?xml version="1.0" encoding="utf-8"?><teststruct><msgdata><![CDATA[<tag>Some unescaped content</tag>]]></msgdata></teststruct>"#;
   assert_eq!(xml_output, expected_output);
 }
+
+#[test]
+fn test_cdata_deserialization() {
+  init();
+  let xml = r#"<?xml version="1.0" encoding="utf-8"?><teststruct><msgdata><![CDATA[<tag>Some unescaped content</tag>]]></msgdata></teststruct>"#;
+  let r: TestStruct = yaserde::de::from_str(&xml).unwrap();
+  let expected_output = TestStruct {
+    msgdata: "<tag>Some unescaped content</tag>".to_string(),
+  };
+  assert_eq!(r, expected_output);
+}
