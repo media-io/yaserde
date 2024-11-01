@@ -158,19 +158,19 @@ pub fn serialize(
           )),
         };
       }
-
-      
       let label_name = field.renamed_label(root_attributes);
       let conditions = condition_generator(&label, &field);
 
       if field.is_cdata() {
         return quote! {
-            let start_event = ::yaserde::__xml::writer::XmlEvent::start_element(#label_name);
-            writer.write(start_event).map_err(|e| e.to_string())?;
-            let data = ::yaserde::__xml::writer::events::XmlEvent::cdata(&self.#label);
-            writer.write(data).map_err(|e| e.to_string())?;
-            let end_event = ::yaserde::__xml::writer::XmlEvent::end_element();
-            writer.write(end_event).map_err(|e| e.to_string())?;
+            #conditions {
+              let start_event = ::yaserde::__xml::writer::XmlEvent::start_element(#label_name);
+              writer.write(start_event).map_err(|e| e.to_string())?;
+              let data = ::yaserde::__xml::writer::events::XmlEvent::cdata(&self.#label);
+              writer.write(data).map_err(|e| e.to_string())?;
+              let end_event = ::yaserde::__xml::writer::XmlEvent::end_element();
+              writer.write(end_event).map_err(|e| e.to_string())?;
+            }
         }.into()
       }
 
@@ -364,5 +364,3 @@ pub fn serialize(
     generics,
   )
 }
-
-

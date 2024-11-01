@@ -44,7 +44,7 @@ impl YaSerdeField {
     self.attributes.skip_serializing
   }
 
-  pub fn is_cdata(&self) -> bool{
+  pub fn is_cdata(&self) -> bool {
     self.attributes.cdata
   }
 
