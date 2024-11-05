@@ -3,8 +3,10 @@ use yaserde::*;
 
 #[derive(YaDeserialize, Debug, PartialEq)]
 #[yaserde(
-  namespace = "myns: http://my_namespace_1/",
-  namespace = "ext: http://my_namespace_2/",
+  namespaces = {
+    "myns" = "http://my_namespace_1/",
+    "ext" = "http://my_namespace_2/",
+  },
   prefix = "myns"
 )]
 pub struct ErrorType {

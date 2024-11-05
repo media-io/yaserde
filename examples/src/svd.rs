@@ -5,117 +5,76 @@ fn parsing_svd() {
 
   #[derive(PartialEq, Debug, YaSerialize)]
   struct CpuDef {
-    #[yaserde(child)]
     name: String,
-    #[yaserde(child)]
     revision: String,
-    #[yaserde(child)]
     endian: String, // enum {LE, BE, ME}
-    #[yaserde(child)]
     mpupresent: bool,
-    #[yaserde(child)]
     fpupresent: bool,
     //#[yaserde(child)]
     //nvicpriobits: enum {8, 16, 32, 64, 128},
-    #[yaserde(child)]
     vendorsystickconfig: bool,
   }
 
   #[derive(PartialEq, Debug, YaSerialize)]
   struct Field {
     name: String,
-    #[yaserde(child)]
     description: String,
-    #[yaserde(child)]
     bitrange: String,
-    #[yaserde(child)]
     access: String,
   }
 
   #[derive(PartialEq, Debug, YaSerialize)]
   struct Register {
-    #[yaserde(child)]
     name: String,
-    #[yaserde(child)]
     description: String,
-    #[yaserde(child)]
     addressoffset: String,
-    #[yaserde(child)]
     size: u8,
-    #[yaserde(child)]
     access: String,
-    #[yaserde(child)]
     resetvalue: String,
-    #[yaserde(child)]
     resetmask: String,
-    #[yaserde(child)]
     fields: Vec<Field>,
   }
 
   #[derive(PartialEq, Debug, YaSerialize)]
   struct Peripheral {
-    #[yaserde(child)]
     name: String,
-    #[yaserde(child)]
     version: String,
-    #[yaserde(child)]
     description: String,
-    #[yaserde(child)]
     groupname: String,
-    #[yaserde(child)]
     baseaddress: String,
-    #[yaserde(child)]
     size: u8,
-    #[yaserde(child)]
     access: String,
-    #[yaserde(child)]
     registers: Vec<Register>,
   }
 
   #[derive(PartialEq, Debug, YaSerialize)]
   struct DevAttrs {
-    #[yaserde(child)]
     vendor: String,
-    #[yaserde(child)]
     vendorid: String,
-    #[yaserde(child)]
     name: String,
-    #[yaserde(child)]
     series: String,
-    #[yaserde(child)]
     version: String,
-    #[yaserde(child)]
     description: String,
-    #[yaserde(child)]
     licensetext: String,
-    #[yaserde(child)]
     cpu: CpuDef,
-    #[yaserde(child)]
     addressunitbits: u8,
-    #[yaserde(child)]
     width: u8,
-    #[yaserde(child)]
     size: u8,
-    #[yaserde(child)]
     access: String,
-    #[yaserde(child)]
     resetvalue: String,
-    #[yaserde(child)]
     resetmask: String,
-    #[yaserde(child)]
     peripherals: Vec<Peripheral>,
   }
 
   #[derive(PartialEq, Debug, YaSerialize)]
   #[yaserde(rename = "device")]
   struct Device {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     schemaversion: String,
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     xmlns: String,
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     xsnonamespaceschemalocation: String,
-    #[yaserde(child)]
     devattributes: DevAttrs,
   }
 

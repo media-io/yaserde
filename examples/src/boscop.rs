@@ -2,102 +2,102 @@
 use yaserde::*;
 
 #[derive(Debug, Clone, PartialEq, YaDeserialize)]
-#[yaserde(root = "layout")]
+#[yaserde(rename = "layout")]
 pub struct Layout {
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub version: u32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub mode: u32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub w: u32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub h: u32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub orientation: String,
   pub tabpage: Vec<Tabpage>,
 }
 
 #[derive(Debug, Clone, PartialEq, YaDeserialize)]
 pub struct Tabpage {
-  #[yaserde(attribute, rename = "name")]
+  #[yaserde(attribute = true, rename = "name")]
   pub named: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub scalef: f32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub scalet: f32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub li_t: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub li_c: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub li_s: u32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub li_o: bool,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub li_b: bool,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub la_t: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub la_c: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub la_s: u32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub la_o: bool,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub la_b: bool,
   pub control: Vec<Control>,
 }
 
 #[derive(Debug, Clone, PartialEq, YaDeserialize)]
 pub struct Control {
-  #[yaserde(attribute, rename = "name")]
+  #[yaserde(attribute = true, rename = "name")]
   pub named: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub x: u32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub y: u32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub w: u32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub h: u32,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub color: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub scalef: Option<f32>,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub scalet: Option<f32>,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub local_off: Option<bool>,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub sp: Option<bool>,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub sr: Option<bool>,
   pub midi: Vec<Midi>,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub response: Option<String>,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub inverted: Option<String>,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub centered: Option<String>,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub norollover: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, YaDeserialize)]
 pub struct Midi {
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub var: String,
-  #[yaserde(attribute, rename = "type")]
+  #[yaserde(attribute = true, rename = "type")]
   pub typ: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub channel: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub data1: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub data2f: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub data2t: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   pub sysex: String,
 }
 

@@ -2,11 +2,11 @@
 use yaserde::*;
 
 #[derive(YaDeserialize, Debug, PartialEq)]
-#[yaserde(root = "DOMSymbolItem")]
+#[yaserde(rename = "DOMSymbolItem")]
 struct Level {
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   last_modified: u64,
-  #[yaserde(attribute, rename = "name")]
+  #[yaserde(attribute = true, rename = "name")]
   named: String,
   timeline: Timeline,
 }
@@ -19,11 +19,11 @@ struct Timeline {
 
 #[derive(YaDeserialize, Debug, PartialEq)]
 struct DOMTimeline {
-  #[yaserde(attribute, rename = "name")]
+  #[yaserde(attribute = true, rename = "name")]
   named: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   current_frame: u64,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   guides: u64,
   layers: Layers,
 }
@@ -36,9 +36,9 @@ struct Layers {
 
 #[derive(YaDeserialize, Debug, PartialEq)]
 struct DOMLayer {
-  #[yaserde(attribute, rename = "name")]
+  #[yaserde(attribute = true, rename = "name")]
   named: String,
-  #[yaserde(attribute)]
+  #[yaserde(attribute = true)]
   name2: String,
 }
 
