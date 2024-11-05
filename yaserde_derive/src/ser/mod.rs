@@ -15,7 +15,7 @@ pub fn expand_derive_serialize(ast: &syn::DeriveInput) -> Result<TokenStream, St
   let data = &ast.data;
   let generics = &ast.generics;
 
-  let root_attributes = YaSerdeAttribute::parse(attrs);
+  let root_attributes = YaSerdeAttribute::from(attrs);
 
   let root_name = format!(
     "{}{}",

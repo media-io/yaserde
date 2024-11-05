@@ -112,7 +112,7 @@ pub fn parse(
 }
 
 fn parse_variant(variant: &syn::Variant, name: &Ident) -> Option<TokenStream> {
-  let xml_element_name = YaSerdeAttribute::parse(&variant.attrs).xml_element_name(&variant.ident);
+  let xml_element_name = YaSerdeAttribute::from(&variant.attrs).xml_element_name(&variant.ident);
 
   let variant_name = {
     let label = &variant.ident;

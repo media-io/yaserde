@@ -12,14 +12,14 @@ pub fn expand_derive_deserialize(ast: &syn::DeriveInput) -> Result<TokenStream, 
   let data = &ast.data;
   let generics = &ast.generics;
 
-  let root_attributes = YaSerdeAttribute::parse(attrs);
+  let root_attributes = YaSerdeAttribute::from(attrs);
 
   let root_name = root_attributes.xml_element_name(name);
   let root_namespace = root_attributes
     .namespaces
     .iter()
     .find_map(|(prefix, namespace)| {
-      if root_attributes.prefix.eq(prefix) {
+      if root_attributes.prefix.as_deref().eq(&Some(prefix)) {
         Some(namespace.clone())
       } else {
         None

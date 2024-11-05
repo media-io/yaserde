@@ -1,124 +1,89 @@
-use proc_macro2::{token_stream::IntoIter, Delimiter, Ident, TokenStream, TokenTree};
-use quote::quote;
+use proc_macro2::{Ident, TokenStream};
+use quote::{quote, ToTokens};
+use serde::Deserialize;
+use serde_tokenstream::from_tokenstream;
 use std::collections::BTreeMap;
-use syn::Attribute;
+use std::convert::TryFrom;
+use syn::{Attribute, Meta};
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize)]
 pub struct YaSerdeAttribute {
+  /// Set this field as an XML attribute
+  #[serde(default)]
   pub attribute: bool,
+  /// Set default callback function
+  #[serde(default)]
   pub default: Option<String>,
+  /// Set the default namespace
+  #[serde(default)]
   pub default_namespace: Option<String>,
+  /// Flatten child fields
+  #[serde(default)]
   pub flatten: bool,
-  pub namespaces: BTreeMap<Option<String>, String>,
+  /// Declare all namespaces with prefix/URL
+  #[serde(default)]
+  pub namespaces: BTreeMap<String, String>,
+  /// Set the prefix for the scope
+  #[serde(default)]
   pub prefix: Option<String>,
+  /// Rename the field/struct/enum name
+  #[serde(default)]
   pub rename: Option<String>,
+  #[serde(default)]
   pub tag: Option<String>,
+  /// Disable the serialization for the field
+  #[serde(default)]
   pub skip_serializing: bool,
+  /// Disable the serialization for the field based on a condition
+  #[serde(default)]
   pub skip_serializing_if: Option<String>,
+  /// Set the field as an XML text content
+  #[serde(default)]
   pub text: bool,
 }
 
-fn get_value(iter: &mut IntoIter) -> Option<String> {
-  if let (Some(TokenTree::Punct(operator)), Some(TokenTree::Literal(value))) =
-    (iter.next(), iter.next())
-  {
-    if operator.as_char() == '=' {
-      Some(value.to_string().replace('"', ""))
+impl TryFrom<&Attribute> for YaSerdeAttribute {
+  type Error = String;
+
+  fn try_from(attr: &Attribute) -> Result<Self, Self::Error> {
+    if attr.path().is_ident("yaserde") {
+      let attributes = match &attr.meta {
+        Meta::Path(_) => {
+          unreachable!()
+        }
+        Meta::List(list) => {
+          let mut tokens = TokenStream::new();
+          list.tokens.to_tokens(&mut tokens);
+
+          match from_tokenstream::<YaSerdeAttribute>(&tokens) {
+            Ok(attribute) => attribute,
+            Err(error) => {
+              panic!("YaSerDe derive error: {}", error);
+            }
+          }
+        }
+        Meta::NameValue(_) => {
+          unreachable!()
+        }
+      };
+
+      Ok(attributes)
     } else {
-      None
+      Err("not an attribute".to_string())
     }
-  } else {
-    None
+  }
+}
+
+impl From<&Vec<Attribute>> for YaSerdeAttribute {
+  fn from(attributes: &Vec<Attribute>) -> Self {
+    attributes
+      .iter()
+      .find_map(|attribute| YaSerdeAttribute::try_from(attribute).ok())
+      .unwrap_or_default()
   }
 }
 
 impl YaSerdeAttribute {
-  pub fn parse(attrs: &[Attribute]) -> YaSerdeAttribute {
-    let mut attribute = false;
-    let mut flatten = false;
-    let mut default = None;
-    let mut default_namespace = None;
-    let mut namespaces = BTreeMap::new();
-    let mut prefix = None;
-    let mut rename = None;
-    let mut tag = None;
-    let mut skip_serializing = false;
-    let mut skip_serializing_if = None;
-    let mut text = false;
-
-    for attr in attrs.iter().filter(|a| a.path.is_ident("yaserde")) {
-      let mut attr_iter = attr.clone().tokens.into_iter();
-      if let Some(TokenTree::Group(group)) = attr_iter.next() {
-        if group.delimiter() == Delimiter::Parenthesis {
-          let mut attr_iter = group.stream().into_iter();
-
-          while let Some(item) = attr_iter.next() {
-            if let TokenTree::Ident(ident) = item {
-              match ident.to_string().as_str() {
-                "attribute" => {
-                  attribute = true;
-                }
-                "default" => {
-                  default = get_value(&mut attr_iter);
-                }
-                "default_namespace" => {
-                  default_namespace = get_value(&mut attr_iter);
-                }
-                "flatten" => {
-                  flatten = true;
-                }
-                "namespace" => {
-                  if let Some(namespace) = get_value(&mut attr_iter) {
-                    let splitted: Vec<&str> = namespace.split(": ").collect();
-                    if splitted.len() == 2 {
-                      namespaces.insert(Some(splitted[0].to_owned()), splitted[1].to_owned());
-                    }
-                    if splitted.len() == 1 {
-                      namespaces.insert(None, splitted[0].to_owned());
-                    }
-                  }
-                }
-                "prefix" => {
-                  prefix = get_value(&mut attr_iter);
-                }
-                "rename" => {
-                  rename = get_value(&mut attr_iter);
-                }
-                "tag" => {
-                  tag = get_value(&mut attr_iter);
-                }
-                "skip_serializing" => {
-                  skip_serializing = true;
-                }
-                "skip_serializing_if" => {
-                  skip_serializing_if = get_value(&mut attr_iter);
-                }
-                "text" => {
-                  text = true;
-                }
-                _ => {}
-              }
-            }
-          }
-        }
-      }
-    }
-
-    YaSerdeAttribute {
-      attribute,
-      default,
-      default_namespace,
-      flatten,
-      namespaces,
-      prefix,
-      rename,
-      tag,
-      skip_serializing,
-      skip_serializing_if,
-      text,
-    }
-  }
-
   pub fn xml_element_name(&self, ident: &Ident) -> String {
     self.rename.clone().unwrap_or_else(|| ident.to_string())
   }
@@ -151,7 +116,7 @@ impl YaSerdeAttribute {
       .namespaces
       .iter()
       .filter_map(|(prefix, namespace)| {
-        if configured_prefix.eq(prefix) {
+        if configured_prefix.as_deref().eq(&Some(prefix)) {
           Some(quote!(#namespace => {}))
         } else {
           None
@@ -172,186 +137,4 @@ impl YaSerdeAttribute {
       }
     )
   }
-}
-
-#[test]
-fn parse_empty_attributes() {
-  let attributes = vec![];
-  let attrs = YaSerdeAttribute::parse(&attributes);
-
-  assert_eq!(
-    YaSerdeAttribute {
-      attribute: false,
-      default: None,
-      default_namespace: None,
-      flatten: false,
-      namespaces: BTreeMap::new(),
-      prefix: None,
-      rename: None,
-      tag: None,
-      skip_serializing: false,
-      skip_serializing_if: None,
-      text: false,
-    },
-    attrs
-  );
-}
-
-#[test]
-fn parse_attributes() {
-  use proc_macro2::{Span, TokenStream};
-  use std::str::FromStr;
-  use syn::punctuated::Punctuated;
-  use syn::token::Bracket;
-  use syn::token::Pound;
-  use syn::AttrStyle::Outer;
-  use syn::{Ident, Path, PathArguments, PathSegment};
-
-  let mut punctuated = Punctuated::new();
-  punctuated.push(PathSegment {
-    ident: Ident::new("yaserde", Span::call_site()),
-    arguments: PathArguments::None,
-  });
-
-  let attributes = vec![Attribute {
-    pound_token: Pound {
-      spans: [Span::call_site()],
-    },
-    style: Outer,
-    bracket_token: Bracket {
-      span: Span::call_site(),
-    },
-    path: Path {
-      leading_colon: None,
-      segments: punctuated,
-    },
-    tokens: TokenStream::from_str("(attribute)").unwrap(),
-  }];
-
-  let attrs = YaSerdeAttribute::parse(&attributes);
-
-  assert_eq!(
-    YaSerdeAttribute {
-      attribute: true,
-      default: None,
-      default_namespace: None,
-      flatten: false,
-      namespaces: BTreeMap::new(),
-      prefix: None,
-      rename: None,
-      tag: None,
-      skip_serializing: false,
-      skip_serializing_if: None,
-      text: false,
-    },
-    attrs
-  );
-}
-
-#[test]
-fn only_parse_yaserde_attributes() {
-  use proc_macro2::{Span, TokenStream};
-  use std::str::FromStr;
-  use syn::punctuated::Punctuated;
-  use syn::token::Bracket;
-  use syn::token::Pound;
-  use syn::AttrStyle::Outer;
-  use syn::{Ident, Path, PathArguments, PathSegment};
-
-  let mut punctuated = Punctuated::new();
-  punctuated.push(PathSegment {
-    ident: Ident::new("serde", Span::call_site()),
-    arguments: PathArguments::None,
-  });
-
-  let attributes = vec![Attribute {
-    pound_token: Pound {
-      spans: [Span::call_site()],
-    },
-    style: Outer,
-    bracket_token: Bracket {
-      span: Span::call_site(),
-    },
-    path: Path {
-      leading_colon: None,
-      segments: punctuated,
-    },
-    tokens: TokenStream::from_str("(flatten)").unwrap(),
-  }];
-
-  let attrs = YaSerdeAttribute::parse(&attributes);
-
-  assert_eq!(
-    YaSerdeAttribute {
-      attribute: false,
-      default: None,
-      default_namespace: None,
-      flatten: false,
-      namespaces: BTreeMap::new(),
-      prefix: None,
-      rename: None,
-      tag: None,
-      skip_serializing: false,
-      skip_serializing_if: None,
-      text: false,
-    },
-    attrs
-  );
-}
-
-#[test]
-fn parse_attributes_with_values() {
-  use proc_macro2::{Span, TokenStream};
-  use std::str::FromStr;
-  use syn::punctuated::Punctuated;
-  use syn::token::Bracket;
-  use syn::token::Pound;
-  use syn::AttrStyle::Outer;
-  use syn::{Ident, Path, PathArguments, PathSegment};
-
-  let mut punctuated = Punctuated::new();
-  punctuated.push(PathSegment {
-    ident: Ident::new("yaserde", Span::call_site()),
-    arguments: PathArguments::None,
-  });
-
-  let attributes = vec![Attribute {
-    pound_token: Pound {
-      spans: [Span::call_site()],
-    },
-    style: Outer,
-    bracket_token: Bracket {
-      span: Span::call_site(),
-    },
-    path: Path {
-      leading_colon: None,
-      segments: punctuated,
-    },
-    tokens: TokenStream::from_str("(attribute, flatten, default_namespace=\"example\", namespace=\"example: http://example.org\")").unwrap(),
-  }];
-
-  let attrs = YaSerdeAttribute::parse(&attributes);
-
-  let mut namespaces = BTreeMap::new();
-  namespaces.insert(
-    Some("example".to_string()),
-    "http://example.org".to_string(),
-  );
-
-  assert_eq!(
-    YaSerdeAttribute {
-      attribute: true,
-      default: None,
-      default_namespace: Some("example".to_string()),
-      flatten: true,
-      namespaces,
-      prefix: None,
-      rename: None,
-      tag: None,
-      skip_serializing: false,
-      skip_serializing_if: None,
-      text: false,
-    },
-    attrs
-  );
 }

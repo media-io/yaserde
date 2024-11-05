@@ -16,7 +16,7 @@ pub struct YaSerdeField {
 
 impl YaSerdeField {
   pub fn new(syn_field: syn::Field) -> Self {
-    let attributes = YaSerdeAttribute::parse(&syn_field.attrs);
+    let attributes = YaSerdeAttribute::from(&syn_field.attrs);
 
     YaSerdeField {
       syn_field,
@@ -143,7 +143,7 @@ impl YaSerdeField {
       .namespaces
       .iter()
       .find_map(|(prefix, namespace)| {
-        if self.attributes.prefix.eq(prefix) {
+        if self.attributes.prefix.as_deref().eq(&Some(prefix)) {
           Some(namespace.clone())
         } else {
           None

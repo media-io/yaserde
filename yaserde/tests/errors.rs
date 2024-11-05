@@ -12,7 +12,7 @@ fn de_no_content() {
   init();
 
   #[derive(YaDeserialize, PartialEq, Debug)]
-  #[yaserde(root = "book")]
+  #[yaserde(rename = "book")]
   pub struct Book {
     author: String,
     title: String,
@@ -31,7 +31,7 @@ fn de_wrong_end_balise() {
   init();
 
   #[derive(YaDeserialize, PartialEq, Debug)]
-  #[yaserde(root = "book")]
+  #[yaserde(rename = "book")]
   pub struct Book {
     author: String,
     title: String,

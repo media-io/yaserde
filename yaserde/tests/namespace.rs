@@ -15,7 +15,9 @@ fn struct_simple_namespace() {
   #[yaserde(
     rename = "book",
     prefix = "ns",
-    namespace = "ns: http://www.sample.com/ns/domain"
+    namespaces = {
+      "ns" = "http://www.sample.com/ns/domain"
+    }
   )]
   pub struct Book {
     #[yaserde(prefix = "ns")]
@@ -48,8 +50,10 @@ fn struct_multiple_namespaces() {
   #[yaserde(
     rename = "book",
     prefix = "ns",
-    namespace = "ns: http://www.sample.com/ns/domain",
-    namespace = "ns2: http://www.sample.com/ns/domain_2"
+    namespaces = {
+      "ns" = "http://www.sample.com/ns/domain",
+      "ns2" = "http://www.sample.com/ns/domain_2"
+    }
   )]
   pub struct Book {
     #[yaserde(prefix = "ns")]
@@ -82,7 +86,9 @@ fn struct_partial_namespace() {
   #[yaserde(
     rename = "book",
     prefix = "ns",
-    namespace = "ns: http://www.sample.com/ns/domain"
+    namespaces = {
+      "ns" = "http://www.sample.com/ns/domain"
+    }
   )]
   pub struct Book {
     author: String,
@@ -114,13 +120,17 @@ fn struct_sub_namespace_definition() {
   #[yaserde(
     rename = "book",
     prefix = "ns",
-    namespace = "ns: http://www.sample.com/ns/domain",
-    namespace = "ns2: http://www.sample.com/ns/domain_2"
+    namespaces = {
+      "ns" = "http://www.sample.com/ns/domain",
+      "ns2" = "http://www.sample.com/ns/domain_2"
+    }
   )]
   pub struct Book {
     #[yaserde(prefix = "ns")]
     author: String,
-    #[yaserde(prefix = "ns2", namespace = "ns2: http://www.sample.com/ns/domain_2")]
+    #[yaserde(prefix = "ns2", namespaces = {
+      "ns2" = "http://www.sample.com/ns/domain_2"
+    })]
     title: String,
   }
 
@@ -146,14 +156,18 @@ fn struct_namespace_nested() {
   init();
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(prefix = "nsa", namespace = "nsa: http://www.sample.com/ns/a")]
+  #[yaserde(prefix = "nsa", namespaces = {
+    "nsa" = "http://www.sample.com/ns/a"
+  })]
   struct A {
     #[yaserde(prefix = "nsa")]
     alpha: i32,
   }
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(prefix = "nsb", namespace = "nsb: http://www.sample.com/ns/b")]
+  #[yaserde(prefix = "nsb", namespaces = {
+    "nsb" = "http://www.sample.com/ns/b"
+  })]
   struct B {
     // Note that name `nested` resides in `nsb` though it has a type from `nsa`
     #[yaserde(prefix = "nsb")]
@@ -181,7 +195,9 @@ fn struct_namespace_nested_defined_at_root() {
   init();
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(prefix = "nsa", namespace = "nsa: http://www.sample.com/ns/a")]
+  #[yaserde(prefix = "nsa", namespaces = {
+    "nsa" = "http://www.sample.com/ns/a"
+  })]
   struct A {
     #[yaserde(prefix = "nsa")]
     alpha: i32,
@@ -190,8 +206,10 @@ fn struct_namespace_nested_defined_at_root() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     prefix = "nsb",
-    namespace = "nsb: http://www.sample.com/ns/b"
-    namespace = "nsa: http://www.sample.com/ns/a"
+    namespaces = {
+      "nsb" = "http://www.sample.com/ns/b",
+      "nsa" = "http://www.sample.com/ns/a"
+    }
   )]
   struct B {
     // Note that name `nested` resides in `nsb` though it has a type from `nsa`
@@ -222,13 +240,15 @@ fn struct_attribute_namespace() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "root",
-    namespace = "ns1: http://www.sample.com/ns/domain1",
-    namespace = "ns2: http://www.sample.com/ns/domain2"
+    namespaces = {
+      "ns1" = "http://www.sample.com/ns/domain1",
+      "ns2" = "http://www.sample.com/ns/domain2"
+    }
   )]
   pub struct XmlStruct {
     #[yaserde(prefix = "ns1")]
     item_1: String,
-    #[yaserde(attribute, prefix = "ns2")]
+    #[yaserde(attribute = true, prefix = "ns2")]
     item_2: String,
   }
 
@@ -254,8 +274,11 @@ fn struct_implicit_default_namespace() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "tt",
-    namespace = "http://www.w3.org/ns/ttml",
-    namespace = "ttm: http://www.w3.org/ns/ttml#metadata"
+    default_namespace = "ttml",
+    namespaces = {
+      "ttml" = "http://www.w3.org/ns/ttml",
+      "ttm" = "http://www.w3.org/ns/ttml#metadata"
+    }
   )]
   pub struct XmlStruct {
     item: String,
@@ -279,8 +302,10 @@ fn struct_explicit_default_namespace() {
   #[yaserde(
     rename = "tt",
     default_namespace = "ttml",
-    namespace = "ttml: http://www.w3.org/ns/ttml",
-    namespace = "ttm: http://www.w3.org/ns/ttml#metadata"
+    namespaces = {
+      "ttml" = "http://www.w3.org/ns/ttml",
+      "ttm" = "http://www.w3.org/ns/ttml#metadata"
+    }
   )]
   pub struct XmlStruct {
     item: String,
@@ -305,8 +330,10 @@ fn struct_default_namespace_via_attribute_with_prefix() {
     rename = "tt",
     prefix = "TTML",
     default_namespace = "TTML",
-    namespace = "TTML: http://www.w3.org/ns/ttml",
-    namespace = "ttm: http://www.w3.org/ns/ttml#metadata"
+    namespaces = {
+      "TTML" = "http://www.w3.org/ns/ttml",
+      "ttm" = "http://www.w3.org/ns/ttml#metadata"
+    }
   )]
   pub struct XmlStruct {
     #[yaserde(prefix = "TTML")]
@@ -330,7 +357,9 @@ fn enum_namespace() {
   #[yaserde(
     rename = "root",
     prefix = "ns",
-    namespace = "ns: http://www.sample.com/ns/domain"
+    namespaces = {
+      "ns" = "http://www.sample.com/ns/domain"
+    }
   )]
   pub enum XmlStruct {
     #[yaserde(prefix = "ns")]
@@ -356,8 +385,10 @@ fn enum_multi_namespaces() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(
     rename = "root",
-    namespace = "ns1: http://www.sample.com/ns/domain1",
-    namespace = "ns2: http://www.sample.com/ns/domain2"
+    namespaces = {
+    "ns1" = "http://www.sample.com/ns/domain1",
+    "ns2" = "http://www.sample.com/ns/domain2"
+    }
   )]
   #[derive(Default)]
   pub enum XmlStruct {
@@ -396,7 +427,9 @@ fn enum_attribute_namespace() {
   #[yaserde(
     rename = "rootA",
     prefix = "ns",
-    namespace = "ns: http://www.sample.com/ns/domain"
+    namespaces = {
+      "ns" = "http://www.sample.com/ns/domain"
+    }
   )]
   #[derive(Default)]
   pub enum XmlStruct {
@@ -432,13 +465,17 @@ fn struct_bad_namespace() {
   #[yaserde(
     rename = "book",
     prefix = "ns",
-    namespace = "ns: http://www.sample.com/ns/domain",
-    namespace = "ns2: http://www.sample.com/ns/domain_2"
+    namespaces = {
+      "ns" = "http://www.sample.com/ns/domain",
+      "ns2" = "http://www.sample.com/ns/domain_2"
+    }
   )]
   pub struct Book {
     #[yaserde(prefix = "ns")]
     author: String,
-    #[yaserde(prefix = "ns2", namespace = "ns2: http://www.sample.com/ns/domain_2")]
+    #[yaserde(prefix = "ns2", namespaces = {
+      "ns2" = "http://www.sample.com/ns/domain_2"
+    })]
     title: String,
   }
 
@@ -461,9 +498,13 @@ fn struct_default_namespace_no_prefix() {
   init();
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
-  #[yaserde(rename = "book", namespace = "http://www.sample.com/ns/domain")]
+  #[yaserde(rename = "book", prefix = "ns", default_namespace = "ns", namespaces = {
+    "ns" = "http://www.sample.com/ns/domain"
+  })]
   pub struct Book {
+    #[yaserde(prefix = "ns")]
     author: String,
+    #[yaserde(prefix = "ns")]
     title: String,
   }
 

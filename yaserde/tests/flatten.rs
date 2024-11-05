@@ -13,10 +13,10 @@ fn basic_flatten() {
 
   #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct DateTime {
-    #[yaserde(flatten)]
+    #[yaserde(flatten = true)]
     date: Date,
     time: String,
-    #[yaserde(flatten)]
+    #[yaserde(flatten = true)]
     kind: DateKind,
   }
 
@@ -25,9 +25,9 @@ fn basic_flatten() {
     year: i32,
     month: i32,
     day: i32,
-    #[yaserde(flatten)]
+    #[yaserde(flatten = true)]
     extra: Extra,
-    #[yaserde(flatten)]
+    #[yaserde(flatten = true)]
     optional_extra: Option<OptionalExtra>,
   }
 
@@ -93,7 +93,7 @@ fn root_flatten_struct() {
   init();
 
   #[derive(YaDeserialize, YaSerialize, PartialEq, Debug)]
-  #[yaserde(flatten)]
+  #[yaserde(flatten = true)]
   pub struct Content {
     binary_data: String,
     string_data: String,
@@ -115,7 +115,7 @@ fn root_flatten_enum() {
   init();
 
   #[derive(YaSerialize, PartialEq, Debug)]
-  #[yaserde(flatten)]
+  #[yaserde(flatten = true)]
   pub enum Content {
     Binary(Binary),
     Data(Data),
@@ -152,24 +152,26 @@ fn flatten_attribute() {
 
   #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct HtmlText {
-    #[yaserde(flatten)]
+    #[yaserde(flatten = true)]
     text_attributes: TextAttributes,
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     display: String,
   }
 
   #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct TextAttributes {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     bold: bool,
-    #[yaserde(flatten)]
+    #[yaserde(flatten = true)]
     font: FontAttributes,
   }
 
   #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
-  #[yaserde(namespace = "ns: http://www.sample.com/ns/domain")]
+  #[yaserde(namespaces = {
+    "ns" = "http://www.sample.com/ns/domain"
+  })]
   pub struct FontAttributes {
-    #[yaserde(attribute, prefix = "ns")]
+    #[yaserde(attribute = true, prefix = "ns")]
     size: u32,
   }
 
@@ -194,20 +196,20 @@ fn flatten_attribute_and_child() {
 
   #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct Node {
-    #[yaserde(flatten)]
+    #[yaserde(flatten = true)]
     base: Base,
     value: StringValue,
   }
 
   #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct Base {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     id: String,
   }
 
   #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct StringValue {
-    #[yaserde(text)]
+    #[yaserde(text = true)]
     string: String,
   }
 
@@ -232,14 +234,14 @@ fn flatten_name_in_unknown_child() {
 
   #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   pub struct Node {
-    #[yaserde(flatten)]
+    #[yaserde(flatten = true)]
     base: Base,
     value: Value,
   }
 
   #[derive(PartialEq, Debug, YaDeserialize, YaSerialize)]
   struct Base {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     id: String,
   }
 

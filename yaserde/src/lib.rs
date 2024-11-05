@@ -19,19 +19,17 @@
 //! #[derive(PartialEq, Debug, YaSerialize)]
 //! #[yaserde(rename = "device")]
 //! struct Device {
-//!   #[yaserde(attribute)]
+//!   #[yaserde(attribute = true)]
 //!   schemaversion: String,
-//!   #[yaserde(attribute)]
+//!   #[yaserde(attribute = true)]
 //!   xmlns: String,
-//!   #[yaserde(attribute)]
+//!   #[yaserde(attribute = true)]
 //!   xsnonamespaceschemalocation: String,
-//!   #[yaserde(child)]
 //!   attributes: DeviceAttributes
 //! }
 //!
 //! #[derive(PartialEq, Debug, YaSerialize)]
 //! struct DeviceAttributes {
-//!   #[yaserde(child)]
 //!   vendor: String,
 //! }
 //!```
@@ -297,7 +295,7 @@ macro_rules! test_for_attribute_type {
     #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
     #[yaserde(rename = "data")]
     pub struct Data {
-      #[yaserde(attribute)]
+      #[yaserde(attribute = true)]
       item: $type,
     }
     let model = Data { item: $value };
