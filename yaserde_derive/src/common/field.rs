@@ -44,6 +44,10 @@ impl YaSerdeField {
     self.attributes.skip_serializing
   }
 
+  pub fn is_cdata(&self) -> bool {
+    self.attributes.cdata
+  }
+
   pub fn get_value_label(&self) -> Option<syn::Ident> {
     self
       .syn_field

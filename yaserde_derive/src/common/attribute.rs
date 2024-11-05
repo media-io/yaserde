@@ -40,6 +40,9 @@ pub struct YaSerdeAttribute {
   /// Set the field as an XML text content
   #[serde(default)]
   pub text: bool,
+  /// Set the field as an XML CDATA content
+  #[serde(default)]
+  pub cdata: bool,
 }
 
 impl TryFrom<&Attribute> for YaSerdeAttribute {
