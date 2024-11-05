@@ -26,7 +26,7 @@ fn test_cdata_serialization() {
 fn test_cdata_deserialization() {
   init();
   let xml = r#"<?xml version="1.0" encoding="utf-8"?><teststruct><msgdata><![CDATA[<tag>Some unescaped content</tag>]]></msgdata></teststruct>"#;
-  let r: TestStruct = yaserde::de::from_str(&xml).unwrap();
+  let r: TestStruct = yaserde::de::from_str(xml).unwrap();
   let expected_output = TestStruct {
     msgdata: "<tag>Some unescaped content</tag>".to_string(),
   };
