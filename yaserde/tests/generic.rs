@@ -22,7 +22,7 @@ fn generic() {
 
   #[derive(Debug, Default, PartialEq, YaDeserialize, YaSerialize)]
   pub struct Generic {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     color: String,
   }
 

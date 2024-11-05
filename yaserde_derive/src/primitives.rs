@@ -59,7 +59,7 @@ pub fn hexbinary_serde(input: TokenStream) -> TokenStream {
   let first = input.clone();
   let DeriveInput { ident, .. } = parse_macro_input!(first);
   // Calculate number digits to determine whether leading zero should be added
-  quote! {
+  quote!(
     impl std::fmt::Display for #ident {
       fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:02X}", self.0)
@@ -77,7 +77,7 @@ pub fn hexbinary_serde(input: TokenStream) -> TokenStream {
       .ok_or(String::from("Unknown bits were set in Bitflag"))
       }
     }
-  }
+  )
   .into()
 }
 
@@ -85,7 +85,8 @@ pub fn primitive_serde(input: TokenStream) -> TokenStream {
   let first = input.clone();
   let ref di @ DeriveInput { ref ident, .. } = parse_macro_input!(first);
   let fromstr = extract_full_path(di).unwrap();
-  quote! {
+
+  quote!(
     impl std::fmt::Display for #ident {
       fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
@@ -99,7 +100,7 @@ pub fn primitive_serde(input: TokenStream) -> TokenStream {
         Ok(#ident(#fromstr))
       }
     }
-  }
+  )
   .into()
 }
 

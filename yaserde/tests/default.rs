@@ -101,7 +101,7 @@ fn default_attribute_string() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(rename = "base")]
   pub struct XmlStruct {
-    #[yaserde(attribute, default = "default_string")]
+    #[yaserde(attribute = true, default = "default_string")]
     background: String,
   }
 
@@ -128,7 +128,7 @@ fn module_inclusion() {
     #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
     #[yaserde(rename = "module")]
     pub struct Module {
-      #[yaserde(attribute)]
+      #[yaserde(attribute = true)]
       pub color: String,
     }
   }

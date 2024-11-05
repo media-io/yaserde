@@ -1,12 +1,7 @@
-# yaserde &emsp; [![Build Status]][travis] [![Latest Version]][crates.io] [![Coverage Status]][coveralls]
+# yaserde &emsp; [![Latest Version]][crates.io]
 
-[Build Status]: https://travis-ci.com/media-io/yaserde.svg?branch=master
-[travis]: https://travis-ci.com/media-io/yaserde
 [Latest Version]: https://img.shields.io/crates/v/yaserde.svg
 [crates.io]: https://crates.io/crates/yaserde
-
-[Coverage Status]: https://coveralls.io/repos/github/media-io/yaserde/badge.svg?branch=master
-[coveralls]: https://coveralls.io/github/media-io/yaserde?branch=master
 
 **Yet Another Serializer/Deserializer specialized for XML**
 

@@ -7,7 +7,7 @@ fn init() {
 #[derive(YaSerialize, YaDeserialize, PartialEq, Debug)]
 #[yaserde(rename = "teststruct")]
 struct TestStruct {
-  #[yaserde(cdata)]
+  #[yaserde(cdata = true)]
   pub msgdata: String,
 }
 

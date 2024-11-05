@@ -14,7 +14,7 @@ fn skip_serializing() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "base")]
   pub struct XmlStruct {
-    #[yaserde(skip_serializing)]
+    #[yaserde(skip_serializing = true)]
     skipped_serializing: String,
   }
 
@@ -33,7 +33,7 @@ fn skip_serializing_for_nested_struct() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "base")]
   pub struct XmlStruct {
-    #[yaserde(skip_serializing)]
+    #[yaserde(skip_serializing = true)]
     skipped_serializing: XmlStructChild,
   }
 
@@ -56,7 +56,7 @@ fn skip_serializing_for_enum() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "base")]
   pub struct XmlStruct {
-    #[yaserde(skip_serializing)]
+    #[yaserde(skip_serializing = true)]
     skipped_serializing: XmlEnum,
   }
 
@@ -81,7 +81,7 @@ fn skip_serializing_for_vec() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "base")]
   pub struct XmlStruct {
-    #[yaserde(skip_serializing)]
+    #[yaserde(skip_serializing = true)]
     skipped_serializing: Vec<i8>,
   }
 

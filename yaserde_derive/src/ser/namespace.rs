@@ -7,7 +7,7 @@ pub fn generate_namespaces_definition(attributes: &YaSerdeAttribute) -> TokenStr
     .namespaces
     .iter()
     .map(|(prefix, namespace)| {
-      if attributes.default_namespace.eq(prefix) {
+      if attributes.default_namespace.as_deref().eq(&Some(prefix)) {
         quote!(
           .default_ns(#namespace)
         )

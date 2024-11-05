@@ -114,7 +114,7 @@ fn attribute_enum() {
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   #[yaserde(rename = "base")]
   pub struct XmlStruct {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     color: Color,
   }
 
@@ -139,7 +139,7 @@ fn attribute_enum2() {
   #[derive(Debug, PartialEq, YaSerialize, YaDeserialize)]
   #[yaserde(rename = "child1")]
   struct Child1 {
-    #[yaserde(attribute, rename = "val")]
+    #[yaserde(attribute = true, rename = "val")]
     pub val: String,
   }
 
@@ -155,16 +155,16 @@ fn attribute_enum2() {
   #[yaserde(rename = "child2")]
   #[derive(Default)]
   struct Child2 {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub num: u8,
   }
 
   #[derive(Debug, PartialEq, YaSerialize, YaDeserialize)]
-  #[yaserde(flatten)]
+  #[yaserde(flatten = true)]
   enum Base {
-    #[yaserde(flatten, rename = "child1")]
+    #[yaserde(flatten = true, rename = "child1")]
     C1(Child1),
-    #[yaserde(flatten, rename = "child2")]
+    #[yaserde(flatten = true, rename = "child2")]
     C2(Child2),
   }
 
@@ -193,7 +193,7 @@ fn attribute_enum2() {
   #[derive(Debug, PartialEq, YaSerialize, YaDeserialize)]
   #[yaserde(rename = "base")]
   enum Base2 {
-    #[yaserde(flatten)]
+    #[yaserde(flatten = true)]
     C1(Child1),
   }
 
@@ -361,8 +361,7 @@ fn unnamed_enum() {
 #[test]
 fn tagged_enum() {
   #[derive(Debug, PartialEq, YaSerialize, YaDeserialize, Default)]
-  #[yaserde(tag = "type")]
-  #[yaserde(rename = "foobar")]
+  #[yaserde(tag = "type", rename = "foobar")]
   enum XmlEnum {
     #[default]
     #[yaserde(rename = "foo")]

@@ -25,12 +25,11 @@ pub fn serialize(
     .variants
     .iter()
     .map(|variant| -> TokenStream {
-      let _attrs = crate::common::YaSerdeAttribute::parse(&variant.attrs);
-
       let add_tag = if let Some(tag) = &root_attributes.tag {
-        let attrs = crate::common::YaSerdeAttribute::parse(&variant.attrs);
+        let attrs = crate::common::YaSerdeAttribute::from(&variant.attrs);
         let label = variant.ident.clone();
         let element_name = attrs.xml_element_name(&variant.ident);
+
         quote! {
           match self {
             #name::#label { .. } => {
@@ -122,7 +121,7 @@ fn inner_enum_inspector(
     .variants
     .iter()
     .map(|variant| {
-      let variant_attrs = YaSerdeAttribute::parse(&variant.attrs);
+      let variant_attrs = YaSerdeAttribute::from(&variant.attrs);
 
       let label = &variant.ident;
       let label_name = build_label_name(label, &variant_attrs, &root_attributes.default_namespace);

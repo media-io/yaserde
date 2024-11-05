@@ -111,7 +111,7 @@ fn ser_list_of_items() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "base")]
   pub struct XmlStructOfStructFlattenedField {
-    #[yaserde(flatten)]
+    #[yaserde(flatten = true)]
     items: Vec<SubStruct>,
   }
 
@@ -136,7 +136,7 @@ fn ser_attributes() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "base")]
   pub struct XmlStruct {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     item: String,
     sub: SubStruct,
   }
@@ -144,7 +144,7 @@ fn ser_attributes() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "sub")]
   pub struct SubStruct {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     subitem: String,
   }
 
@@ -189,9 +189,9 @@ fn ser_attributes_complex() {
 
   #[derive(YaSerialize, PartialEq, Debug, Default)]
   pub struct Struct {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     attr_option_string: Option<String>,
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     attr_option_enum: Option<other_mod::AttrEnum>,
   }
 
@@ -219,7 +219,7 @@ fn ser_rename() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "base")]
   pub struct XmlStruct {
-    #[yaserde(attribute, rename = "Item")]
+    #[yaserde(attribute = true, rename = "Item")]
     item: String,
     #[yaserde(rename = "sub")]
     sub_struct: SubStruct,
@@ -230,7 +230,7 @@ fn ser_rename() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "sub")]
   pub struct SubStruct {
-    #[yaserde(attribute, rename = "sub_item")]
+    #[yaserde(attribute = true, rename = "sub_item")]
     subitem: String,
   }
 
@@ -266,7 +266,7 @@ fn ser_text_content_with_attributes() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "base")]
   pub struct XmlStruct {
-    #[yaserde(attribute, rename = "Item")]
+    #[yaserde(attribute = true, rename = "Item")]
     item: String,
     #[yaserde(rename = "sub")]
     sub_struct: SubStruct,
@@ -275,9 +275,9 @@ fn ser_text_content_with_attributes() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "sub")]
   pub struct SubStruct {
-    #[yaserde(attribute, rename = "sub_item")]
+    #[yaserde(attribute = true, rename = "sub_item")]
     subitem: String,
-    #[yaserde(text)]
+    #[yaserde(text = true)]
     text: String,
   }
 
@@ -315,7 +315,7 @@ fn ser_text_attribute_on_optional_string() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "base")]
   pub struct XmlStruct {
-    #[yaserde(text)]
+    #[yaserde(text = true)]
     text: Option<String>,
   }
 
@@ -337,7 +337,7 @@ fn ser_keyword() {
   #[derive(YaSerialize, PartialEq, Debug)]
   #[yaserde(rename = "base")]
   pub struct XmlStruct {
-    #[yaserde(attribute, rename = "ref")]
+    #[yaserde(attribute = true, rename = "ref")]
     r#ref: String,
   }
 

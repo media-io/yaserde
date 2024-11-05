@@ -113,7 +113,7 @@ fn option_bool_no_crash_on_bad_input() {
 
   #[derive(Debug, PartialEq, YaDeserialize, YaSerialize)]
   struct SubTest {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     content: Option<bool>,
   }
 
@@ -138,7 +138,7 @@ mod tests {
 
   #[derive(Debug, YaDeserialize, YaSerialize)]
   pub struct Person {
-    #[yaserde(flatten)]
+    #[yaserde(flatten = true)]
     pub car: Option<Car>,
   }
 

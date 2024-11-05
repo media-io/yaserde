@@ -75,18 +75,18 @@ fn skip_serializing_if_for_struct_attributes() {
   #[yaserde(rename = "base")]
   pub struct XmlStruct {
     #[yaserde(
-      attribute,
+      attribute = true,
       skip_serializing_if = "check_string_function",
       default = "default_string_function"
     )]
     string_with_default_item: String,
-    #[yaserde(attribute, skip_serializing_if = "check_string_function")]
+    #[yaserde(attribute = true, skip_serializing_if = "check_string_function")]
     string_item: String,
-    #[yaserde(attribute, skip_serializing_if = "check_bool_function")]
+    #[yaserde(attribute = true, skip_serializing_if = "check_bool_function")]
     bool_item: bool,
-    #[yaserde(attribute, skip_serializing_if = "check_f32_function")]
+    #[yaserde(attribute = true, skip_serializing_if = "check_f32_function")]
     f32_item: f32,
-    #[yaserde(attribute, skip_serializing_if = "check_option_string_function")]
+    #[yaserde(attribute = true, skip_serializing_if = "check_option_string_function")]
     option_string_item: Option<String>,
   }
 
